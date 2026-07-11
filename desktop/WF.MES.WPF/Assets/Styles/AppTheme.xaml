@@ -1,0 +1,83 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 品牌色 -->
+    <Color x:Key="AppPrimaryColor">#1565C0</Color>
+    <Color x:Key="AppPrimaryDarkColor">#0D47A1</Color>
+    <Color x:Key="AppPrimaryLightColor">#1976D2</Color>
+    <Color x:Key="AppPrimaryPaleColor">#1E88E5</Color>
+
+    <!-- 状态 -->
+    <Color x:Key="AppSuccessColor">#16A34A</Color>
+    <Color x:Key="AppErrorColor">#DC2626</Color>
+
+    <!-- 遮罩 -->
+    <Color x:Key="AppLoadingOverlayColor">#99FFFFFF</Color>
+    <Color x:Key="AppLoadingOverlayLightColor">#80FFFFFF</Color>
+
+    <!-- 背景 / 表面 -->
+    <Color x:Key="AppBackgroundColor">#F0F4F8</Color>
+    <Color x:Key="AppSidebarColor">#E8EEF5</Color>
+    <Color x:Key="AppPanelColor">#E8EEF5</Color>
+    <Color x:Key="AppBorderColor">#D5DEE8</Color>
+
+    <!-- 文字 -->
+    <Color x:Key="AppTextPrimaryColor">#333333</Color>
+    <Color x:Key="AppTextBodyColor">#434343</Color>
+    <Color x:Key="AppTextSecondaryColor">#5C6B7A</Color>
+    <Color x:Key="AppTextMutedColor">#8C8C8C</Color>
+
+    <!-- 导航 -->
+    <Color x:Key="AppNavHoverColor">#DCE8F4</Color>
+    <Color x:Key="AppNavSelectedColor">#CEDEF2</Color>
+
+    <!-- 顶栏 -->
+    <Color x:Key="AppHeaderSubtitleColor">#D6E8FF</Color>
+    <Color x:Key="AppHeaderBadgeTextColor">#E8F2FF</Color>
+    <Color x:Key="AppOnBrandTextMutedColor">#B8D4F0</Color>
+    <Color x:Key="AppHeaderButtonHoverColor">#F0F7FF</Color>
+    <Color x:Key="AppHeaderButtonPressedColor">#E3F2FD</Color>
+
+    <!-- 画刷 -->
+    <SolidColorBrush x:Key="AppPrimaryBrush" Color="{StaticResource AppPrimaryColor}" />
+    <SolidColorBrush x:Key="AppPrimaryDarkBrush" Color="{StaticResource AppPrimaryDarkColor}" />
+    <SolidColorBrush x:Key="AppSuccessBrush" Color="{StaticResource AppSuccessColor}" />
+    <SolidColorBrush x:Key="AppErrorBrush" Color="{StaticResource AppErrorColor}" />
+    <SolidColorBrush x:Key="AppLoadingOverlayBrush" Color="{StaticResource AppLoadingOverlayColor}" />
+    <SolidColorBrush x:Key="AppLoadingOverlayLightBrush" Color="{StaticResource AppLoadingOverlayLightColor}" />
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="{StaticResource AppBackgroundColor}" />
+    <SolidColorBrush x:Key="AppSidebarBrush" Color="{StaticResource AppSidebarColor}" />
+    <SolidColorBrush x:Key="AppPanelBrush" Color="{StaticResource AppPanelColor}" />
+    <SolidColorBrush x:Key="AppBorderBrush" Color="{StaticResource AppBorderColor}" />
+    <SolidColorBrush x:Key="AppTextPrimaryBrush" Color="{StaticResource AppTextPrimaryColor}" />
+    <SolidColorBrush x:Key="AppTextBodyBrush" Color="{StaticResource AppTextBodyColor}" />
+    <SolidColorBrush x:Key="AppTextMutedBrush" Color="{StaticResource AppTextMutedColor}" />
+    <SolidColorBrush x:Key="AppNavHoverBrush" Color="{StaticResource AppNavHoverColor}" />
+    <SolidColorBrush x:Key="AppNavSelectedBrush" Color="{StaticResource AppNavSelectedColor}" />
+    <SolidColorBrush x:Key="AppHeaderSubtitleBrush" Color="{StaticResource AppHeaderSubtitleColor}" />
+    <SolidColorBrush x:Key="AppHeaderBadgeTextBrush" Color="{StaticResource AppHeaderBadgeTextColor}" />
+    <SolidColorBrush x:Key="AppOnBrandTextMutedBrush" Color="{StaticResource AppOnBrandTextMutedColor}" />
+    <SolidColorBrush x:Key="AppHeaderButtonHoverBrush" Color="{StaticResource AppHeaderButtonHoverColor}" />
+    <SolidColorBrush x:Key="AppHeaderButtonPressedBrush" Color="{StaticResource AppHeaderButtonPressedColor}" />
+
+    <!-- 品牌渐变：Shell 顶栏（水平） -->
+    <LinearGradientBrush x:Key="AppBrandGradientHorizontal" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Offset="0" Color="{StaticResource AppPrimaryDarkColor}" />
+        <GradientStop Offset="0.55" Color="{StaticResource AppPrimaryColor}" />
+        <GradientStop Offset="1" Color="{StaticResource AppPrimaryLightColor}" />
+    </LinearGradientBrush>
+
+    <!-- 品牌渐变：登录页品牌区（对角） -->
+    <LinearGradientBrush x:Key="AppBrandGradientDiagonal" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="{StaticResource AppPrimaryDarkColor}" />
+        <GradientStop Offset="0.55" Color="{StaticResource AppPrimaryColor}" />
+        <GradientStop Offset="1" Color="{StaticResource AppPrimaryPaleColor}" />
+    </LinearGradientBrush>
+
+    <!-- HandyControl 主题覆盖 -->
+    <Color x:Key="PrimaryColor">#1565C0</Color>
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}" />
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="{StaticResource AppTextSecondaryColor}" />
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource AppBorderColor}" />
+
+</ResourceDictionary>

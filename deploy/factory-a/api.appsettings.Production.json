@@ -1,0 +1,20 @@
+{
+  "ConnectionStrings": {
+    "Default": "Server=YOUR_SERVER;Database=MES;User Id=sa;Password=YOUR_PASSWORD;Encrypt=True;TrustServerCertificate=True;"
+  },
+  "Factory": {
+    "Code": "FAB-A",
+    "Name": "示例工厂 A"
+  },
+  "Jwt": {
+    "Issuer": "WF.MES",
+    "Audience": "WF.MES.Client",
+    "SecretKey": "CHANGE-ME-32-CHARS-MINIMUM-SECRET!!",
+    "AccessTokenExpireMinutes": 30,
+    "RefreshTokenExpireDays": 7
+  },
+  "Redis": {
+    "ConnectionString": "localhost:6379",
+    "DefaultDatabase": 0
+  }
+}

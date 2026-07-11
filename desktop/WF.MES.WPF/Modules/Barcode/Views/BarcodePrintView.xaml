@@ -1,0 +1,130 @@
+﻿<UserControl x:Class="WF.MES.WPF.Modules.Barcode.Views.BarcodePrintView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:prism="http://prismlibrary.com/"
+             prism:ViewModelLocator.AutoWireViewModel="True">
+    <Grid Margin="{StaticResource PageRootMargin}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Style="{StaticResource PageTitleStyle}"
+                   Text="{Binding PageTitle}" />
+
+        <Border Grid.Row="1"
+                Margin="{StaticResource ContentSectionMargin}"
+                Style="{StaticResource FormCardBorderStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="140" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="200" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="140" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="80" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock VerticalAlignment="Center"
+                           Text="{Binding CustomerLabel}" />
+                <ComboBox Grid.Column="1"
+                          Margin="8,0,0,0"
+                          VerticalAlignment="Center"
+                          DisplayMemberPath="CustomerName"
+                          IsEnabled="{Binding ShowGeneratingOverlay, Converter={StaticResource Boolean2BooleanReConverter}}"
+                          ItemsSource="{Binding Customers}"
+                          SelectedItem="{Binding SelectedCustomer}" />
+                <TextBlock Grid.Column="2"
+                           Margin="16,0,0,0"
+                           VerticalAlignment="Center"
+                           Text="{Binding MaterialNoLabel}" />
+                <ComboBox Grid.Column="3"
+                          Margin="8,0,0,0"
+                          VerticalAlignment="Center"
+                          DisplayMemberPath="MaterialNo"
+                          IsEnabled="{Binding ShowGeneratingOverlay, Converter={StaticResource Boolean2BooleanReConverter}}"
+                          ItemsSource="{Binding Rules}"
+                          SelectedItem="{Binding SelectedRule}" />
+                <TextBlock Grid.Column="4"
+                           Margin="16,0,0,0"
+                           VerticalAlignment="Center"
+                           Text="{Binding PrintDateLabel}" />
+                <DatePicker Grid.Column="5"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            IsEnabled="{Binding ShowGeneratingOverlay, Converter={StaticResource Boolean2BooleanReConverter}}"
+                            SelectedDate="{Binding PrintDate}" />
+                <TextBlock Grid.Column="6"
+                           Margin="16,0,0,0"
+                           VerticalAlignment="Center"
+                           Text="{Binding QuantityLabel}" />
+                <TextBox Grid.Column="7"
+                         Margin="8,0,0,0"
+                         VerticalAlignment="Center"
+                         IsEnabled="{Binding ShowGeneratingOverlay, Converter={StaticResource Boolean2BooleanReConverter}}"
+                         Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Grid.Column="8"
+                        Margin="16,0,0,0"
+                        VerticalAlignment="Center"
+                        Command="{Binding GenerateCommand}"
+                        Content="{Binding GenerateButtonText}"
+                        Style="{StaticResource ButtonPrimary}" />
+                <TextBlock Grid.Row="1"
+                           Grid.Column="7"
+                           Grid.ColumnSpan="2"
+                           Margin="8,2,0,0"
+                           Style="{StaticResource FormHintTextStyle}"
+                           Text="{Binding MaxQuantityHint}"
+                           TextWrapping="NoWrap" />
+
+                <Border Grid.RowSpan="2"
+                        Grid.ColumnSpan="9"
+                        Style="{StaticResource LoadingOverlayBorderStyle}"
+                        Visibility="{Binding ShowGeneratingOverlay, Converter={StaticResource Boolean2VisibilityConverter}}">
+                    <StackPanel Style="{StaticResource LoadingOverlayPanelStyle}">
+                        <ProgressBar Width="160"
+                                     Height="4"
+                                     IsIndeterminate="True" />
+                        <TextBlock Style="{StaticResource LoadingOverlayMessageStyle}"
+                                   Text="{Binding StatusMessage}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2"
+                Style="{StaticResource InfoPanelBorderStyle}">
+            <Grid>
+                <StackPanel>
+                    <TextBlock Text="{Binding RecentGenerateNoLine}" />
+                    <TextBlock Style="{StaticResource InfoPanelLineStyle}"
+                               Text="{Binding SerialConfigLine}" />
+                    <TextBlock Style="{StaticResource InfoPanelLineStyle}"
+                               Text="{Binding ResetKeyPreview, StringFormat=ResetKey：{0}}" />
+                    <TextBlock Style="{StaticResource InfoPanelLineStyle}"
+                               Text="{Binding SerialRangeLine}" />
+                    <TextBlock Style="{StaticResource InfoPanelLineStyle}"
+                               Text="{Binding SamplePreview}" />
+                    <TextBlock Style="{StaticResource InfoPanelLineStyle}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               Text="{Binding SampleLengthLine}"
+                               Visibility="{Binding ShowSampleLengthPreview, Converter={StaticResource Boolean2VisibilityConverter}}" />
+                </StackPanel>
+                <TextBlock HorizontalAlignment="Right"
+                           VerticalAlignment="Top"
+                           Style="{StaticResource PageHintTextStyle}"
+                           Text="{Binding PreviewUpdatingText}"
+                           Visibility="{Binding ShowPreviewLoading, Converter={StaticResource Boolean2VisibilityConverter}}" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

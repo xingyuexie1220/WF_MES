@@ -1,0 +1,72 @@
+# ====================== .NET / C# 后端通用过滤（你现有保留） ======================
+**/bin/
+**/obj/
+**/.vs/
+*.user
+*.suo
+
+# ====================== Node / Npm / UniApp 核心 ======================
+# 依赖包（禁止上传，体积巨大）
+**/node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# 编译输出目录
+**/dist/
+unpackage/
+.uni/
+.uni-app/
+
+# npm 日志、缓存
+**/logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ====================== 环境配置文件 ======================
+.env.local
+.env.*.local
+.env.development.local
+.env.production.local
+
+# ====================== IDE 编辑器缓存 ======================
+# VSCode
+.vscode/
+*.code-workspace
+.DS_Store.vscode
+
+# JetBrains IDEA
+.idea/
+*.iml
+out/
+
+# HBuilderX 专属缓存（重点补充，uni项目必备）
+.hbuilderx/
+**/.hbuilderx/
+hbuilderx.log
+temp/
+
+# ====================== 系统垃圾文件 ======================
+# Windows
+Thumbs.db
+Desktop.ini
+*.tmp
+*.bak
+*.swp
+
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ====================== 模拟器/调试临时文件 ======================
+# 雷电模拟器adb缓存、临时基座安装包
+*.apk
+temp-apk/
+
+# ====================== 本地私密配置（接口地址、密钥、本地调试参数） ======================
+config.local.js
+api.local.config.ts
+secret.config.js

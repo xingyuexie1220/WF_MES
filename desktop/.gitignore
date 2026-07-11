@@ -1,0 +1,25 @@
+# 编译输出
+bin/
+obj/
+_build_out/
+*.exe
+*.dll
+*.pdb
+*.log
+
+# VS 缓存
+.vs/
+*.suo
+*.user
+*.cache
+
+# 系统文件
+.DS_Store
+Thumbs.db
+**/node_modules/
+
+# 数据库、配置秘钥
+*.mdf
+*.ldf
+appsettings*.json
+*.env

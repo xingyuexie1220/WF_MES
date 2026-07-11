@@ -1,0 +1,110 @@
+﻿<Window x:Class="WF.MES.WPF.Modules.Barcode.Views.BarcodeGenerateResultWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding WindowTitle}"
+        Width="860"
+        Height="620"
+        MinWidth="720"
+        MinHeight="480"
+        ResizeMode="CanResize"
+        WindowStartupLocation="CenterOwner"
+        Background="White">
+    <Grid Margin="{StaticResource PageRootMargin}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Style="{StaticResource PageTitleStyle}"
+                   Text="{Binding PageTitle}" />
+
+        <Border Grid.Row="1"
+                Margin="{StaticResource ContentSectionMargin}"
+                Style="{StaticResource InfoPanelBorderStyle}">
+            <StackPanel>
+                <TextBlock Text="{Binding GenerateNoLine}" />
+                <TextBlock Style="{StaticResource InfoPanelLineStyle}"
+                           Text="{Binding CustomerLine}" />
+                <TextBlock Style="{StaticResource InfoPanelLineStyle}"
+                           Text="{Binding MaterialNoLine}" />
+                <TextBlock Style="{StaticResource InfoPanelLineStyle}"
+                           Text="{Binding PrintDateLine}" />
+                <TextBlock Style="{StaticResource InfoPanelLineStyle}"
+                           Text="{Binding QuantityLine}" />
+                <TextBlock Style="{StaticResource InfoPanelLineStyle}"
+                           Text="{Binding SerialRangeLine}" />
+                <TextBlock Style="{StaticResource InfoPanelLineStyle}"
+                           Text="{Binding ResetKeyLine}"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <DataGrid Grid.Row="2"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  ItemsSource="{Binding Records}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="{Binding Ui.SerialValue}"
+                                    Binding="{Binding SerialValue}"
+                                    Width="80" />
+                <DataGridTextColumn Header="{Binding Ui.FullBarcode}"
+                                    Binding="{Binding Barcode}"
+                                    Width="*" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid Grid.Row="3"
+              Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock VerticalAlignment="Center"
+                       Text="{Binding PrinterLabel}" />
+            <ComboBox Grid.Column="1"
+                      Margin="8,0,0,0"
+                      IsEnabled="{Binding ShowPrintingOverlay, Converter={StaticResource Boolean2BooleanReConverter}}"
+                      ItemsSource="{Binding Printers}"
+                      SelectedItem="{Binding SelectedPrinter}" />
+            <TextBlock Grid.Column="2"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       Style="{StaticResource PageHintTextStyle}"
+                       Text="{Binding PrintStatus}"
+                       TextWrapping="Wrap" />
+            <Button Grid.Column="3"
+                    Margin="0,0,8,0"
+                    Command="{Binding OpenTemplateFolderCommand}"
+                    Content="{Binding LabelFolderText}"
+                    Style="{StaticResource ButtonDefault}" />
+            <Button Grid.Column="4"
+                    Margin="0,0,8,0"
+                    Command="{Binding PrintCommand}"
+                    Content="{Binding PrintButtonText}"
+                    Style="{StaticResource ButtonPrimary}" />
+            <Button Grid.Column="5"
+                    Command="{Binding CloseCommand}"
+                    Content="{Binding Ui.Close}"
+                    Style="{StaticResource ButtonDefault}" />
+        </Grid>
+
+        <Border Grid.RowSpan="4"
+                Style="{StaticResource LoadingOverlayBorderStyle}"
+                Visibility="{Binding ShowPrintingOverlay, Converter={StaticResource Boolean2VisibilityConverter}}">
+            <StackPanel Style="{StaticResource LoadingOverlayPanelStyle}">
+                <ProgressBar Width="200"
+                             Height="4"
+                             IsIndeterminate="True" />
+                <TextBlock Style="{StaticResource LoadingOverlayMessageStyle}"
+                           Text="{Binding PrintStatus}" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

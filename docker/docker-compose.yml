@@ -1,0 +1,37 @@
+services:
+  wf-mes-sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: wf-mes-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "WfMes@123456"
+    ports:
+      - "1433:1433"
+    volumes:
+      - wf_mes_sqlserver_data:/var/opt/mssql
+    networks:
+      - wf-mes-net
+
+  wf-mes-redis:
+    image: redis:7-alpine
+    container_name: wf-mes-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - wf-mes-net
+
+  wf-mes-rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: wf-mes-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - wf-mes-net
+
+volumes:
+  wf_mes_sqlserver_data:
+
+networks:
+  wf-mes-net:
+    driver: bridge

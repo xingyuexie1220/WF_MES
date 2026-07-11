@@ -1,0 +1,7 @@
+{
+  "Api": {
+    "BaseUrl": "https://api-mes-a.example.com/api/v1",
+    "FactoryCode": "FAB-A",
+    "FactoryName": "示例工厂 A"
+  }
+}

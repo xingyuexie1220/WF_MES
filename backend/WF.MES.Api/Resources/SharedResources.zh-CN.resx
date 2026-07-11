@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="auth.invalid_credentials" xml:space="preserve"><value>用户名或密码错误</value></data>
+  <data name="auth.session_replaced_by_other_device" xml:space="preserve"><value>账号已在其他设备登录</value></data>
+  <data name="auth.user_disabled" xml:space="preserve"><value>账号已禁用</value></data>
+  <data name="common.brand" xml:space="preserve"><value>WF MES</value></data>
+  <data name="common.cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="common.query" xml:space="preserve"><value>查询</value></data>
+  <data name="common.reset" xml:space="preserve"><value>重置</value></data>
+  <data name="common.save" xml:space="preserve"><value>保存</value></data>
+  <data name="common.success" xml:space="preserve"><value>操作成功</value></data>
+  <data name="layout.developing" xml:space="preserve"><value>功能开发中</value></data>
+  <data name="login.password" xml:space="preserve"><value>请输入密码</value></data>
+  <data name="login.submit" xml:space="preserve"><value>登录</value></data>
+  <data name="login.success" xml:space="preserve"><value>登录成功</value></data>
+  <data name="login.username" xml:space="preserve"><value>请输入用户名</value></data>
+  <data name="login.welcome" xml:space="preserve"><value>欢迎登录</value></data>
+  <data name="menu.bigscreen" xml:space="preserve"><value>数据大屏</value></data>
+  <data name="menu.desktop.assembly" xml:space="preserve"><value>组装作业</value></data>
+  <data name="menu.desktop.barcode" xml:space="preserve"><value>条码管理</value></data>
+  <data name="menu.desktop.customer" xml:space="preserve"><value>客户管理</value></data>
+  <data name="menu.desktop.detail" xml:space="preserve"><value>条码明细</value></data>
+  <data name="menu.desktop.equipment" xml:space="preserve"><value>设备测试</value></data>
+  <data name="menu.desktop.equipmentTest" xml:space="preserve"><value>测试对接</value></data>
+  <data name="menu.desktop.materialMaintain" xml:space="preserve"><value>物料维护</value></data>
+  <data name="menu.desktop.materialRule" xml:space="preserve"><value>物料规则</value></data>
+  <data name="menu.desktop.materialScan" xml:space="preserve"><value>物料扫码</value></data>
+  <data name="menu.desktop.mes" xml:space="preserve"><value>生产执行</value></data>
+  <data name="menu.desktop.print" xml:space="preserve"><value>条码打印</value></data>
+  <data name="menu.desktop.reprint" xml:space="preserve"><value>条码补印</value></data>
+  <data name="menu.desktop.rework" xml:space="preserve"><value>箱体返工</value></data>
+  <data name="menu.desktop.root" xml:space="preserve"><value>桌面端</value></data>
+  <data name="menu.desktop.workorder" xml:space="preserve"><value>工单扫码</value></data>
+  <data name="menu.factory" xml:space="preserve"><value>工厂管理</value></data>
+  <data name="menu.masterData" xml:space="preserve"><value>生产配置</value></data>
+  <data name="menu.masterMaterial" xml:space="preserve"><value>物料管理</value></data>
+  <data name="menu.masterRoute" xml:space="preserve"><value>工艺路线</value></data>
+  <data name="menu.masterStation" xml:space="preserve"><value>工站配置</value></data>
+  <data name="menu.masterWorkCenter" xml:space="preserve"><value>工作中心</value></data>
+  <data name="menu.mobile.home" xml:space="preserve"><value>工作台</value></data>
+  <data name="menu.mobile.inventory" xml:space="preserve"><value>库存查询</value></data>
+  <data name="menu.mobile.root" xml:space="preserve"><value>手机端 MES</value></data>
+  <data name="menu.mobile.simplePass" xml:space="preserve"><value>简单过站</value></data>
+  <data name="menu.mobile.warehouseScan" xml:space="preserve"><value>扫码入库</value></data>
+  <data name="menu.report" xml:space="preserve"><value>生产报表</value></data>
+  <data name="menu.reportOutput" xml:space="preserve"><value>产量报表</value></data>
+  <data name="menu.reportWip" xml:space="preserve"><value>WIP 报表</value></data>
+  <data name="menu.system" xml:space="preserve"><value>系统设置</value></data>
+</root>

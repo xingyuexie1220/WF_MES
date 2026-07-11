@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WF MES 客户端下载</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(160deg, #eef3fb 0%, #f8fafc 45%, #e8f0fe 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #1f2937;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+      padding: 36px 32px 28px;
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .version {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 24px;
+    }
+
+    .download-btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: #2563eb;
+      color: #fff;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 14px 20px;
+      border-radius: 10px;
+      transition: background 0.2s;
+    }
+
+    .download-btn:hover { background: #1d4ed8; }
+
+    .steps {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .steps h2 {
+      font-size: 14px;
+      color: #374151;
+      margin-bottom: 12px;
+    }
+
+    .steps ol {
+      padding-left: 20px;
+      color: #6b7280;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="logo">WF</div>
+    <h1>WF MES 客户端</h1>
+    <p class="subtitle">制造执行系统桌面客户端，点击下方按钮下载安装包。</p>
+    <div class="version" id="version">版本加载中...</div>
+    <a class="download-btn" id="downloadBtn" href="WF.MES.WPF.zip">下载安装包</a>
+
+    <section class="steps">
+      <h2>首次安装说明</h2>
+      <ol>
+        <li>下载 <strong>WF.MES.WPF.zip</strong> 并解压到固定目录（如 <code>C:\WF.MES\</code>）</li>
+        <li>编辑 <strong>appsettings.json</strong>，配置数据库连接</li>
+        <li>运行 <strong>WF.MES.WPF.exe</strong></li>
+        <li>需安装 .NET 8 Desktop Runtime（x86）</li>
+      </ol>
+    </section>
+
+    <p class="footer">安装后程序会在登录时自动检查并更新</p>
+  </main>
+
+  <script>
+    const versionEl = document.getElementById("version");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    fetch("version.json")
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (data) {
+        if (!data) {
+          versionEl.textContent = "版本信息不可用";
+          return;
+        }
+
+        versionEl.textContent = "当前发布版本 " + (data.version || "未知");
+
+        if (data.downloadUrl) {
+          var fileName = data.downloadUrl.split("/").pop();
+          if (fileName) {
+            downloadBtn.href = fileName;
+            downloadBtn.textContent = "下载安装包（" + fileName + "）";
+          }
+        }
+
+        if (data.releaseNotes) {
+          versionEl.textContent += " · " + data.releaseNotes;
+        }
+      })
+      .catch(function () {
+        versionEl.textContent = "版本信息不可用";
+      });
+  </script>
+</body>
+</html>

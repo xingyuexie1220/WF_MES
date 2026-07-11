@@ -1,0 +1,35 @@
+<hc:Window x:Class="WF.MES.WPF.Views.Login.FactorySelectWindow"
+           xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+           xmlns:hc="https://handyorg.github.io/handycontrol"
+           Title="选择工厂"
+           Width="460"
+           Height="380"
+           WindowStartupLocation="CenterScreen">
+    <StackPanel Margin="24">
+        <TextBlock x:Name="TitleText"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Text="请选择登录工厂" />
+        <TextBlock x:Name="HintText"
+                   Margin="0,8,0,16"
+                   Foreground="#666"
+                   TextWrapping="Wrap"
+                   Text="您的账号可访问多个工厂，请选择本次登录的工厂。" />
+        <ListBox x:Name="FactoryList"
+                 DisplayMemberPath="FactoryName"
+                 Height="180" />
+        <StackPanel Margin="0,16,0,0"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+            <Button x:Name="CancelButton"
+                    Margin="0,0,8,0"
+                    Click="Cancel_Click"
+                    Content="取消" />
+            <Button x:Name="ConfirmButton"
+                    Click="Confirm_Click"
+                    Content="确认"
+                    Style="{StaticResource ButtonPrimary}" />
+        </StackPanel>
+    </StackPanel>
+</hc:Window>
