@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using SqlSugar;
+using WF.MES.Core.Exceptions;
 
 namespace WF.MES.Infrastructure.Data;
 
@@ -10,7 +11,7 @@ public static class SqlSugarSetup
     public static ISqlSugarClient CreateClient(IConfiguration configuration)
     {
         var connectionString = EnsureMultipleActiveResultSets(configuration.GetConnectionString("WfMesDb")
-            ?? throw new InvalidOperationException("未配置数据库连接字符串 ConnectionStrings:WfMesDb"));
+            ?? throw new BusinessException("err.dbConnectionNotConfigured"));
 
         var db = new SqlSugarScope(new ConnectionConfig
         {

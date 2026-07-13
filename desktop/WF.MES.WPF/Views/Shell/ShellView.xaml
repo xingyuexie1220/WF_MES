@@ -5,6 +5,7 @@
            xmlns:hc="https://handyorg.github.io/handycontrol"
            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
            xmlns:prism="http://prismlibrary.com/"
+           xmlns:infra="clr-namespace:WF.MES.WPF.Infrastructure"
            Title="WF MES"
            Icon="pack://application:,,,/Assets/app.ico"
            Width="1280"
@@ -145,7 +146,7 @@
                     <TextBlock FontSize="18"
                                FontWeight="SemiBold"
                                Foreground="White"
-                               Text="{Binding HeaderTitle}" />
+                               infra:Loc.Key="ui.headerTitle" />
                     <StackPanel Margin="0,4,0,0"
                                 Orientation="Horizontal">
                         <TextBlock FontSize="13"
@@ -178,15 +179,21 @@
                                VerticalAlignment="Center"
                                FontSize="12"
                                Foreground="{StaticResource AppHeaderSubtitleBrush}"
-                               Text="{Binding LocaleLabel}" />
+                               infra:Loc.Key="ui.locale.label" />
                     <ComboBox Width="120"
                               Height="32"
                               Margin="0,0,12,0"
                               VerticalAlignment="Center"
-                              DisplayMemberPath="Label"
+                              Foreground="{StaticResource AppHeaderSubtitleBrush}"
                               ItemsSource="{Binding LocaleOptions}"
-                              SelectedValue="{Binding SelectedLocale, Mode=TwoWay}"
-                              SelectedValuePath="Value" />
+                              SelectedItem="{Binding SelectedLocaleOption, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Foreground="{StaticResource AppTextPrimaryBrush}"
+                                           Text="{Binding Label}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                     <Button Command="{Binding SwitchFactoryCommand}"
                             Margin="0,0,10,0"
                             Style="{StaticResource ShellHeaderSopButtonStyle}"
@@ -195,21 +202,21 @@
                             <TextBlock Margin="0,0,6,0"
                                        FontSize="15"
                                        Text="🏭" />
-                            <TextBlock Text="{Binding SwitchFactoryText}" />
+                            <TextBlock infra:Loc.Key="ui.factory.switch" />
                         </StackPanel>
                     </Button>
                     <Button Command="{Binding OpenSopCommand}"
                             Style="{StaticResource ShellHeaderSopButtonStyle}"
-                            ToolTip="{Binding OpenSopText}">
+                            ToolTip="{Binding [ui.openSop], Source={x:Static infra:Loc.LocSource}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Margin="0,0,6,0"
                                        FontSize="15"
                                        Text="📖" />
-                            <TextBlock Text="{Binding OpenSopText}" />
+                            <TextBlock infra:Loc.Key="ui.openSop" />
                         </StackPanel>
                     </Button>
                     <Button Command="{Binding LogoutCommand}"
-                            Content="{Binding LogoutText}"
+                            infra:Loc.Key="ui.logout"
                             Style="{StaticResource ShellHeaderExitButtonStyle}" />
                 </StackPanel>
             </Grid>

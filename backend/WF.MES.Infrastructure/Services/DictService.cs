@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using SqlSugar;
 using WF.MES.Application.Common;
 using WF.MES.Application.Dicts;
@@ -16,7 +16,7 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
     public async Task<PagedResult<DictTypeDto>> GetTypePagedListAsync(DictTypeQueryRequest request, CancellationToken cancellationToken = default)
     {
         RefAsync<int> total = 0;
-        var items = await db.Queryable<SysDictType>()
+        var items = await db.Queryable<SystemDictType>()
             .Where(t => !t.IsDeleted)
             .WhereIF(!string.IsNullOrWhiteSpace(request.DictName), t => t.DictName.Contains(request.DictName!))
             .WhereIF(!string.IsNullOrWhiteSpace(request.DictType), t => t.DictType.Contains(request.DictType!))
@@ -49,7 +49,7 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
 
     public async Task<List<DictTypeDto>> GetAllTypesAsync(CancellationToken cancellationToken = default)
     {
-        var items = await db.Queryable<SysDictType>()
+        var items = await db.Queryable<SystemDictType>()
             .Where(t => !t.IsDeleted && t.Status == 1)
             .OrderBy(t => t.DictType)
             .Select(t => new DictTypeDto
@@ -72,7 +72,7 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
 
     public async Task<DictTypeDto?> GetTypeByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        var item = await db.Queryable<SysDictType>()
+        var item = await db.Queryable<SystemDictType>()
             .Where(t => t.Id == id && !t.IsDeleted)
             .Select(t => new DictTypeDto
             {
@@ -100,12 +100,12 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
     public async Task<long> CreateTypeAsync(CreateDictTypeRequest request, long operatorId, CancellationToken cancellationToken = default)
     {
         var dictType = request.DictType.Trim();
-        if (await db.Queryable<SysDictType>().AnyAsync(t => t.DictType == dictType && !t.IsDeleted))
+        if (await db.Queryable<SystemDictType>().AnyAsync(t => t.DictType == dictType && !t.IsDeleted))
         {
             throw new BusinessException("字典类型编码已存在");
         }
 
-        var entity = new SysDictType
+        var entity = new SystemDictType
         {
             DictName = request.DictName.Trim(),
             DictType = dictType,
@@ -122,7 +122,7 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
 
     public async Task UpdateTypeAsync(long id, UpdateDictTypeRequest request, long operatorId, CancellationToken cancellationToken = default)
     {
-        var entity = await db.Queryable<SysDictType>().FirstAsync(t => t.Id == id && !t.IsDeleted)
+        var entity = await db.Queryable<SystemDictType>().FirstAsync(t => t.Id == id && !t.IsDeleted)
             ?? throw new BusinessException("字典类型不存在");
 
         var oldDictType = entity.DictType;
@@ -138,10 +138,10 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
 
     public async Task DeleteTypeAsync(long id, long operatorId, CancellationToken cancellationToken = default)
     {
-        var entity = await db.Queryable<SysDictType>().FirstAsync(t => t.Id == id && !t.IsDeleted)
+        var entity = await db.Queryable<SystemDictType>().FirstAsync(t => t.Id == id && !t.IsDeleted)
             ?? throw new BusinessException("字典类型不存在");
 
-        if (await db.Queryable<SysDictData>().AnyAsync(d => d.DictTypeId == id && !d.IsDeleted))
+        if (await db.Queryable<SystemDictData>().AnyAsync(d => d.DictTypeId == id && !d.IsDeleted))
         {
             throw new BusinessException("请先删除该类型下的字典数据");
         }
@@ -156,7 +156,7 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
     public async Task<PagedResult<DictDataDto>> GetDataPagedListAsync(DictDataQueryRequest request, CancellationToken cancellationToken = default)
     {
         RefAsync<int> total = 0;
-        var items = await db.Queryable<SysDictData>()
+        var items = await db.Queryable<SystemDictData>()
             .Where(d => !d.IsDeleted)
             .WhereIF(request.DictTypeId.HasValue, d => d.DictTypeId == request.DictTypeId)
             .WhereIF(!string.IsNullOrWhiteSpace(request.DictType), d => d.DictType == request.DictType)
@@ -200,7 +200,7 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
             return cached;
         }
 
-        var items = await db.Queryable<SysDictData>()
+        var items = await db.Queryable<SystemDictData>()
             .Where(d => !d.IsDeleted && d.DictType == dictType && d.Status == 1)
             .OrderBy(d => d.Sort)
             .Select(d => new DictDataDto
@@ -228,7 +228,7 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
 
     public async Task<DictDataDto?> GetDataByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        var item = await db.Queryable<SysDictData>()
+        var item = await db.Queryable<SystemDictData>()
             .Where(d => d.Id == id && !d.IsDeleted)
             .Select(d => new DictDataDto
             {
@@ -258,10 +258,10 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
 
     public async Task<long> CreateDataAsync(CreateDictDataRequest request, long operatorId, CancellationToken cancellationToken = default)
     {
-        var type = await db.Queryable<SysDictType>().FirstAsync(t => t.Id == request.DictTypeId && !t.IsDeleted)
+        var type = await db.Queryable<SystemDictType>().FirstAsync(t => t.Id == request.DictTypeId && !t.IsDeleted)
             ?? throw new BusinessException("字典类型不存在");
 
-        var entity = new SysDictData
+        var entity = new SystemDictData
         {
             DictTypeId = type.Id,
             DictType = type.DictType,
@@ -281,7 +281,7 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
 
     public async Task UpdateDataAsync(long id, UpdateDictDataRequest request, long operatorId, CancellationToken cancellationToken = default)
     {
-        var entity = await db.Queryable<SysDictData>().FirstAsync(d => d.Id == id && !d.IsDeleted)
+        var entity = await db.Queryable<SystemDictData>().FirstAsync(d => d.Id == id && !d.IsDeleted)
             ?? throw new BusinessException("字典数据不存在");
 
         entity.DictLabel = request.DictLabel.Trim();
@@ -298,7 +298,7 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
 
     public async Task DeleteDataAsync(long id, long operatorId, CancellationToken cancellationToken = default)
     {
-        var entity = await db.Queryable<SysDictData>().FirstAsync(d => d.Id == id && !d.IsDeleted)
+        var entity = await db.Queryable<SystemDictData>().FirstAsync(d => d.Id == id && !d.IsDeleted)
             ?? throw new BusinessException("字典数据不存在");
 
         entity.IsDeleted = true;
@@ -322,7 +322,7 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
             return;
         }
 
-        var users = await db.Queryable<SysUser>()
+        var users = await db.Queryable<SystemUser>()
             .Where(u => userIds.Contains(u.Id))
             .Select(u => new { u.Id, u.NickName, u.UserName })
             .ToListAsync();
@@ -359,7 +359,7 @@ public class DictService(ISqlSugarClient db, Application.Common.ICacheService ca
             return;
         }
 
-        var users = await db.Queryable<SysUser>()
+        var users = await db.Queryable<SystemUser>()
             .Where(u => userIds.Contains(u.Id))
             .Select(u => new { u.Id, u.NickName, u.UserName })
             .ToListAsync();

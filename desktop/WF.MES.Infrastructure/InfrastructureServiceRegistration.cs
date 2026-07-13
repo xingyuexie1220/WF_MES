@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.Configuration;
-using Prism.Ioc;
 using SqlSugar;
 using WF.MES.Core;
 using WF.MES.Core.Interfaces;
@@ -33,11 +32,6 @@ public static class InfrastructureServiceRegistration
                 container.Resolve<IConfiguration>(),
                 container.Resolve<IApiTokenStore>(),
                 container.Resolve<ILocalizationService>()));
-        containerRegistry.RegisterSingleton<IBarcodeApi>(container =>
-            ApiClientRegistration.CreateBarcodeApi(
-                container.Resolve<IConfiguration>(),
-                container.Resolve<IApiTokenStore>(),
-                container.Resolve<ILocalizationService>()));
 
         containerRegistry.RegisterSingleton<ISqlSugarClient>(_ => SqlSugarSetup.CreateClient(configuration));
         containerRegistry.RegisterSingleton<IDatabaseHealthService, DatabaseHealthService>();
@@ -47,7 +41,7 @@ public static class InfrastructureServiceRegistration
         containerRegistry.RegisterSingleton<IMenuPermissionService, ApiMenuPermissionService>();
         containerRegistry.RegisterSingleton<IMenuActionAuthorization, MenuActionAuthorization>();
         containerRegistry.RegisterSingleton<IUpdateService, UpdateService>();
-        containerRegistry.RegisterSingleton<ICustomerService, ApiCustomerService>();
+        containerRegistry.RegisterSingleton<ICustomerService, CustomerService>();
         containerRegistry.RegisterSingleton<IMaterialBarcodeRuleService, MaterialBarcodeRuleService>();
         containerRegistry.RegisterSingleton<ISerialNumberFormatter, SerialNumberFormatter>();
         containerRegistry.RegisterSingleton<IBarcodeBuilder, BarcodeBuilder>();

@@ -1,6 +1,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using Serilog;
+using WF.MES.Core.Exceptions;
 
 namespace WF.MES.Infrastructure.Services.Printing;
 
@@ -22,9 +23,9 @@ internal sealed class BarTenderComPrintEngine : IDisposable
     public static BarTenderComPrintEngine Create()
     {
         var type = Type.GetTypeFromProgID(ApplicationProgId)
-            ?? throw new InvalidOperationException($"未找到 BarTender COM 组件（{ApplicationProgId}）。请确认本机已安装 BarTender Automation/Enterprise。");
+            ?? throw new BusinessException("err.bartenderComNotFound", ApplicationProgId);
 
-        dynamic application = Activator.CreateInstance(type) ?? throw new InvalidOperationException("无法启动 BarTender.Application");
+        dynamic application = Activator.CreateInstance(type) ?? throw new BusinessException("err.bartenderStartFailed");
 
         application.Visible = false;
         Log.Information("BarTender COM 打印引擎已启动");
@@ -141,20 +142,19 @@ internal sealed class BarTenderComPrintEngine : IDisposable
             databases = _format!.Databases;
             if (Convert.ToInt32(databases.Count) < 1)
             {
-                throw new InvalidOperationException(
-                    "标签模板未配置数据库连接。请在 BarTender 中为模板添加「文本文件」数据库。");
+                throw new BusinessException("err.bartenderNoDatabase");
             }
 
             database = databases.GetDatabase(1);
             fields = database.Fields;
             if (Convert.ToInt32(fields.Count) < 1)
             {
-                throw new InvalidOperationException("标签模板的数据库连接未定义任何字段。");
+                throw new BusinessException("err.bartenderNoDatabaseFields");
             }
 
             return ReadFieldName(fields, 1);
         }
-        catch (InvalidOperationException)
+        catch (BusinessException)
         {
             throw;
         }
@@ -196,7 +196,7 @@ internal sealed class BarTenderComPrintEngine : IDisposable
                 }
             }
 
-            throw new InvalidOperationException("无法读取 BarTender 数据库字段名称。");
+            throw new BusinessException("err.bartenderFieldNameUnreadable");
         }
         finally
         {
@@ -216,9 +216,7 @@ internal sealed class BarTenderComPrintEngine : IDisposable
             databases = _format.Databases;
             if (Convert.ToInt32(databases.Count) < 1)
             {
-                throw new InvalidOperationException(
-                    "标签模板未配置数据库连接。请在 BarTender 中为模板添加「文本文件」数据库，" +
-                    "并将条码对象绑定到该数据库的第一个字段，同时设置页面布局行列数。");
+                throw new BusinessException("err.bartenderDatabaseSetup");
             }
 
             database = databases.GetDatabase(1);
@@ -259,7 +257,7 @@ internal sealed class BarTenderComPrintEngine : IDisposable
     {
         if (_format == null)
         {
-            throw new InvalidOperationException("BarTender 模板尚未打开");
+            throw new BusinessException("err.bartenderFormatNotOpen");
         }
     }
 

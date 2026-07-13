@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Refit;
 using Serilog;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Interfaces;
 using WF.MES.Infrastructure.Api;
 using WF.MES.Models.Dtos;
@@ -16,8 +17,6 @@ public sealed class ApiAuthService(
     ILocalizationService localization,
     IConfiguration configuration) : IAuthService
 {
-    private static readonly TimeSpan RefreshBeforeExpiry = TimeSpan.FromMinutes(2);
-    private readonly SemaphoreSlim _refreshLock = new(1, 1);
     private readonly string? _apiBaseUrl = configuration["Api:BaseUrl"];
 
     public async Task<LoginResultDto> LoginAsync(string userName, string password, CancellationToken cancellationToken = default)
@@ -39,9 +38,8 @@ public sealed class ApiAuthService(
                 return new LoginResultDto
                 {
                     Success = false,
-                    ErrorMessage = string.IsNullOrWhiteSpace(response.Message)
-                        ? localization.T("auth.invalid_credentials", "账号或密码错误")
-                        : response.Message
+                    ErrorMessage = ApiMessageResolver.Resolve(
+                        localization, response.MessageCode, response.Message, "auth.invalid_credentials")
                 };
             }
 
@@ -59,9 +57,7 @@ public sealed class ApiAuthService(
             return new LoginResultDto
             {
                 Success = true,
-                User = response.Data.UserInfo,
-                AccessToken = response.Data.AccessToken,
-                RefreshToken = response.Data.RefreshToken
+                User = response.Data.UserInfo
             };
         }
         catch (Exception ex)
@@ -69,7 +65,7 @@ public sealed class ApiAuthService(
             return new LoginResultDto
             {
                 Success = false,
-                ErrorMessage = ApiErrorHelper.ToUserMessage(ex, _apiBaseUrl)
+                ErrorMessage = ApiErrorHelper.ToUserMessage(ex, localization, _apiBaseUrl)
             };
         }
     }
@@ -94,9 +90,8 @@ public sealed class ApiAuthService(
                 return new LoginResultDto
                 {
                     Success = false,
-                    ErrorMessage = string.IsNullOrWhiteSpace(response.Message)
-                        ? localization.T("desktop.factory.selectFailed", "选厂失败")
-                        : response.Message
+                    ErrorMessage = ApiMessageResolver.Resolve(
+                        localization, response.MessageCode, response.Message, "ui.factory.selectFailed")
                 };
             }
 
@@ -104,9 +99,7 @@ public sealed class ApiAuthService(
             return new LoginResultDto
             {
                 Success = true,
-                User = response.Data.UserInfo,
-                AccessToken = response.Data.AccessToken,
-                RefreshToken = response.Data.RefreshToken
+                User = response.Data.UserInfo
             };
         }
         catch (Exception ex)
@@ -114,7 +107,7 @@ public sealed class ApiAuthService(
             return new LoginResultDto
             {
                 Success = false,
-                ErrorMessage = ApiErrorHelper.ToUserMessage(ex, _apiBaseUrl)
+                ErrorMessage = ApiErrorHelper.ToUserMessage(ex, localization, _apiBaseUrl)
             };
         }
     }
@@ -133,9 +126,8 @@ public sealed class ApiAuthService(
                 return new LoginResultDto
                 {
                     Success = false,
-                    ErrorMessage = string.IsNullOrWhiteSpace(response.Message)
-                        ? localization.T("desktop.factory.switchFailed", "切换工厂失败")
-                        : response.Message
+                    ErrorMessage = ApiMessageResolver.Resolve(
+                        localization, response.MessageCode, response.Message, "ui.factory.switchFailed")
                 };
             }
 
@@ -143,9 +135,7 @@ public sealed class ApiAuthService(
             return new LoginResultDto
             {
                 Success = true,
-                User = response.Data.UserInfo,
-                AccessToken = response.Data.AccessToken,
-                RefreshToken = response.Data.RefreshToken
+                User = response.Data.UserInfo
             };
         }
         catch (Exception ex)
@@ -153,7 +143,7 @@ public sealed class ApiAuthService(
             return new LoginResultDto
             {
                 Success = false,
-                ErrorMessage = ApiErrorHelper.ToUserMessage(ex, _apiBaseUrl)
+                ErrorMessage = ApiErrorHelper.ToUserMessage(ex, localization, _apiBaseUrl)
             };
         }
     }
@@ -165,26 +155,14 @@ public sealed class ApiAuthService(
             return false;
         }
 
-        if (ShouldRefreshProactively())
+        if (tokenStore.AccessTokenExpiresAt is { } expiresAt && expiresAt <= DateTimeOffset.UtcNow)
         {
-            await TryRefreshTokenAsync(cancellationToken);
-        }
-
-        if (await PingSessionAsync(cancellationToken))
-        {
-            return true;
-        }
-
-        if (!await TryRefreshTokenAsync(cancellationToken))
-        {
+            Log.Information("Access Token 已过期，需重新登录");
             return false;
         }
 
         return await PingSessionAsync(cancellationToken);
     }
-
-    public Task<bool> TryRefreshTokenAsync(CancellationToken cancellationToken = default)
-        => RefreshTokensInternalAsync(cancellationToken);
 
     public async Task LogoutAsync(CancellationToken cancellationToken = default)
     {
@@ -213,21 +191,10 @@ public sealed class ApiAuthService(
             NewPassword = newPassword
         }, cancellationToken);
 
-        var user = ApiResponseHelper.EnsureData(response, "修改密码失败");
+        var user = ApiResponseHelper.EnsureData(response, "err.changePasswordFailed");
         sessionService.SetUser(user);
         sessionService.SetActionPermissions(user.Permissions.ToHashSet(StringComparer.OrdinalIgnoreCase));
         return user;
-    }
-
-    private bool ShouldRefreshProactively()
-    {
-        if (string.IsNullOrWhiteSpace(tokenStore.RefreshToken))
-        {
-            return false;
-        }
-
-        var expiresAt = tokenStore.AccessTokenExpiresAt;
-        return expiresAt is null || expiresAt <= DateTimeOffset.UtcNow.Add(RefreshBeforeExpiry);
     }
 
     private async Task<bool> PingSessionAsync(CancellationToken cancellationToken)
@@ -237,6 +204,11 @@ public sealed class ApiAuthService(
             var response = await authApi.GetInfoAsync(cancellationToken);
             if (response.Code != 200 || response.Data is null)
             {
+                if (ApiResponseHelper.IsSessionReplaced(response))
+                {
+                    Log.Information("会话已在其他设备登录");
+                }
+
                 return false;
             }
 
@@ -244,57 +216,25 @@ public sealed class ApiAuthService(
             sessionService.SetActionPermissions(response.Data.Permissions.ToHashSet(StringComparer.OrdinalIgnoreCase));
             return true;
         }
+        catch (ApiException apiEx)
+        {
+            if (ApiErrorHelper.TryParseApiResult(apiEx, out var messageCode, out _)
+                && string.Equals(messageCode, ApiResponseHelper.SessionReplacedCode, StringComparison.OrdinalIgnoreCase))
+            {
+                Log.Information("会话已在其他设备登录");
+            }
+
+            return false;
+        }
         catch
         {
             return false;
         }
     }
 
-    private async Task<bool> RefreshTokensInternalAsync(CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(tokenStore.RefreshToken))
-        {
-            return false;
-        }
-
-        await _refreshLock.WaitAsync(cancellationToken);
-        try
-        {
-            if (string.IsNullOrWhiteSpace(tokenStore.RefreshToken))
-            {
-                return false;
-            }
-
-            var response = await authApi.RefreshAsync(new RefreshTokenRequestDto
-            {
-                RefreshToken = tokenStore.RefreshToken
-            }, cancellationToken);
-
-            if (response.Code != 200 || response.Data is null)
-            {
-                Log.Warning("Refresh Token 失效：{Message}", response.Message);
-                tokenStore.Clear();
-                return false;
-            }
-
-            ApplyLoginResponse(response.Data);
-            Log.Information("Access Token 已刷新");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "刷新 Access Token 失败");
-            return false;
-        }
-        finally
-        {
-            _refreshLock.Release();
-        }
-    }
-
     private void ApplyLoginResponse(LoginResponseDto data)
     {
-        tokenStore.SetTokens(data.AccessToken, data.RefreshToken, data.ExpiresIn, data.UserInfo.FactoryId);
+        tokenStore.SetAccessToken(data.AccessToken, data.ExpiresIn, data.UserInfo.FactoryId);
         sessionService.SetUser(data.UserInfo);
         sessionService.SetActionPermissions(data.UserInfo.Permissions.ToHashSet(StringComparer.OrdinalIgnoreCase));
     }
@@ -312,11 +252,11 @@ public static class ApiClientRegistration
     public static IAuthApi CreateAuthApi(IConfiguration configuration, IApiTokenStore tokenStore, ILocalizationService localization)
     {
         var baseUrl = configuration["Api:BaseUrl"]
-            ?? throw new InvalidOperationException("未配置 Api:BaseUrl");
+            ?? throw new BusinessException("err.apiBaseUrlNotConfigured");
 
         var handler = new AuthTokenHandler(tokenStore, localization)
         {
-            InnerHandler = new HttpClientHandler()
+            InnerHandler = ApiHttpClientFactory.CreateHandler()
         };
 
         var httpClient = new HttpClient(handler)
@@ -326,28 +266,6 @@ public static class ApiClientRegistration
         };
 
         return RestService.For<IAuthApi>(httpClient, new RefitSettings
-        {
-            ContentSerializer = new SystemTextJsonContentSerializer(JsonOptions)
-        });
-    }
-
-    public static IBarcodeApi CreateBarcodeApi(IConfiguration configuration, IApiTokenStore tokenStore, ILocalizationService localization)
-    {
-        var baseUrl = configuration["Api:BaseUrl"]
-            ?? throw new InvalidOperationException("未配置 Api:BaseUrl");
-
-        var handler = new AuthTokenHandler(tokenStore, localization)
-        {
-            InnerHandler = new HttpClientHandler()
-        };
-
-        var httpClient = new HttpClient(handler)
-        {
-            BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/"),
-            Timeout = TimeSpan.FromSeconds(configuration.GetValue("Api:TimeoutSeconds", 30))
-        };
-
-        return RestService.For<IBarcodeApi>(httpClient, new RefitSettings
         {
             ContentSerializer = new SystemTextJsonContentSerializer(JsonOptions)
         });

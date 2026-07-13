@@ -1,5 +1,7 @@
 using FluentValidation;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Interfaces;
+using WF.MES.Infrastructure.Localization;
 using WF.MES.Models.Dtos;
 using WF.MES.Models.Entities;
 
@@ -8,26 +10,26 @@ namespace WF.MES.Infrastructure.Validation.Barcode;
 /// <summary><see cref="MaterialRuleEditDto"/> 校验（含规则段与条码长度）。</summary>
 public sealed class MaterialRuleEditValidator : AbstractValidator<MaterialRuleEditDto>
 {
-    public MaterialRuleEditValidator(IBarcodeBuilder barcodeBuilder)
+    public MaterialRuleEditValidator(IBarcodeBuilder barcodeBuilder, ILocalizationService localization)
     {
         RuleFor(x => x.CustomerId)
             .GreaterThan(0)
-            .WithMessage("请选择客户");
+            .WithMessage(_ => localization.T("val.customerRequired"));
 
         RuleFor(x => x.MaterialNo)
-            .NotEmpty().WithMessage("料号不能为空")
-            .MaximumLength(50).WithMessage("料号不能超过 50 个字符");
+            .NotEmpty().WithMessage(_ => localization.T("val.materialNoRequired"))
+            .MaximumLength(50).WithMessage(_ => localization.T("val.materialNoTooLong"));
 
         RuleFor(x => x.BarcodeLength)
             .GreaterThan(0)
-            .WithMessage("请填写条码长度");
+            .WithMessage(_ => localization.T("val.barcodeLengthRequired"));
 
         RuleFor(x => x.Segments)
             .NotEmpty()
-            .WithMessage("请至少添加一个组成段");
+            .WithMessage(_ => localization.T("val.segmentRequired"));
 
         RuleForEach(x => x.Segments)
-            .SetValidator(new RuleSegmentEditValidator());
+            .SetValidator(new RuleSegmentEditValidator(localization));
 
         RuleFor(x => x)
             .Custom((dto, context) =>
@@ -51,17 +53,19 @@ public sealed class MaterialRuleEditValidator : AbstractValidator<MaterialRuleEd
                 {
                     barcodeBuilder.ValidateSegments(entities);
                 }
-                catch (InvalidOperationException ex)
+                catch (BusinessException ex)
                 {
-                    context.AddFailure(ex.Message);
+                    context.AddFailure(BusinessMessageResolver.Resolve(localization, ex));
                     return;
                 }
 
                 var calculatedLength = barcodeBuilder.CalculateBarcodeLength(entities);
                 if (dto.BarcodeLength != calculatedLength)
                 {
-                    context.AddFailure(
-                        $"条码长度({dto.BarcodeLength})与生成总长度({calculatedLength})不一致，请检查组成段或条码长度");
+                    context.AddFailure(string.Format(
+                        localization.T("val.barcodeLengthMismatch"),
+                        dto.BarcodeLength,
+                        calculatedLength));
                 }
             });
     }

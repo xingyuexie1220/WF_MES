@@ -1,4 +1,4 @@
-using SqlSugar;
+﻿using SqlSugar;
 using WF.MES.Application.Common;
 using WF.MES.Application.Depts;
 using WF.MES.Application.Depts.Dtos;
@@ -18,7 +18,7 @@ public class DeptService(ISqlSugarClient db, IFactoryContext factoryContext) : I
         }
 
         var factoryId = factoryContext.CurrentFactoryId.Value;
-        var depts = await db.Queryable<SysDept>()
+        var depts = await db.Queryable<SystemDept>()
             .Where(d => !d.IsDeleted && d.FactoryId == factoryId)
             .OrderBy(d => d.Sort)
             .Select(d => new DeptDto
@@ -40,7 +40,7 @@ public class DeptService(ISqlSugarClient db, IFactoryContext factoryContext) : I
 
     public async Task<DeptDto?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        var dept = await db.Queryable<SysDept>()
+        var dept = await db.Queryable<SystemDept>()
             .Where(d => d.Id == id && !d.IsDeleted)
             .Select(d => new DeptDto
             {
@@ -72,7 +72,7 @@ public class DeptService(ISqlSugarClient db, IFactoryContext factoryContext) : I
             return null;
         }
 
-        var users = await db.Queryable<SysUser>()
+        var users = await db.Queryable<SystemUser>()
             .Where(u => u.Id == userId.Value && !u.IsDeleted)
             .Select(u => new { u.NickName, u.UserName })
             .Take(1)
@@ -96,7 +96,7 @@ public class DeptService(ISqlSugarClient db, IFactoryContext factoryContext) : I
 
         var factoryId = factoryContext.CurrentFactoryId.Value;
 
-        if (await db.Queryable<SysDept>().AnyAsync(d => d.FactoryId == factoryId && d.DeptCode == request.DeptCode && !d.IsDeleted, cancellationToken))
+        if (await db.Queryable<SystemDept>().AnyAsync(d => d.FactoryId == factoryId && d.DeptCode == request.DeptCode && !d.IsDeleted, cancellationToken))
         {
             throw new BusinessException("部门编码已存在");
         }
@@ -104,7 +104,7 @@ public class DeptService(ISqlSugarClient db, IFactoryContext factoryContext) : I
         var parentType = await GetParentDeptTypeAsync(request.ParentId, factoryId, cancellationToken);
         ValidateOrgStructure(request.ParentId, request.DeptType, parentType);
 
-        var dept = new SysDept
+        var dept = new SystemDept
         {
             FactoryId = factoryId,
             ParentId = request.ParentId,
@@ -134,10 +134,10 @@ public class DeptService(ISqlSugarClient db, IFactoryContext factoryContext) : I
         }
 
         var factoryId = factoryContext.CurrentFactoryId.Value;
-        var dept = await db.Queryable<SysDept>().FirstAsync(d => d.Id == id && d.FactoryId == factoryId && !d.IsDeleted, cancellationToken)
+        var dept = await db.Queryable<SystemDept>().FirstAsync(d => d.Id == id && d.FactoryId == factoryId && !d.IsDeleted, cancellationToken)
             ?? throw new BusinessException("部门不存在", 404);
 
-        if (await db.Queryable<SysDept>().AnyAsync(d => d.FactoryId == factoryId && d.DeptCode == request.DeptCode && d.Id != id && !d.IsDeleted, cancellationToken))
+        if (await db.Queryable<SystemDept>().AnyAsync(d => d.FactoryId == factoryId && d.DeptCode == request.DeptCode && d.Id != id && !d.IsDeleted, cancellationToken))
         {
             throw new BusinessException("部门编码已存在");
         }
@@ -167,17 +167,17 @@ public class DeptService(ISqlSugarClient db, IFactoryContext factoryContext) : I
 
         var factoryId = factoryContext.CurrentFactoryId.Value;
 
-        if (await db.Queryable<SysDept>().AnyAsync(d => d.ParentId == id && !d.IsDeleted, cancellationToken))
+        if (await db.Queryable<SystemDept>().AnyAsync(d => d.ParentId == id && !d.IsDeleted, cancellationToken))
         {
             throw new BusinessException("存在下级部门，不能删除");
         }
 
-        if (await db.Queryable<SysUser>().AnyAsync(u => u.DeptId == id && !u.IsDeleted, cancellationToken))
+        if (await db.Queryable<SystemUser>().AnyAsync(u => u.DeptId == id && !u.IsDeleted, cancellationToken))
         {
             throw new BusinessException("部门下存在用户，不能删除");
         }
 
-        var dept = await db.Queryable<SysDept>().FirstAsync(d => d.Id == id && d.FactoryId == factoryId && !d.IsDeleted, cancellationToken)
+        var dept = await db.Queryable<SystemDept>().FirstAsync(d => d.Id == id && d.FactoryId == factoryId && !d.IsDeleted, cancellationToken)
             ?? throw new BusinessException("部门不存在", 404);
 
         dept.IsDeleted = true;
@@ -205,7 +205,7 @@ public class DeptService(ISqlSugarClient db, IFactoryContext factoryContext) : I
             return null;
         }
 
-        return await db.Queryable<SysDept>()
+        return await db.Queryable<SystemDept>()
             .Where(d => d.Id == parentId && d.FactoryId == factoryId && !d.IsDeleted)
             .Select(d => d.DeptType)
             .FirstAsync(cancellationToken);

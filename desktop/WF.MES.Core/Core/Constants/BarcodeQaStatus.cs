@@ -11,15 +11,6 @@ public static class BarcodeQaStatus
 
     public const int Rejected = 3;
 
-    public static string GetText(int status) => status switch
-    {
-        PendingUpload => "待上传资料",
-        PendingReview => "待 QA 审核",
-        Approved => "已确认",
-        Rejected => "已驳回",
-        _ => $"未知({status})"
-    };
-
     public static bool CanReview(int status) => status == PendingReview;
 
     public static bool CanUpload(int status) => status is PendingUpload or Rejected;

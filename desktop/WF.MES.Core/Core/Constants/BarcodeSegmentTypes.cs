@@ -11,20 +11,10 @@ public static class BarcodeSegmentTypes
 
     public const long SerialStartValue = 1;
 
-    public static IReadOnlyList<BarcodeSegmentTypeOption> TypeOptions { get; } =
-    [
-        new(Literal, GetDisplayName(Literal)),
-        new(Date, GetDisplayName(Date)),
-        new(Serial, GetDisplayName(Serial))
-    ];
+    public static readonly string[] AllTypes = [Literal, Date, Serial];
 
-    public static string GetDisplayName(string segmentType) => segmentType switch
-    {
-        Literal => "固定符号",
-        Date => "日期",
-        Serial => "流水号",
-        _ => segmentType
-    };
+    public static bool IsValid(string? segmentType) =>
+        !string.IsNullOrWhiteSpace(segmentType) && AllTypes.Contains(segmentType);
 }
 
 public sealed record BarcodeSegmentTypeOption(string Value, string Display);

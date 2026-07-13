@@ -1,0 +1,28 @@
+{
+  "_comment": "API messageCode 契約文案（權威參考）。新增 WfMessageCodes 時須同步到三端 UI 包。",
+  "common": {
+    "internal_error": "伺服器內部錯誤",
+    "not_found": "資源不存在",
+    "requestFailed": "請求失敗"
+  },
+  "auth": {
+    "invalid_credentials": "使用者名稱或密碼錯誤",
+    "user_disabled": "帳號已停用",
+    "user_not_found": "使用者不存在",
+    "refresh_invalid": "登入已過期，請重新登入",
+    "password_same_as_old": "新密碼不能與舊密碼相同",
+    "password_too_short": "密碼長度不足",
+    "factory_required": "請先選擇工廠",
+    "factory_forbidden": "無權存取該工廠"
+  },
+  "session": {
+    "replaced_by_other_device": "帳號已在其他裝置登入"
+  },
+  "factory": {
+    "not_found": "工廠不存在",
+    "code_exists": "工廠編碼已存在"
+  },
+  "validation": {
+    "failed": "請求參數無效"
+  }
+}

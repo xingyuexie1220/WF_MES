@@ -1,9 +1,9 @@
-using SqlSugar;
+﻿using SqlSugar;
 
 namespace WF.MES.Models.Entities;
 
 /// <summary>条码规则段（Barcode_RuleSegment）。</summary>
-[SugarTable("Bcd_RuleSegment")]
+[SugarTable("Barcode_RuleSegment")]
 public class BarcodeRuleSegment
 {
     [SugarColumn(IsPrimaryKey = true, IsIdentity = true, ColumnName = "Segment_Id")]

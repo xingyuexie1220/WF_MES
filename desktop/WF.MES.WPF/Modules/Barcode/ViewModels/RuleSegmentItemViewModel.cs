@@ -1,4 +1,4 @@
-﻿using WF.MES.Core.Constants;
+using WF.MES.Core.Constants;
 
 namespace WF.MES.WPF.Modules.Barcode.ViewModels;
 
@@ -66,7 +66,7 @@ public class RuleSegmentItemViewModel : BindableBase
         {
             if (SetProperty(ref _serialRadix, value))
             {
-                RaisePropertyChanged(nameof(SerialRadixDescription));
+                RefreshSerialRadixDescription();
             }
         }
     }
@@ -81,22 +81,30 @@ public class RuleSegmentItemViewModel : BindableBase
     public bool IsDate => SegmentType == BarcodeSegmentTypes.Date;
     public bool IsSerial => SegmentType == BarcodeSegmentTypes.Serial;
 
-    public string SerialRadixDescription =>
-        SerialRadixDefinitions.GetDescription(SerialRadix);
+    public string SerialRadixDescription
+    {
+        get => _serialRadixDescription;
+        private set => SetProperty(ref _serialRadixDescription, value);
+    }
 
-    public static IReadOnlyList<BarcodeSegmentTypeOption> SegmentTypeOptions =>
-        BarcodeSegmentTypes.TypeOptions;
+    public void RefreshLocalizedText(Func<string, string> translate)
+    {
+        _translate = translate;
+        RefreshSerialRadixDescription();
+    }
 
-    public static IReadOnlyList<DateFormatOption> DateFormatOptions { get; } =
-        DatePartFormats.AllOptionItems;
+    private void RefreshSerialRadixDescription()
+    {
+        if (_translate == null)
+        {
+            return;
+        }
 
-    public static IReadOnlyList<SerialRadixOption> SerialRadixOptions { get; } =
-        SerialRadixDefinitions.SupportedRadices
-            .Select(r => new SerialRadixOption(
-                r,
-                SerialRadixDefinitions.GetDisplayName(r),
-                SerialRadixDefinitions.GetDescription(r)))
-            .ToList();
+        SerialRadixDescription = _translate($"ui.barcode.serialRadixDesc.{SerialRadix}");
+    }
+
+    private Func<string, string>? _translate;
+    private string _serialRadixDescription = string.Empty;
 }
 
 public sealed record SerialRadixOption(int Value, string Display, string Description);

@@ -1,4 +1,5 @@
-﻿using System.Windows.Media;
+using System.Windows.Media;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
@@ -20,13 +21,11 @@ public class BarcodeQaReviewDialogViewModel : LocalizedViewModelBase
     public BarcodeQaReviewDialogViewModel(
         IBarcodeQaReviewService qaService,
         int ruleId,
-        ILocalizationService localization,
-        IDesktopUiText ui)
+        ILocalizationService localization)
         : base(localization)
     {
         _qaService = qaService;
         _ruleId = ruleId;
-        Ui = ui;
 
         ApproveCommand = new DelegateCommand(async () => await ApproveAsync(), CanApprove)
             .ObservesProperty(() => IsBusy)
@@ -39,35 +38,9 @@ public class BarcodeQaReviewDialogViewModel : LocalizedViewModelBase
             .ObservesProperty(() => IsBusy);
     }
 
-    public IDesktopUiText Ui { get; }
-
     public event Action<bool>? RequestClose;
 
-    public string WindowTitle => L("desktop.barcode.qaTitle");
-
-    public string ApproveText => L("desktop.actions.approve");
-
-    public string RejectText => L("desktop.actions.reject");
-
-    public string RejectReasonLabel => L("desktop.barcode.qaRejectReasonRequired");
-
-    public string ApproveHint => L("desktop.barcode.qaApproveHint");
-
-    public string DrawingPreviewTitle => L("desktop.barcode.qaDrawingPreview");
-
-    public string SamplePreviewTitle => L("desktop.barcode.qaSamplePreview");
-
-    public string BarcodeTotalLengthLine =>
-        Detail == null ? string.Empty : $"{Ui.BarcodeLength}：{Detail.BarcodeLength}";
-
-    public string QaStatusLine =>
-        Detail == null ? string.Empty : $"{Ui.Status}：{Detail.QaStatusText}";
-
-    public string UploadedByLine =>
-        Detail == null ? string.Empty : $"{Ui.CreatedBy}：{Detail.AttachmentUploadedByText}";
-
-    public string UploadedAtLine =>
-        Detail == null ? string.Empty : $"{Ui.CreatedAt}：{Detail.AttachmentUploadedAtText}";
+    public string WindowTitle => L("ui.barcode.qaTitle");
 
     public BarcodeQaReviewDetailDto? Detail
     {
@@ -77,10 +50,6 @@ public class BarcodeQaReviewDialogViewModel : LocalizedViewModelBase
             if (SetProperty(ref _detail, value))
             {
                 RaisePropertyChanged(nameof(TitleText));
-                RaisePropertyChanged(nameof(BarcodeTotalLengthLine));
-                RaisePropertyChanged(nameof(QaStatusLine));
-                RaisePropertyChanged(nameof(UploadedByLine));
-                RaisePropertyChanged(nameof(UploadedAtLine));
                 ApproveCommand.RaiseCanExecuteChanged();
                 RejectCommand.RaiseCanExecuteChanged();
             }
@@ -146,12 +115,12 @@ public class BarcodeQaReviewDialogViewModel : LocalizedViewModelBase
             Detail = await _qaService.GetDetailAsync(_ruleId);
             if (Detail == null)
             {
-                throw new InvalidOperationException(L("desktop.barcode.ruleNotFound"));
+                throw new BusinessException("err.materialRuleNotFound");
             }
 
             if (!BarcodeQaStatus.CanReview(Detail.QaStatus))
             {
-                throw new InvalidOperationException(L("desktop.barcode.qaPendingOnly"));
+                throw new BusinessException("err.qaPendingOnly");
             }
 
             DrawingPreview = BarcodeQaReviewImagePreview.FromBytes(Detail.DrawingImage);
@@ -159,7 +128,7 @@ public class BarcodeQaReviewDialogViewModel : LocalizedViewModelBase
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
             RequestClose?.Invoke(false);
         }
         finally
@@ -171,17 +140,7 @@ public class BarcodeQaReviewDialogViewModel : LocalizedViewModelBase
     protected override void RefreshLocalizedProperties()
     {
         RaisePropertyChanged(nameof(WindowTitle));
-        RaisePropertyChanged(nameof(ApproveText));
-        RaisePropertyChanged(nameof(RejectText));
-        RaisePropertyChanged(nameof(RejectReasonLabel));
-        RaisePropertyChanged(nameof(ApproveHint));
-        RaisePropertyChanged(nameof(DrawingPreviewTitle));
-        RaisePropertyChanged(nameof(SamplePreviewTitle));
         RaisePropertyChanged(nameof(TitleText));
-        RaisePropertyChanged(nameof(BarcodeTotalLengthLine));
-        RaisePropertyChanged(nameof(QaStatusLine));
-        RaisePropertyChanged(nameof(UploadedByLine));
-        RaisePropertyChanged(nameof(UploadedAtLine));
     }
 
     private bool CanApproveAction =>
@@ -210,12 +169,12 @@ public class BarcodeQaReviewDialogViewModel : LocalizedViewModelBase
         try
         {
             await _qaService.ApproveAsync(Detail.RuleId);
-            HandyControl.Controls.Growl.Success(L("desktop.barcode.qaApproved"));
+            HandyControl.Controls.Growl.Success(L("ui.barcode.qaApproved"));
             RequestClose?.Invoke(true);
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
         finally
         {
@@ -239,12 +198,12 @@ public class BarcodeQaReviewDialogViewModel : LocalizedViewModelBase
                 RejectRemark = RejectRemark.Trim()
             });
 
-            HandyControl.Controls.Growl.Success(L("desktop.barcode.qaRejected"));
+            HandyControl.Controls.Growl.Success(L("ui.barcode.qaRejected"));
             RequestClose?.Invoke(true);
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
         finally
         {

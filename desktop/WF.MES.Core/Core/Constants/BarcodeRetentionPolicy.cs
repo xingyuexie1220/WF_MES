@@ -6,6 +6,4 @@ namespace WF.MES.Core.Constants;
 public static class BarcodeRetentionPolicy
 {
     public const int RetentionDays = 30;
-
-    public static string DetailPageHint => $"系统仅保留近 {RetentionDays} 天内的生成记录，更早数据由数据库每日定时任务自动清理。";
 }

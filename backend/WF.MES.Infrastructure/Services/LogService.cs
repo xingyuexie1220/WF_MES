@@ -1,4 +1,4 @@
-using SqlSugar;
+﻿using SqlSugar;
 using WF.MES.Application.Logs;
 using WF.MES.Application.Logs.Dtos;
 using WF.MES.Domain.Entities;
@@ -124,31 +124,31 @@ public class LogService(ISqlSugarClient db) : ILogService
     {
         if (request.BeforeTime.HasValue)
         {
-            await db.Deleteable<SysOperationLog>()
+            await db.Deleteable<SystemOperationLog>()
                 .Where(l => l.OperTime < request.BeforeTime.Value)
                 .ExecuteCommandAsync();
             return;
         }
 
-        await db.Deleteable<SysOperationLog>().ExecuteCommandAsync();
+        await db.Deleteable<SystemOperationLog>().ExecuteCommandAsync();
     }
 
     public async Task ClearExceptionLogsAsync(ClearLogRequest request, CancellationToken cancellationToken = default)
     {
         if (request.BeforeTime.HasValue)
         {
-            await db.Deleteable<SysExceptionLog>()
+            await db.Deleteable<SystemExceptionLog>()
                 .Where(l => l.ExceptionTime < request.BeforeTime.Value)
                 .ExecuteCommandAsync();
             return;
         }
 
-        await db.Deleteable<SysExceptionLog>().ExecuteCommandAsync();
+        await db.Deleteable<SystemExceptionLog>().ExecuteCommandAsync();
     }
 
     public async Task WriteExceptionLogAsync(ExceptionLogDto log, CancellationToken cancellationToken = default)
     {
-        var entity = new SysExceptionLog
+        var entity = new SystemExceptionLog
         {
             Module = log.Module,
             Message = log.Message,
@@ -165,9 +165,9 @@ public class LogService(ISqlSugarClient db) : ILogService
         await db.Insertable(entity).ExecuteCommandAsync();
     }
 
-    private ISugarQueryable<SysOperationLog> BuildOperationQuery(OperationLogQueryRequest request)
+    private ISugarQueryable<SystemOperationLog> BuildOperationQuery(OperationLogQueryRequest request)
     {
-        return db.Queryable<SysOperationLog>()
+        return db.Queryable<SystemOperationLog>()
             .WhereIF(!string.IsNullOrWhiteSpace(request.Module), l => l.Module!.Contains(request.Module!))
             .WhereIF(!string.IsNullOrWhiteSpace(request.OperUserName), l => l.OperUserName!.Contains(request.OperUserName!))
             .WhereIF(request.Status.HasValue, l => l.Status == request.Status)
@@ -175,9 +175,9 @@ public class LogService(ISqlSugarClient db) : ILogService
             .WhereIF(request.EndTime.HasValue, l => l.OperTime <= request.EndTime);
     }
 
-    private ISugarQueryable<SysExceptionLog> BuildExceptionQuery(ExceptionLogQueryRequest request)
+    private ISugarQueryable<SystemExceptionLog> BuildExceptionQuery(ExceptionLogQueryRequest request)
     {
-        return db.Queryable<SysExceptionLog>()
+        return db.Queryable<SystemExceptionLog>()
             .WhereIF(!string.IsNullOrWhiteSpace(request.Module), l => l.Module!.Contains(request.Module!))
             .WhereIF(!string.IsNullOrWhiteSpace(request.OperUserName), l => l.OperUserName!.Contains(request.OperUserName!))
             .WhereIF(request.BeginTime.HasValue, l => l.ExceptionTime >= request.BeginTime)

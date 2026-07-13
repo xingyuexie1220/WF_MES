@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using Serilog;
 using SqlSugar;
 using WF.MES.Core.Constants;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
 using WF.MES.Models.Entities;
@@ -118,7 +119,7 @@ public class BarcodeGenerateService : IBarcodeGenerateService
             catch (Exception ex) when (IsBarcodeUniqueConstraintViolation(ex))
             {
                 Log.Error(ex, "条码重复，请重试或联系管理员");
-                throw new InvalidOperationException("条码重复，请重试或联系管理员。", ex);
+                throw new BusinessException("err.barcodeDuplicate", ex);
             }
 
             await UpsertCounterAsync(rule.RuleId, resetKey, end);
@@ -133,7 +134,7 @@ public class BarcodeGenerateService : IBarcodeGenerateService
                 Records = MapGeneratedRecords(barcodes)
             };
         }
-        catch (InvalidOperationException)
+        catch (BusinessException)
         {
             await _db.Ado.RollbackTranAsync();
             throw;
@@ -142,7 +143,7 @@ public class BarcodeGenerateService : IBarcodeGenerateService
         {
             await _db.Ado.RollbackTranAsync();
             Log.Error(ex, "条码重复，请重试或联系管理员");
-            throw new InvalidOperationException("条码重复，请重试或联系管理员。", ex);
+            throw new BusinessException("err.barcodeDuplicate", ex);
         }
         catch
         {
@@ -223,7 +224,7 @@ public class BarcodeGenerateService : IBarcodeGenerateService
         LoadRuleContextAsync(BarcodeGenerateRequestDto request)
     {
         var rule = await _db.Queryable<BarcodeMaterialRule>().InSingleAsync(request.RuleId)
-            ?? throw new InvalidOperationException("料号条码规则不存在");
+            ?? throw new BusinessException("err.materialRuleNotFound");
 
         var segments = await _db.Queryable<BarcodeRuleSegment>()
             .Where(s => s.RuleId == rule.RuleId)
@@ -308,7 +309,7 @@ public class BarcodeGenerateService : IBarcodeGenerateService
         var max = _formatter.GetMaxValue(config.SerialRadix, config.SerialDigits);
         if (endValue > max)
         {
-            throw new InvalidOperationException($"流水号超出最大范围（{config.SerialRadix}进制 {config.SerialDigits} 位）");
+            throw new BusinessException("err.serialRangeExceeded", config.SerialRadix, config.SerialDigits);
         }
     }
 }

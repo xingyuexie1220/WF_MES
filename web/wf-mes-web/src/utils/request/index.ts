@@ -2,6 +2,7 @@ import axios, { type AxiosError, type AxiosRequestConfig, type AxiosResponse, ty
 import { ElMessage } from 'element-plus'
 import router from '@/router'
 import i18n from '@/i18n'
+import { resolveApiMessage } from '@/utils/i18n/resolveApiMessage'
 import type { ApiResult } from '@/types/base/response'
 import type { UserInfo } from '@/types/auth/user'
 import {
@@ -42,14 +43,14 @@ async function handleApiResult<T>(result: ApiResult<T>, config: InternalAxiosReq
     if (result.messageCode === 'session.replaced_by_other_device') {
       clearAllStorage()
       router.push('/login')
-      ElMessage.warning(result.message)
-      return Promise.reject(new Error(result.message)) as never
+      ElMessage.warning(resolveApiMessage(result))
+      return Promise.reject(new Error(resolveApiMessage(result))) as never
     }
     return refreshAndRetry(config) as never
   }
 
-  ElMessage.error(result.message || '请求失败')
-  return Promise.reject(new Error(result.message)) as never
+  ElMessage.error(resolveApiMessage(result))
+  return Promise.reject(new Error(resolveApiMessage(result))) as never
 }
 
 type WfRequestConfig = InternalAxiosRequestConfig & {
@@ -80,7 +81,7 @@ request.interceptors.response.use(
       clearAllStorage()
       router.push('/login')
     }
-    ElMessage.error(error.response?.data?.message || error.message)
+    ElMessage.error(resolveApiMessage(error.response?.data ?? { message: error.message }))
     return Promise.reject(error)
   }
 )

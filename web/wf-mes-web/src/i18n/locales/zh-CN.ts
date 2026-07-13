@@ -33,6 +33,9 @@ export default {
     search: '搜索',
     saveSuccess: '保存成功',
     exportSuccess: '导出成功',
+    requestFailed: '请求失败',
+    internal_error: '服务器内部错误',
+    not_found: '资源不存在',
     successLabel: '成功',
     fail: '失败'
   },
@@ -142,9 +145,20 @@ export default {
     }
   },
   auth: {
-    invalidCredentials: '用户名或密码错误',
-    userDisabled: '账号已禁用',
-    sessionReplaced: '账号已在其他设备登录'
+    invalid_credentials: '用户名或密码错误',
+    user_disabled: '账号已禁用',
+    user_not_found: '用户不存在',
+    refresh_invalid: '登录已过期，请重新登录',
+    password_same_as_old: '新密码不能与旧密码相同',
+    password_too_short: '密码长度不足',
+    factory_required: '请先选择工厂',
+    factory_forbidden: '无权访问该工厂'
+  },
+  session: {
+    replaced_by_other_device: '账号已在其他设备登录'
+  },
+  validation: {
+    failed: '请求参数无效'
   },
   route: {
     dashboard: 'WF MES 制造执行系统',
@@ -198,6 +212,8 @@ export default {
     halfYear: '近半年'
   },
   factory: {
+    not_found: '工厂不存在',
+    code_exists: '工厂编码已存在',
     title: '工厂管理',
     pageDesc: '维护工厂与区域信息，支持多工厂切换与默认工厂设置。',
     add: '新增工厂',
@@ -389,6 +405,7 @@ export default {
       typeCompany: '公司',
       typeDepartment: '部门',
       typeWorkshop: '车间',
+      typeLine: '产线',
       typeTeam: '班组'
     },
     position: {

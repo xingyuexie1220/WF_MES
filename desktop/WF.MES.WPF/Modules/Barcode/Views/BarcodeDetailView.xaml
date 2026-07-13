@@ -1,6 +1,7 @@
 <UserControl x:Class="WF.MES.WPF.Modules.Barcode.Views.BarcodeDetailView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:infra="clr-namespace:WF.MES.WPF.Infrastructure"
              xmlns:prism="http://prismlibrary.com/"
              prism:ViewModelLocator.AutoWireViewModel="True">
     <Grid Margin="{StaticResource PageRootMargin}">
@@ -21,7 +22,7 @@
         <StackPanel Grid.Row="2"
                     Style="{StaticResource PageToolbarPanelStyle}">
             <TextBlock VerticalAlignment="Center"
-                       Text="{Binding CustomerLabel}" />
+                       infra:Loc.FieldLabelKey="ui.fields.customer" />
             <ComboBox Width="140"
                       Margin="8,0,0,0"
                       DisplayMemberPath="CustomerName"
@@ -29,28 +30,28 @@
                       SelectedItem="{Binding SelectedCustomer}" />
             <TextBlock Margin="16,0,0,0"
                        VerticalAlignment="Center"
-                       Text="{Binding MaterialFilterLabel}" />
+                       infra:Loc.FieldLabelKey="ui.fields.materialFilter" />
             <TextBox Width="140"
                      Margin="8,0,0,0"
                      Text="{Binding FilterMaterialNo, UpdateSourceTrigger=PropertyChanged}" />
             <TextBlock Margin="16,0,0,0"
                        VerticalAlignment="Center"
-                       Text="{Binding GenerateNoLabel}" />
+                       infra:Loc.FieldLabelKey="ui.fields.generateNo" />
             <TextBox Width="140"
                      Margin="8,0,0,0"
                      Text="{Binding FilterGenerateNo, UpdateSourceTrigger=PropertyChanged}" />
             <TextBlock Margin="16,0,0,0"
                        VerticalAlignment="Center"
-                       Text="{Binding GenerateTimeFromLabel}" />
+                       infra:Loc.FieldLabelKey="ui.fields.generateTimeFrom" />
             <DatePicker Width="130"
                         Margin="8,0,0,0"
                         SelectedDate="{Binding FilterCreatedFrom}" />
             <Button Margin="12,0,0,0"
                     Command="{Binding RefreshCommand}"
-                    Content="{Binding Ui.Query}"
+                    infra:Loc.Key="ui.actions.query"
                     Style="{StaticResource ButtonPrimary}" />
             <Button Command="{Binding ExportCommand}"
-                    Content="{Binding Ui.Export}"
+                    infra:Loc.Key="ui.actions.export"
                     Style="{StaticResource PageToolbarSecondaryButtonStyle}" />
         </StackPanel>
 
@@ -70,36 +71,36 @@
                       ItemsSource="{Binding GenerateRecords}"
                       SelectedItem="{Binding SelectedGenerateRecord}">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="{Binding DataContext.Ui.GenerateNo, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding GenerateNo}" Width="150">
+                    <infra:LocDataGridTextColumn LocKey="ui.fields.generateNo" Binding="{Binding GenerateNo}" Width="150">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="TextWrapping" Value="NoWrap" />
                                 <Setter Property="TextTrimming" Value="None" />
                             </Style>
                         </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="{Binding DataContext.Ui.Customer, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding CustomerName}" Width="90" />
-                    <DataGridTextColumn Header="{Binding DataContext.Ui.MaterialNo, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding MaterialNo}" Width="120">
+                    </infra:LocDataGridTextColumn>
+                    <infra:LocDataGridTextColumn LocKey="ui.fields.customer" Binding="{Binding CustomerName}" Width="90" />
+                    <infra:LocDataGridTextColumn LocKey="ui.fields.materialNo" Binding="{Binding MaterialNo}" Width="120">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="TextWrapping" Value="NoWrap" />
                                 <Setter Property="TextTrimming" Value="None" />
                             </Style>
                         </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="{Binding DataContext.Ui.PrintDate, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding PrintDate, StringFormat=yyyy-MM-dd}" Width="100" />
-                    <DataGridTextColumn Header="{Binding DataContext.Ui.Quantity, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Quantity}" Width="60" />
-                    <DataGridTextColumn Header="{Binding DataContext.Ui.SerialRange, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding SerialRangeText}" Width="120">
+                    </infra:LocDataGridTextColumn>
+                    <infra:LocDataGridTextColumn LocKey="ui.fields.printDate" Binding="{Binding PrintDate, StringFormat=yyyy-MM-dd}" Width="100" />
+                    <infra:LocDataGridTextColumn LocKey="ui.fields.quantity" Binding="{Binding Quantity}" Width="60" />
+                    <infra:LocDataGridTextColumn LocKey="ui.fields.serialRange" Binding="{Binding SerialRangeText}" Width="120">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="TextWrapping" Value="NoWrap" />
                                 <Setter Property="TextTrimming" Value="None" />
                             </Style>
                         </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="{Binding DataContext.Ui.PrintStatus, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding PrintStatusText}" Width="80" />
-                    <DataGridTextColumn Header="{Binding DataContext.Ui.CreatedAt, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding CreatedAt, StringFormat=yyyy-MM-dd HH:mm}" Width="140" />
-                    <DataGridTextColumn Header="{Binding DataContext.Ui.Operator, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding CreatedBy}" Width="90" />
+                    </infra:LocDataGridTextColumn>
+                    <infra:LocDataGridEnumColumn LocKey="ui.fields.printStatus" EnumMap="printStatus" Binding="{Binding PrintStatus}" Width="80" />
+                    <infra:LocDataGridTextColumn LocKey="ui.fields.createdAt" Binding="{Binding CreatedAt, StringFormat=yyyy-MM-dd HH:mm}" Width="140" />
+                    <infra:LocDataGridTextColumn LocKey="ui.fields.operator" Binding="{Binding CreatedBy}" Width="90" />
                 </DataGrid.Columns>
             </DataGrid>
 
@@ -112,28 +113,48 @@
                     <StackPanel>
                         <TextBlock Style="{StaticResource InfoPanelSectionTitleStyle}"
                                    Text="{Binding DetailSectionTitle}" />
-                        <TextBlock Margin="0,8,0,0"
-                                   Text="{Binding DetailGenerateNoLine}" />
-                        <TextBlock Style="{StaticResource InfoPanelLineStyle}"
-                                   Text="{Binding DetailCustomerLine}" />
-                        <TextBlock Style="{StaticResource InfoPanelLineStyle}"
-                                   Text="{Binding DetailMaterialNoLine}" />
-                        <TextBlock Style="{StaticResource InfoPanelLineStyle}"
-                                   Text="{Binding DetailPrintDateLine}" />
-                        <TextBlock Style="{StaticResource InfoPanelLineStyle}"
-                                   Text="{Binding DetailQuantityLine}" />
-                        <TextBlock Style="{StaticResource InfoPanelLineStyle}"
-                                   Text="{Binding DetailSerialRangeLine}" />
-                        <TextBlock Style="{StaticResource InfoPanelLineStyle}"
-                                   Text="{Binding DetailResetKeyLine}"
-                                   TextTrimming="None"
-                                   TextWrapping="Wrap" />
-                        <TextBlock Style="{StaticResource InfoPanelLineStyle}"
-                                   Text="{Binding DetailPrintStatusLine}" />
-                        <TextBlock Style="{StaticResource InfoPanelLineStyle}"
-                                   Text="{Binding SelectedGenerateRecord.LastReprintSummary}"
-                                   TextWrapping="Wrap"
-                                   Visibility="{Binding SelectedGenerateRecord.IsReprinted, Converter={StaticResource Boolean2VisibilityConverter}}" />
+                        <StackPanel Margin="0,8,0,0"
+                                    DataContext="{Binding SelectedGenerateRecord}">
+                            <infra:LocInfoField LabelKey="ui.fields.generateNo"
+                                                ValuePath="GenerateNo" />
+                            <infra:LocInfoField Margin="{StaticResource InfoLineMargin}"
+                                                LabelKey="ui.fields.customer"
+                                                ValuePath="CustomerName" />
+                            <infra:LocInfoField Margin="{StaticResource InfoLineMargin}"
+                                                LabelKey="ui.fields.materialNo"
+                                                ValuePath="MaterialNo" />
+                            <infra:LocInfoField Margin="{StaticResource InfoLineMargin}"
+                                                LabelKey="ui.fields.printDate"
+                                                ValuePath="PrintDate"
+                                                ValueStringFormat="yyyy-MM-dd" />
+                            <infra:LocInfoField Margin="{StaticResource InfoLineMargin}"
+                                                LabelKey="ui.fields.quantity"
+                                                ValuePath="Quantity"
+                                                ValueStringFormat="N0" />
+                            <infra:LocInfoField Margin="{StaticResource InfoLineMargin}"
+                                                LabelKey="ui.fields.serialRange"
+                                                ValuePath="SerialRangeText" />
+                            <infra:LocInfoField Margin="{StaticResource InfoLineMargin}"
+                                                LabelKey="ui.fields.resetKeyLabel"
+                                                ValuePath="ResetKey"
+                                                ValueTextWrapping="Wrap" />
+                            <infra:LocInfoField Margin="{StaticResource InfoLineMargin}"
+                                                EnumMap="printStatus"
+                                                LabelKey="ui.fields.printStatus"
+                                                ValuePath="PrintStatus" />
+                            <TextBlock Margin="{StaticResource InfoLineMargin}"
+                                       TextWrapping="Wrap"
+                                       Visibility="{Binding IsReprinted, Converter={StaticResource Boolean2VisibilityConverter}}">
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{x:Static infra:LocFormatConverter.Instance}"
+                                                  ConverterParameter="ui.barcode.lastReprintSummary">
+                                        <Binding Path="LastReprintedAt" StringFormat="{}{0:yyyy-MM-dd HH:mm}" />
+                                        <Binding Path="LastReprintedBy" TargetNullValue="-" />
+                                        <Binding Source="{x:Static infra:Loc.LocSource}" Path="Revision" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </StackPanel>
                         <TextBlock Margin="0,16,0,0"
                                    Style="{StaticResource PageHintTextStyle}"
                                    Text="{Binding ExportOnlyHint}" />

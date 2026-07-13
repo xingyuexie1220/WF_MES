@@ -4,14 +4,14 @@
   执行顺序: 01 -> 02 -> 03
 */
 
-IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = N'MES')
+IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = N'WF_MES_DEV')
 BEGIN
-    CREATE DATABASE [MES];
+    CREATE DATABASE [WF_MES_DEV];
 END
 GO
 
-USE [MES];
+USE [WF_MES_DEV];
 GO
 
-PRINT N'数据库 MES 已就绪';
+PRINT N'Database WF_MES_DEV is ready';
 GO

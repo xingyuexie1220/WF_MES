@@ -1,7 +1,8 @@
-﻿<UserControl x:Class="WF.MES.WPF.Modules.Barcode.Views.BarcodeQaReviewView"
+<UserControl x:Class="WF.MES.WPF.Modules.Barcode.Views.BarcodeQaReviewView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:infra="clr-namespace:WF.MES.WPF.Infrastructure"
              xmlns:prism="http://prismlibrary.com/"
              prism:ViewModelLocator.AutoWireViewModel="True">
     <Grid Margin="{StaticResource PageRootMargin}"
@@ -18,7 +19,7 @@
         <StackPanel Grid.Row="1"
                     Style="{StaticResource PageToolbarPanelStyle}">
             <TextBlock VerticalAlignment="Center"
-                       Text="{Binding Ui.Status}" />
+                       infra:Loc.Key="ui.fields.status" />
             <ComboBox Margin="8,0,0,0"
                       Width="140"
                       DisplayMemberPath="DisplayText"
@@ -26,7 +27,7 @@
                       SelectedItem="{Binding SelectedStatusFilter}" />
             <TextBlock Margin="12,0,0,0"
                        VerticalAlignment="Center"
-                       Text="{Binding Ui.Customer}" />
+                       infra:Loc.Key="ui.fields.customer" />
             <ComboBox Margin="8,0,0,0"
                       Width="120"
                       DisplayMemberPath="CustomerName"
@@ -34,20 +35,20 @@
                       SelectedItem="{Binding SelectedCustomer}" />
             <TextBlock Margin="12,0,0,0"
                        VerticalAlignment="Center"
-                       Text="{Binding Ui.MaterialNo}" />
+                       infra:Loc.Key="ui.fields.materialNo" />
             <TextBox Margin="8,0,0,0"
                      Width="120"
                      Text="{Binding FilterMaterialNo, UpdateSourceTrigger=LostFocus}" />
             <Button Margin="12,0,0,0"
                     Command="{Binding RefreshCommand}"
-                    Content="{Binding Ui.Refresh}"
+                    infra:Loc.Key="ui.actions.refresh"
                     Style="{StaticResource ButtonDefault}" />
             <Button Command="{Binding OpenUploadCommand}"
-                    Content="{Binding Ui.Upload}"
+                    infra:Loc.Key="ui.actions.upload"
                     Style="{StaticResource PageToolbarSecondaryButtonStyle}"
                     Visibility="{Binding HasUploadPermission, Converter={StaticResource Boolean2VisibilityConverter}}" />
             <Button Command="{Binding OpenReviewCommand}"
-                    Content="{Binding Ui.Review}"
+                    infra:Loc.Key="ui.actions.review"
                     Style="{StaticResource PageToolbarSecondaryButtonStyle}"
                     Visibility="{Binding HasReviewPermission, Converter={StaticResource Boolean2VisibilityConverter}}" />
         </StackPanel>
@@ -59,17 +60,17 @@
                   ItemsSource="{Binding Items}"
                   SelectedItem="{Binding SelectedItem}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="{Binding DataContext.Ui.Customer, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding CustomerName}" Width="88" />
-                <DataGridTextColumn Header="{Binding DataContext.Ui.MaterialNo, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding MaterialNo}" Width="110" />
-                <DataGridTextColumn Header="{Binding DataContext.Ui.BarcodeLength, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding BarcodeLength}" Width="60" />
-                <DataGridTextColumn Header="{Binding DataContext.Ui.Drawing, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding DrawingImageText}" Width="72" />
-                <DataGridTextColumn Header="{Binding DataContext.Ui.SampleImage, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding PrintSampleImageText}" Width="76" />
-                <DataGridTextColumn Header="{Binding DataContext.Ui.Status, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding QaStatusText}" Width="112" />
-                <DataGridTextColumn Header="{Binding DataContext.Ui.CreatedBy, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding AttachmentUploadedByText}" Width="96" />
-                <DataGridTextColumn Header="{Binding DataContext.Ui.CreatedAt, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding AttachmentUploadedAtText}" Width="156" />
-                <DataGridTextColumn Header="{Binding DataContext.Ui.Reviewer, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding QaReviewedByText}" Width="96" />
-                <DataGridTextColumn Header="{Binding DataContext.Ui.ReviewedAt, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding QaReviewedAtText}" Width="156" />
-                <DataGridTextColumn Header="{Binding DataContext.Ui.RejectReason, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                <infra:LocDataGridTextColumn LocKey="ui.fields.customer" Binding="{Binding CustomerName}" Width="88" />
+                <infra:LocDataGridTextColumn LocKey="ui.fields.materialNo" Binding="{Binding MaterialNo}" Width="110" />
+                <infra:LocDataGridTextColumn LocKey="ui.fields.barcodeLength" Binding="{Binding BarcodeLength}" Width="60" />
+                <infra:LocDataGridEnumColumn LocKey="ui.fields.drawing" EnumMap="attachment" Binding="{Binding HasDrawingImage}" Width="72" />
+                <infra:LocDataGridEnumColumn LocKey="ui.fields.sampleImage" EnumMap="attachment" Binding="{Binding HasPrintSampleImage}" Width="76" />
+                <infra:LocDataGridEnumColumn LocKey="ui.fields.status" EnumMap="qaStatus" Binding="{Binding QaStatus}" Width="112" />
+                <infra:LocDataGridTextColumn LocKey="ui.fields.createdBy" Binding="{Binding AttachmentUploadedByText}" Width="96" />
+                <infra:LocDataGridTextColumn LocKey="ui.fields.createdAt" Binding="{Binding AttachmentUploadedAtText}" Width="156" />
+                <infra:LocDataGridTextColumn LocKey="ui.fields.reviewer" Binding="{Binding QaReviewedByText}" Width="96" />
+                <infra:LocDataGridTextColumn LocKey="ui.fields.reviewedAt" Binding="{Binding QaReviewedAtText}" Width="156" />
+                <infra:LocDataGridTextColumn LocKey="ui.fields.rejectReason"
                                     Binding="{Binding QaReviewRemarkText}"
                                     Width="*"
                                     MinWidth="140">
@@ -78,7 +79,7 @@
                             <Setter Property="TextWrapping" Value="Wrap" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
+                </infra:LocDataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

@@ -5,6 +5,7 @@
            xmlns:hc="https://handyorg.github.io/handycontrol"
            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
            xmlns:prism="http://prismlibrary.com/"
+           xmlns:infra="clr-namespace:WF.MES.WPF.Infrastructure"
            Title="WF MES"
            Icon="pack://application:,,,/Assets/app.ico"
            Width="920"
@@ -88,30 +89,6 @@
                                        Foreground="{StaticResource AppPrimaryDarkBrush}"
                                        Text="WF" />
                         </Border>
-
-                        <TextBlock Margin="0,28,0,0"
-                                   FontSize="30"
-                                   FontWeight="Bold"
-                                   Foreground="White"
-                                   Text="{Binding BrandTitle}" />
-                        <TextBlock Margin="0,10,0,0"
-                                   FontSize="15"
-                                   Foreground="{StaticResource AppHeaderSubtitleBrush}"
-                                   Text="{Binding BrandSubtitle}" />
-
-                        <StackPanel Margin="0,36,0,0">
-                            <TextBlock Margin="0,0,0,10"
-                                       FontSize="13"
-                                       Foreground="{StaticResource AppOnBrandTextMutedBrush}"
-                                       Text="{Binding Feature1Text}" />
-                            <TextBlock Margin="0,0,0,10"
-                                       FontSize="13"
-                                       Foreground="{StaticResource AppOnBrandTextMutedBrush}"
-                                       Text="{Binding Feature2Text}" />
-                            <TextBlock FontSize="13"
-                                       Foreground="{StaticResource AppOnBrandTextMutedBrush}"
-                                       Text="{Binding Feature3Text}" />
-                        </StackPanel>
                     </StackPanel>
 
                     <TextBlock Margin="24"
@@ -140,15 +117,23 @@
                                VerticalAlignment="Center"
                                FontSize="12"
                                Foreground="{StaticResource AppTextMutedBrush}"
-                               Text="{Binding LocaleLabel}" />
+                               infra:Loc.Key="ui.locale.label" />
                     <ComboBox Width="120"
                               Height="32"
                               Margin="0,0,12,0"
                               VerticalAlignment="Center"
-                              DisplayMemberPath="Label"
+                              Background="White"
+                              BorderBrush="{StaticResource AppBorderBrush}"
+                              Foreground="{StaticResource AppTextPrimaryBrush}"
                               ItemsSource="{Binding LocaleOptions}"
-                              SelectedValue="{Binding SelectedLocale, Mode=TwoWay}"
-                              SelectedValuePath="Value" />
+                              SelectedItem="{Binding SelectedLocaleOption, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Foreground="{StaticResource AppTextPrimaryBrush}"
+                                           Text="{Binding Label}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                     <Button Width="36"
                             Height="36"
                             Click="CloseButton_Click"
@@ -165,14 +150,14 @@
                     <TextBlock FontSize="28"
                                FontWeight="SemiBold"
                                Foreground="{StaticResource AppTextPrimaryBrush}"
-                               Text="{Binding WelcomeTitle}" />
+                               infra:Loc.Key="login.welcome" />
                     <TextBlock Margin="0,8,0,32"
                                FontSize="14"
                                Foreground="{StaticResource AppTextMutedBrush}"
-                               Text="{Binding LoginHint}" />
+                               infra:Loc.Key="ui.loginHint" />
 
                     <TextBlock Style="{StaticResource LoginFieldLabelStyle}"
-                               Text="{Binding UsernameLabel}" />
+                               infra:Loc.Key="login.usernameLabel" />
                     <hc:TextBox Height="44"
                                 Margin="0,0,0,20"
                                 hc:BorderElement.CornerRadius="8"
@@ -187,7 +172,7 @@
                     </hc:TextBox>
 
                     <TextBlock Style="{StaticResource LoginFieldLabelStyle}"
-                               Text="{Binding PasswordLabel}" />
+                               infra:Loc.Key="login.passwordLabel" />
                     <PasswordBox x:Name="PasswordBox"
                                  Margin="0,0,0,4"
                                  KeyDown="PasswordBox_OnKeyDown"
@@ -195,7 +180,7 @@
                                  Style="{StaticResource LoginPasswordBoxStyle}" />
 
                     <Button Command="{Binding LoginCommand}"
-                            Content="{Binding LoginButtonText}"
+                            infra:Loc.Key="login.submit"
                             IsEnabled="{Binding IsBusy, Converter={StaticResource Boolean2BooleanReConverter}}"
                             Style="{StaticResource LoginPrimaryButtonStyle}" />
                 </StackPanel>

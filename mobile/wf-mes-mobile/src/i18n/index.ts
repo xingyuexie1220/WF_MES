@@ -1,7 +1,7 @@
 import { createI18n } from 'vue-i18n'
-import zhCN from '../../../../i18n/messages/zh-CN.json'
-import en from '../../../../i18n/messages/en.json'
-import zhTW from '../../../../i18n/messages/zh-TW.json'
+import zhCN from './locales/zh-CN.json'
+import en from './locales/en.json'
+import zhTW from './locales/zh-TW.json'
 import { getLocale, STORAGE_KEYS } from '@/utils/auth'
 
 export type AppLocale = 'zh-CN' | 'zh-TW' | 'en'

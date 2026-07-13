@@ -10,7 +10,7 @@ src/
 │   ├── auth/         # 登录、工厂切换、路由
 │   ├── system/       # 系统管理 CRUD
 │   ├── dashboard/    # 看板 / 大屏
-│   ├── barcode/      # 条码（客户、规则、打印）
+│   ├── barcode/      # 条码（客户等）
 │   ├── production/   # 生产工单（scaffold）
 │   └── equipment/    # 设备测试（scaffold）
 ├── assets/           # 静态资源；styles/_tokens.scss 设计变量
@@ -27,7 +27,7 @@ src/
 │   ├── layout/       # 菜单、页签、全局 loading/theme
 │   ├── notice/       # 站内消息
 │   ├── mes/          # 工单缓存（scaffold）
-│   ├── barcode/      # 条码客户/规则缓存
+│   ├── barcode/      # 条码客户缓存
 │   └── dashboard/    # 大屏/报表 overview
 ├── types/            # 与 C# DTO 对齐（按域分子目录）
 ├── utils/            # request/http、token、format、download、print、exportExcel
@@ -39,6 +39,21 @@ src/
     ├── barcode/      # 条码业务页
     └── common/developing/  # master-data、report 占位页
 ```
+
+## 命名约定
+
+| 类别 | 约定 | 示例 |
+|------|------|------|
+| 共享 Vue | PascalCase + `Wf` 前缀 | `layout/WfHeader.vue`、`components/page/WfTable.vue` |
+| 页面 | `views/{域}/{kebab}/index.vue` | `views/system/user/index.vue` |
+| API / types / routes | kebab-case 文件 | `api/system/user.ts`、`types/system/role.ts` |
+| composables / config | camelCase | `useDict.ts`、`menuTitleKeyMap.ts` |
+| 样式 partial | `_kebab.scss` | `styles/page/_list-panel.scss` |
+| 导入 | **域路径直达** | `@/types/system/user`、`@/stores/auth/user` |
+
+**禁止：** `@/types`、`@/stores` 根 barrel；已移除的 `@/types/api` shim。
+
+**列表页：** 统一 `wf-list-panel` + `WfPage` / `WfPageBody` / `WfPagePager`（及按需 `WfTable` / `WfVxeTable`）。不要再引入已删除的 `WfPageSearch` / `WfPageToolbar`。
 
 ## 开发
 
@@ -77,20 +92,19 @@ npm run format:check
 ## 类型与 API 约定
 
 - 类型定义在 `src/types/{domain}/`，与 C# DTO 字段 camelCase 对齐
-- **禁止** 使用已移除的 `@/types/api` shim，请直接 `@/types/system/user` 等域路径
-- Store 统一 `@/stores/auth/user`、`@/stores/layout/menu` 等，勿用根目录 shim
+- Store 统一 `@/stores/auth/user`、`@/stores/layout/menu` 等域路径
 - 统一使用 `http.get/post/put/delete`（`src/utils/request/http.ts`）
 - 响应体由拦截器解包 `ApiResult.data`，调用方直接获得业务数据
 
 ## i18n 说明
 
-- Web 端文案源文件：`src/i18n/locales/{zh-CN,en,zh-TW}.ts`
-- 根目录 `i18n/messages/*.json` 供后端/移动端同步；**不要**对 Web 直接跑 `sync-web.mjs` 覆盖 locales（会丢失 `route.*`、`system.*` 等键）
-- 新增键请直接编辑 `src/i18n/locales/*.ts`，或改造 sync 脚本为 merge 模式后再使用
+- Web UI 文案：**独立维护** `src/i18n/locales/{zh-CN,en,zh-TW}.ts`
+- API `messageCode` 使用 **snake_case** 键（与 [i18n/api-codes/](../../i18n/api-codes/) 一致），经 `resolveApiMessage` 翻译
+- 新增 `WfMessageCodes` 时，在 locales 中**手工**补同名键；可用 `node i18n/scripts/validate-api-codes.mjs` 校验
 
 ## Scaffold 说明
 
-以下模块已有 API/Store/路由骨架，页面待迭代：
+以下模块已有 API/Store/路由骨架，页面待迭代（**保留，勿当死代码删**）：
 
 | 模块 | 路由 | 占位 |
 |------|------|------|

@@ -1,4 +1,4 @@
-# WF.MES 数据库脚本
+﻿# WF.MES 数据库脚本
 
 ## 说明
 
@@ -6,9 +6,11 @@
 
 实体类上的 `[SugarTable]` 仅用于 SqlSugar ORM 映射已有表，不会同步表结构。
 
-**`02_create_tables.sql` 与现网 MES 库表结构一致**（22 张表：`Sys_*` 15 张 + `Barcode_*` 7 张）。
+**`02_create_tables.sql` 与 `docs/MES.dbo.initdefinition.md`（你的建表定义）一致**，共约 30 张表：`System_*` + `Barcode_*` + `Master_*` / `Production_*` / `Warehouse_*`。
 
 **新环境推荐**：使用 `00_rebuild_all.sql` 一键清空重建（不保留历史数据）。
+
+**权威参考**：`database/docs/MES.dbo.initdefinition.md`（由桌面 `MES.dbo.initdefinition.md` 同步）
 
 ## 脚本清单
 
@@ -19,6 +21,9 @@
 | `sql/01_create_database.sql` | 创建数据库 `MES` |
 | `sql/02_create_tables.sql` | 创建全部业务表 |
 | `sql/03_seed_data.sql` | 三端菜单 + 角色授权 + 部门/用户/字典/公告种子 |
+| `sql/04_seed_business_data.sql` | 条码/主数据/生产/仓储业务测试数据 |
+| `sql/05_upgrade_multifactory.sql` | **已有库增量升级**（补 `DefaultFactoryId`、多工厂表） |
+| `sql/06_rename_table_prefixes.sql` | **已有库**表前缀重命名（缩写 → 全词） |
 | `sql/20_drop_all_tables.sql` | 删除全部业务表（重建前执行） |
 | `sql/24_migrate_nmes_barcode_data.sql` | **NMES → MES** 条码数据迁移（一次性） |
 
@@ -26,20 +31,23 @@
 
 系统表与条码表统一 **PascalCase + 下划线**：
 
-| 前缀 | 示例 |
-|------|------|
-| `Sys_` | `Sys_User`、`Sys_Role_Menu`、`Sys_Dict_Type` |
-| `Barcode_` | `Barcode_Customer`、`Barcode_Record` |
+| 前缀 | 含义 | 示例 |
+|------|------|------|
+| `System_` | 系统平台 | `System_User`、`System_Role_Menu`、`System_Factory` |
+| `Barcode_` | 条码业务 | `Barcode_Customer`、`Barcode_MaterialRule`、`Barcode_Record` |
+| `Master_` | 主数据 | `Master_Material`、`Master_Route`、`Master_Station` |
+| `Production_` | 生产执行 | `Production_WorkOrder`、`Production_PassRecord` |
+| `Warehouse_` | 仓储 | `Warehouse_InboundOrder` |
 
-字典 **编码**（如 `sys_notice_type`）为业务字段值，不是表名，保持小写不变。
+字典 **编码**（如 `System_notice_type`）为业务字段值，不是表名，保持小写不变。
 
 ## NMES 迁移到 MES（桌面客户端历史库）
 
-旧桌面客户端使用独立库 **NMES**（`Sys_*` + `Barcode_*`）。统一平台后 **全部业务落在 MES**：
+旧桌面客户端使用独立库 **NMES**（`System_*` + `Barcode_*`）。统一平台后 **全部业务落在 MES**：
 
 | 数据类型 | 处理方式 |
 |----------|----------|
-| 用户/角色/菜单/会话 | 使用 MES `Sys_*`，**不**从 NMES 迁移；Web 后台维护 |
+| 用户/角色/菜单/会话 | 使用 MES `System_*`，**不**从 NMES 迁移；Web 后台维护 |
 | 条码业务（客户/规则/生成单/明细等） | 先确保 MES 有表结构（`02` 或 `00_rebuild_all`），再执行 `24` |
 | 桌面 WPF 连接串 | `appsettings.json` → `Database=MES` |
 

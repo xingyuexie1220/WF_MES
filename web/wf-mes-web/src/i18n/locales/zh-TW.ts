@@ -33,6 +33,9 @@ export default {
     search: '搜尋',
     saveSuccess: '保存成功',
     exportSuccess: '導出成功',
+    requestFailed: '請求失敗',
+    internal_error: '伺服器內部錯誤',
+    not_found: '資源不存在',
     successLabel: '成功',
     fail: '失敗'
   },
@@ -131,9 +134,24 @@ export default {
     }
   },
   auth: {
-    invalidCredentials: '使用者名稱或密碼錯誤',
-    userDisabled: '帳號已停用',
-    sessionReplaced: '帳號已在其他裝置登入'
+    invalid_credentials: '使用者名稱或密碼錯誤',
+    user_disabled: '帳號已停用',
+    user_not_found: '使用者不存在',
+    refresh_invalid: '登入已過期，請重新登入',
+    password_same_as_old: '新密碼不能與舊密碼相同',
+    password_too_short: '密碼長度不足',
+    factory_required: '請先選擇工廠',
+    factory_forbidden: '無權存取該工廠'
+  },
+  session: {
+    replaced_by_other_device: '帳號已在其他裝置登入'
+  },
+  factory: {
+    not_found: '工廠不存在',
+    code_exists: '工廠編碼已存在'
+  },
+  validation: {
+    failed: '請求參數無效'
   },
   route: {
     dashboard: 'WF MES 製造執行系統',
@@ -345,6 +363,7 @@ export default {
       typeCompany: '公司',
       typeDepartment: '部門',
       typeWorkshop: '車間',
+      typeLine: '產線',
       typeTeam: '班組'
     },
     position: {

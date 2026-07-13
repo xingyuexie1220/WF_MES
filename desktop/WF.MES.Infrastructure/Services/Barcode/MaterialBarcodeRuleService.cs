@@ -2,6 +2,7 @@ using FluentValidation;
 using Serilog;
 using SqlSugar;
 using WF.MES.Core.Constants;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
 using WF.MES.Models.Entities;
@@ -44,7 +45,7 @@ public class MaterialBarcodeRuleService : IMaterialBarcodeRuleService
         if (rule == null || !BarcodeQaStatus.IsApprovedForPrint(rule.QaStatus))
         {
             var materialNo = rule?.MaterialNo ?? ruleId.ToString();
-            throw new InvalidOperationException($"料号 {materialNo} 待 QA 确认");
+            throw new BusinessException("err.materialPendingQa", materialNo);
         }
     }
 
@@ -161,7 +162,7 @@ public class MaterialBarcodeRuleService : IMaterialBarcodeRuleService
                     .AnyAsync(r => r.CustomerId == dto.CustomerId && r.MaterialNo == dto.MaterialNo.Trim());
                 if (exists)
                 {
-                    throw new InvalidOperationException($"该客户下料号「{dto.MaterialNo}」规则已存在");
+                    throw new BusinessException("err.materialRuleDuplicate", dto.MaterialNo);
                 }
 
                 var rule = new BarcodeMaterialRule
@@ -177,7 +178,7 @@ public class MaterialBarcodeRuleService : IMaterialBarcodeRuleService
             else
             {
                 var rule = await _db.Queryable<BarcodeMaterialRule>().InSingleAsync(dto.RuleId)
-                    ?? throw new InvalidOperationException("料号条码规则不存在");
+                    ?? throw new BusinessException("err.materialRuleNotFound");
 
                 var duplicate = await _db.Queryable<BarcodeMaterialRule>()
                     .AnyAsync(r => r.CustomerId == dto.CustomerId
@@ -185,7 +186,7 @@ public class MaterialBarcodeRuleService : IMaterialBarcodeRuleService
                                    && r.RuleId != dto.RuleId);
                 if (duplicate)
                 {
-                    throw new InvalidOperationException($"该客户下料号「{dto.MaterialNo}」规则已存在");
+                    throw new BusinessException("err.materialRuleDuplicate", dto.MaterialNo);
                 }
 
                 rule.CustomerId = dto.CustomerId;
@@ -229,13 +230,13 @@ public class MaterialBarcodeRuleService : IMaterialBarcodeRuleService
         return string.Join("+", segments.OrderBy(s => s.SortOrder).Select(s => s.SegmentType switch
         {
             BarcodeSegmentTypes.Serial => FormatSerialSummary(s),
-            _ => BarcodeSegmentTypes.GetDisplayName(s.SegmentType)
+            _ => s.SegmentType
         }));
     }
 
     private static string FormatSerialSummary(BarcodeRuleSegment segment)
     {
         var config = RuleSegmentConfigMapper.FromEntity(segment);
-        return $"流水号({config.SerialRadix}进制,{config.SerialDigits}位)";
+        return $"{BarcodeSegmentTypes.Serial}:{config.SerialRadix},{config.SerialDigits}";
     }
 }

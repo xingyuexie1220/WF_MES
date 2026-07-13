@@ -10,7 +10,7 @@ public class BarcodeScaffoldService(ISqlSugarClient db, IFactoryContext factoryC
     public async Task<List<BarcodeMaterialRuleDto>> GetMaterialRulesAsync(CancellationToken cancellationToken = default)
     {
         var factoryId = factoryContext.CurrentFactoryId ?? 0;
-        return await db.Queryable<Domain.Entities.Barcode.BcdMaterialRule>()
+        return await db.Queryable<BarcodeMaterialRule>()
             .Where(r => r.FactoryId == factoryId)
             .OrderBy(r => r.MaterialNo)
             .Select(r => new BarcodeMaterialRuleDto

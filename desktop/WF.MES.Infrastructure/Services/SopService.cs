@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Serilog;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Interfaces;
 
 namespace WF.MES.Infrastructure.Services;
@@ -18,7 +19,7 @@ public class SopService : ISopService
     {
         if (string.IsNullOrWhiteSpace(_pdfUrl))
         {
-            throw new InvalidOperationException("未配置 SOP 文档地址，请在 appsettings.json 中设置 Sop:PdfUrl。");
+            throw new BusinessException("err.sopPdfUrlNotConfigured");
         }
 
         Log.Information("打开 SOP 文档: {PdfUrl}", _pdfUrl);

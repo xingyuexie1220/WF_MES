@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,7 +44,7 @@ public class OperationLogFilter(IServiceScopeFactory scopeFactory, ILogger<Opera
             }
 
             var success = executed.Exception is null && httpContext.Response.StatusCode < 400;
-            var log = new SysOperationLog
+            var log = new SystemOperationLog
             {
                 Module = ResolveModule(path),
                 Title = context.ActionDescriptor.RouteValues.TryGetValue("action", out var action)

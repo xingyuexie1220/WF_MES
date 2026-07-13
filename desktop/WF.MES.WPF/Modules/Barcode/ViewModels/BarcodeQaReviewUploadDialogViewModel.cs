@@ -1,5 +1,6 @@
-﻿using System.Windows.Media;
+using System.Windows.Media;
 using Microsoft.Win32;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
@@ -22,13 +23,11 @@ public class BarcodeQaReviewUploadDialogViewModel : LocalizedViewModelBase
     public BarcodeQaReviewUploadDialogViewModel(
         IBarcodeQaReviewService qaService,
         int ruleId,
-        ILocalizationService localization,
-        IDesktopUiText ui)
+        ILocalizationService localization)
         : base(localization)
     {
         _qaService = qaService;
         _ruleId = ruleId;
-        Ui = ui;
 
         PickDrawingCommand = new DelegateCommand(PickDrawing, () => CanEditAttachments)
             .ObservesProperty(() => IsBusy)
@@ -43,31 +42,9 @@ public class BarcodeQaReviewUploadDialogViewModel : LocalizedViewModelBase
             .ObservesProperty(() => IsBusy);
     }
 
-    public IDesktopUiText Ui { get; }
-
     public event Action<bool>? RequestClose;
 
-    public string WindowTitle => L("desktop.barcode.qaUploadTitle");
-
-    public string PreviousRejectReasonLabel => L("desktop.barcode.qaLastRejectReason");
-
-    public string UploadHint => L("desktop.barcode.qaUploadHint");
-
-    public string DrawingPreviewTitle => L("desktop.barcode.qaDrawingPreview");
-
-    public string SamplePreviewTitle => L("desktop.barcode.qaSamplePreview");
-
-    public string SelectDrawingText => L("desktop.actions.selectDrawing");
-
-    public string SelectSampleText => L("desktop.actions.selectSample");
-
-    public string SaveAttachmentsText => L("desktop.actions.saveAttachments");
-
-    public string BarcodeTotalLengthLine =>
-        Detail == null ? string.Empty : $"{Ui.BarcodeLength}：{Detail.BarcodeLength}";
-
-    public string QaStatusLine =>
-        Detail == null ? string.Empty : $"{Ui.Status}：{Detail.QaStatusText}";
+    public string WindowTitle => L("ui.barcode.qaUploadTitle");
 
     public BarcodeQaReviewDetailDto? Detail
     {
@@ -79,8 +56,6 @@ public class BarcodeQaReviewUploadDialogViewModel : LocalizedViewModelBase
                 RaisePropertyChanged(nameof(TitleText));
                 RaisePropertyChanged(nameof(HasPreviousRejectRemark));
                 RaisePropertyChanged(nameof(CanEditAttachments));
-                RaisePropertyChanged(nameof(BarcodeTotalLengthLine));
-                RaisePropertyChanged(nameof(QaStatusLine));
                 PickDrawingCommand.RaiseCanExecuteChanged();
                 PickPrintSampleCommand.RaiseCanExecuteChanged();
                 SaveAttachmentsCommand.RaiseCanExecuteChanged();
@@ -174,12 +149,12 @@ public class BarcodeQaReviewUploadDialogViewModel : LocalizedViewModelBase
             Detail = await _qaService.GetDetailAsync(_ruleId);
             if (Detail == null)
             {
-                throw new InvalidOperationException(L("desktop.barcode.ruleNotFound"));
+                throw new BusinessException("err.materialRuleNotFound");
             }
 
             if (!BarcodeQaStatus.CanUpload(Detail.QaStatus))
             {
-                throw new InvalidOperationException(L("desktop.barcode.uploadNotAllowed"));
+                throw new BusinessException("err.uploadNotAllowed");
             }
 
             DrawingPreview = BarcodeQaReviewImagePreview.FromBytes(Detail.DrawingImage);
@@ -187,7 +162,7 @@ public class BarcodeQaReviewUploadDialogViewModel : LocalizedViewModelBase
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
             RequestClose?.Invoke(false);
         }
         finally
@@ -199,16 +174,7 @@ public class BarcodeQaReviewUploadDialogViewModel : LocalizedViewModelBase
     protected override void RefreshLocalizedProperties()
     {
         RaisePropertyChanged(nameof(WindowTitle));
-        RaisePropertyChanged(nameof(PreviousRejectReasonLabel));
-        RaisePropertyChanged(nameof(UploadHint));
-        RaisePropertyChanged(nameof(DrawingPreviewTitle));
-        RaisePropertyChanged(nameof(SamplePreviewTitle));
-        RaisePropertyChanged(nameof(SelectDrawingText));
-        RaisePropertyChanged(nameof(SelectSampleText));
-        RaisePropertyChanged(nameof(SaveAttachmentsText));
         RaisePropertyChanged(nameof(TitleText));
-        RaisePropertyChanged(nameof(BarcodeTotalLengthLine));
-        RaisePropertyChanged(nameof(QaStatusLine));
     }
 
     private void PickDrawing()
@@ -239,7 +205,7 @@ public class BarcodeQaReviewUploadDialogViewModel : LocalizedViewModelBase
     {
         var dialog = new OpenFileDialog
         {
-            Filter = L("desktop.barcode.imageFilter"),
+            Filter = L("ui.barcode.imageFilter"),
             Multiselect = false
         };
 
@@ -263,13 +229,13 @@ public class BarcodeQaReviewUploadDialogViewModel : LocalizedViewModelBase
 
             HandyControl.Controls.Growl.Success(
                 Detail.QaStatus == BarcodeQaStatus.Rejected
-                    ? L("desktop.barcode.qaAttachmentsSavedPending")
-                    : L("desktop.barcode.qaAttachmentsSaved"));
+                    ? L("ui.barcode.qaAttachmentsSavedPending")
+                    : L("ui.barcode.qaAttachmentsSaved"));
             RequestClose?.Invoke(true);
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
         finally
         {

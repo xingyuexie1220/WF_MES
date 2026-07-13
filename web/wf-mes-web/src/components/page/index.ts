@@ -1,6 +1,4 @@
 export { default as WfPage } from './WfPage.vue'
-export { default as WfPageSearch } from './WfPageSearch.vue'
-export { default as WfPageToolbar } from './WfPageToolbar.vue'
 export { default as WfPageBody } from './WfPageBody.vue'
 export { default as WfTable } from './WfTable.vue'
 export { default as WfVxeTable } from './WfVxeTable.vue'

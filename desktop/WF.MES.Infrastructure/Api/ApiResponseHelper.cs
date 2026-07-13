@@ -1,3 +1,4 @@
+using WF.MES.Core.Exceptions;
 using WF.MES.Models.Dtos;
 
 namespace WF.MES.Infrastructure.Api;
@@ -6,21 +7,25 @@ public static class ApiResponseHelper
 {
     public const string SessionReplacedCode = "session.replaced_by_other_device";
 
-    public static T EnsureData<T>(ApiResultDto<T>? result, string fallbackMessage = "请求失败")
+    public static T EnsureData<T>(ApiResultDto<T>? result, string fallbackMessageCode)
     {
         if (result is null)
         {
-            throw new InvalidOperationException(fallbackMessage);
+            throw new BusinessException(fallbackMessageCode);
         }
 
         if (result.Code == 200)
         {
-            return result.Data ?? throw new InvalidOperationException(fallbackMessage);
+            return result.Data ?? throw new BusinessException(fallbackMessageCode);
         }
 
-        throw new InvalidOperationException(string.IsNullOrWhiteSpace(result.Message) ? fallbackMessage : result.Message);
+        var messageCode = string.IsNullOrWhiteSpace(result.MessageCode)
+            ? fallbackMessageCode
+            : result.MessageCode;
+
+        throw new BusinessException(messageCode);
     }
 
-    public static bool IsSessionReplaced(ApiResultDto<object>? result) =>
+    public static bool IsSessionReplaced<T>(ApiResultDto<T>? result) =>
         result?.Code == 401 && string.Equals(result.MessageCode, SessionReplacedCode, StringComparison.OrdinalIgnoreCase);
 }

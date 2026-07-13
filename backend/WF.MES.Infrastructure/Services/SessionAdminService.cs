@@ -1,4 +1,4 @@
-using SqlSugar;
+﻿using SqlSugar;
 using WF.MES.Application.Auth;
 using WF.MES.Application.Common;
 using WF.MES.Application.Sessions;
@@ -20,7 +20,7 @@ public class SessionAdminService(
     public async Task<PagedResult<SessionDto>> GetPagedListAsync(SessionQueryRequest request, CancellationToken cancellationToken = default)
     {
         var now = DateTime.Now;
-        var tokens = await db.Queryable<SysRefreshToken>()
+        var tokens = await db.Queryable<SystemRefreshToken>()
             .Where(t => !t.IsRevoked && t.ExpireTime > now)
             .ToListAsync(cancellationToken);
 
@@ -35,7 +35,7 @@ public class SessionAdminService(
         }
 
         var userIds = latestTokens.Select(t => t.UserId).Distinct().ToList();
-        var users = await db.Queryable<SysUser>()
+        var users = await db.Queryable<SystemUser>()
             .Where(u => userIds.Contains(u.Id) && !u.IsDeleted)
             .ToListAsync(cancellationToken);
         var userMap = users.ToDictionary(u => u.Id);
@@ -110,7 +110,7 @@ public class SessionAdminService(
             throw new BusinessException("不能强制下线当前会话");
         }
 
-        var user = await db.Queryable<SysUser>()
+        var user = await db.Queryable<SystemUser>()
             .FirstAsync(u => u.Id == request.UserId && !u.IsDeleted, cancellationToken);
 
         if (user is null)
@@ -121,7 +121,7 @@ public class SessionAdminService(
         await authService.LogoutAsync(request.UserId, request.ClientType, null, cancellationToken);
     }
 
-    private static bool MatchesUserName(SysUser user, string? keyword)
+    private static bool MatchesUserName(SystemUser user, string? keyword)
     {
         if (string.IsNullOrWhiteSpace(keyword))
         {

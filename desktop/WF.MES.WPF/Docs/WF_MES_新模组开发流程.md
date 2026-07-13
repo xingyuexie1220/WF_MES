@@ -91,7 +91,7 @@ ViewModel 规范（参考 `CustomerManageViewModel`）：
 containerRegistry.RegisterForNavigation<WorkOrderScanView, WorkOrderScanViewModel>("Mes.WorkOrderScan");
 ```
 
-**Component 必须与 `RegisterForNavigation` 名称完全一致**（对应 `Sys_Menu.Component`，Web 菜单管理维护）。
+**Component 必须与 `RegisterForNavigation` 名称完全一致**（对应 `System_Menu.Component`，Web 菜单管理维护）。
 
 ### 第 6 步：Web 菜单 + 角色授权
 
@@ -103,8 +103,8 @@ containerRegistry.RegisterForNavigation<WorkOrderScanView, WorkOrderScanViewMode
 
 | 层级 | 配置位置 | 含义 |
 |------|----------|------|
-| 菜单 | `Sys_Menu` MenuType=2 + `Sys_Role_Menu` | 能否进入页面 |
-| 按钮 | `Sys_Menu` MenuType=3 的 `Permission` 字段 | API 返回的权限码，桌面 `MenuActions` + `HasAction` |
+| 菜单 | `System_Menu` MenuType=2 + `System_Role_Menu` | 能否进入页面 |
+| 按钮 | `System_Menu` MenuType=3 的 `Permission` 字段 | API 返回的权限码，桌面 `MenuActions` + `HasAction` |
 
 **新增受控按钮 checklist：**
 
@@ -137,6 +137,17 @@ containerRegistry.RegisterForNavigation<WorkOrderScanView, WorkOrderScanViewMode
 
 ## 4. 数据流
 
+**平台门票（API，无 Refresh Token）**
+
+```
+登录 / 选厂 / 切厂 / 改密 / 登出 / 桌面菜单
+  → IAuthService / IMenuPermissionService
+  → Refit IAuthApi
+  → WF.MES.Api
+```
+
+**产线业务（直连 DB）**
+
 ```
 用户操作
   → View (XAML)
@@ -144,10 +155,83 @@ containerRegistry.RegisterForNavigation<WorkOrderScanView, WorkOrderScanViewMode
   → Core 接口 (IXxxService)
   → Infrastructure Service
   → FluentValidation + SqlSugar
-  → SQL Server
+  → SQL Server（ConnectionStrings:WfMesDb）
 ```
 
-ViewModel **不得**绕过接口直接访问 Infrastructure 或数据库。
+ViewModel **不得**绕过接口直接访问 Infrastructure 或数据库；**禁止**产线模块使用 Refit 业务 API。
+
+### 4.1 多语言（i18n）
+
+文案包：`WF.MES.WPF/i18n/{locale}.json`。与 Web `t(key)` 一样：**一个键、一层一种写法**。
+
+#### 键树（必须遵守）
+
+| 前缀 | 用途 | 示例 |
+|------|------|------|
+| `ui.fields.*` | 字段名（无冒号） | `ui.fields.customer` |
+| `ui.actions.*` | 按钮/动词 | `ui.actions.add` |
+| `ui.barcode.*` / `ui.app.*` / `ui.mes.*` … | 模块 UI 文案 | `ui.barcode.exportTitle` |
+| `ui.*`（扁平） | 壳层/登录相关 UI | `ui.welcomeUser` |
+| `err.*` | 业务异常（`BusinessException` / API fallback） | `err.materialRuleNotFound` |
+| `val.*` | FluentValidation 消息 | `val.customerNameRequired` |
+| `auth.*` / `session.*` / `factory.*` / `common.*` | 与后端 `messageCode` 对齐 | `auth.invalid_credentials` |
+| `menu.*` | 菜单（DB `I18nKey`） | `menu.desktop.barcode.print` |
+
+**禁止：** 在 `ui.barcode.*` 里再抛业务异常键；异常一律 `err.*`。校验一律 `val.*`。
+
+#### 标准写法（日常开发只用这些）
+
+登录页 / 主壳层 / 业务模块统一：
+
+| 场景 | 写法 |
+|------|------|
+| XAML 按钮/标签/复选框 | `infra:Loc.Key="ui.actions.add"` |
+| XAML 表单字段标签（带冒号） | `infra:Loc.FieldLabelKey="ui.fields.customer"` |
+| DataGrid 列头 | `<infra:LocDataGridTextColumn LocKey="ui.fields.customer" …/>` |
+| DataGrid 枚举/状态列 | `<infra:LocDataGridEnumColumn LocKey="…" EnumMap="printStatus" Binding="{Binding PrintStatus}" />` |
+| ViewModel 标题/Growl/拼接 | `L("…")` / `TF("ui.barcode.exportedCount", count)` / `EX(ex)` |
+| 下拉选项 | `LocalizedOptions.*(L)` + `RefreshLocalizedProperties` |
+| 启动早期（无 DI） | `WpfLocalization.T("ui.app.tip")` |
+
+`Resources["Loc"]` 在 **CreateShell 之前**挂好（`App.EnsureUiLocalization`），避免登录页 `Loc.Key` 绑到 Fallback。
+
+壳层与登录页的**静态**文案也必须用 `Loc.Key`（勿再维护 `WelcomeTitle`/`LogoutText` 一类属性再 `RaisePropertyChanged`）；仅动态句（状态栏、`WelcomeUser`、格式化版本号等）留在 ViewModel。HandyControl `Placeholder` 等无法挂 `Loc.Key` 的属性可例外保留 VM 属性。
+
+基础设施文件（实现细节，业务模块勿再拆新类）：
+
+| 文件 | 内容 |
+|------|------|
+| `Loc.cs` | `Loc` / `WpfLocalization` / `LocalizationBindingSource` |
+| `LocalizedViewModelBase.cs` | `L` / `TF` / `EX` |
+| `LocColumns.cs` | DataGrid 文本列 / 枚举列 |
+| `LocConverters.cs` | 枚举/格式 Converter、`LocalizedOptions` |
+| `LocInfoField.cs` | 【高级】信息面板字段行 |
+
+`EnumMap` 见 `LocEnumMaps`。**DTO 只存原始值**，列表文案由 `LocEnumConverter` 翻译。
+
+```xml
+xmlns:infra="clr-namespace:WF.MES.WPF.Infrastructure"
+
+<Button infra:Loc.Key="ui.actions.add" Command="{Binding AddCommand}" />
+<infra:LocDataGridEnumColumn LocKey="ui.fields.status" EnumMap="enable" Binding="{Binding Enable}" />
+```
+
+#### 高级（可选，信息面板）
+
+| 场景 | 写法 |
+|------|------|
+| 标签+值一行 | `<infra:LocInfoField LabelKey="ui.fields.customer" ValuePath="CustomerName" />` |
+| 整句格式化 | `LocFormatConverter` + `MultiBinding`（末位绑 `Loc.LocSource.Revision`） |
+
+#### 异常与校验
+
+- 服务层：`throw new BusinessException("err.xxx", args…)`；UI：`Growl.Error(EX(ex))`
+- API：`ApiResponseHelper.EnsureData(result, "err.xxx")`
+- FluentValidation：`ILocalizationService` + `val.*`
+
+**禁止：** `IDesktopUiText`、`BindingProxy`、Core 常量写中文 Display、DTO `*Text` 显示字段、`Apply*Text` + `ReloadCollection`、VM 拼接 `DetailXxxLine`。
+
+CSV 导出表头：服务层注入 `ILocalizationService` 取 `ui.barcode.exportCsv.*`，或返回数值由 VM `TF()` 格式化。
 
 ---
 
@@ -156,7 +240,7 @@ ViewModel **不得**绕过接口直接访问 Infrastructure 或数据库。
 1. ViewModel 不要引用 Infrastructure（含 static helper、SqlSugar）
 2. 不要在 WPF 注册 Service — 统一在 `InfrastructureServiceRegistration.cs`
 3. 不要在 Core 自行读取程序集版本 — 使用注入的 `IAppVersion`
-4. ViewName 必须与 `Sys_Menu.Component` 一致
+4. ViewName 必须与 `System_Menu.Component` 一致
 5. 校验规则写在 Infrastructure Validator + Service 入口，不要只在 ViewModel 写
 
 ---

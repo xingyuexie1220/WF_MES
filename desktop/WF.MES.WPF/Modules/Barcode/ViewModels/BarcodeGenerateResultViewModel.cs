@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.IO;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
@@ -15,6 +15,8 @@ public class BarcodeGenerateResultViewModel : LocalizedViewModelBase
 
     private string _selectedPrinter = string.Empty;
     private string _printStatus = string.Empty;
+    private string? _printStatusKey;
+    private object[] _printStatusArgs = [];
     private bool _isPrinting;
     private bool _hasPrinted;
 
@@ -22,14 +24,12 @@ public class BarcodeGenerateResultViewModel : LocalizedViewModelBase
         ILabelPrintService printService,
         IBarcodeGenerateRecordService recordService,
         BarcodeGeneratePrintDialogModel model,
-        ILocalizationService localization,
-        IDesktopUiText ui)
+        ILocalizationService localization)
         : base(localization)
     {
         _printService = printService;
         _recordService = recordService;
         _model = model;
-        Ui = ui;
 
         foreach (var printer in _printService.GetInstalledPrinters())
         {
@@ -43,17 +43,11 @@ public class BarcodeGenerateResultViewModel : LocalizedViewModelBase
         CloseCommand = new DelegateCommand(() => RequestClose?.Invoke());
     }
 
-    public IDesktopUiText Ui { get; }
-
-    public event Action? RequestClose;
-
-    public string PageTitle => L("desktop.barcode.generateResultTitle");
+    public string PageTitle => L("ui.barcode.generateResultTitle");
 
     public string WindowTitle => $"{PageTitle} - {GenerateNo}";
 
-    public string PrinterLabel => Ui.Printer + "：";
-
-    public string LabelFolderText => L("desktop.actions.labelFolder");
+    public event Action? RequestClose;
 
     public ObservableCollection<string> Printers { get; } = [];
     public ObservableCollection<BarcodeRecordDto> Records { get; } = [];
@@ -71,20 +65,6 @@ public class BarcodeGenerateResultViewModel : LocalizedViewModelBase
     public string SerialRangeText => _model.SerialRangeText;
 
     public int Quantity => _model.Records.Count;
-
-    public string GenerateNoLine => $"{Ui.GenerateNo}：{GenerateNo}";
-
-    public string CustomerLine => $"{Ui.Customer}：{CustomerName}";
-
-    public string MaterialNoLine => $"{Ui.MaterialNo}：{MaterialNo}";
-
-    public string PrintDateLine => $"{Ui.PrintDate}：{PrintDate:yyyy-MM-dd}";
-
-    public string QuantityLine => $"{Ui.Quantity}：{Quantity}";
-
-    public string SerialRangeLine => $"{Ui.SerialRange}：{SerialRangeText}";
-
-    public string ResetKeyLine => $"ResetKey：{ResetKey}";
 
     public string SelectedPrinter
     {
@@ -114,7 +94,7 @@ public class BarcodeGenerateResultViewModel : LocalizedViewModelBase
     public bool ShowPrintingOverlay => IsPrinting;
 
     public string PrintButtonText =>
-        IsPrinting ? L("desktop.barcode.printing") : HasPrinted ? L("desktop.barcode.printed") : L("desktop.barcode.print");
+        IsPrinting ? L("ui.barcode.printing") : HasPrinted ? L("ui.barcode.printed") : L("ui.barcode.print");
 
     public bool HasPrinted
     {
@@ -145,15 +125,8 @@ public class BarcodeGenerateResultViewModel : LocalizedViewModelBase
     {
         RaisePropertyChanged(nameof(PageTitle));
         RaisePropertyChanged(nameof(WindowTitle));
-        RaisePropertyChanged(nameof(PrinterLabel));
-        RaisePropertyChanged(nameof(LabelFolderText));
-        RaisePropertyChanged(nameof(GenerateNoLine));
-        RaisePropertyChanged(nameof(CustomerLine));
-        RaisePropertyChanged(nameof(MaterialNoLine));
-        RaisePropertyChanged(nameof(PrintDateLine));
-        RaisePropertyChanged(nameof(QuantityLine));
-        RaisePropertyChanged(nameof(SerialRangeLine));
         RaisePropertyChanged(nameof(PrintButtonText));
+        ApplyPrintStatus();
     }
 
     private bool CanPrint() =>
@@ -165,13 +138,9 @@ public class BarcodeGenerateResultViewModel : LocalizedViewModelBase
         {
             _printService.OpenTemplateFolder(MaterialNo);
         }
-        catch (FileNotFoundException ex)
-        {
-            HandyControl.Controls.Growl.Warning(ex.Message);
-        }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Warning(EX(ex));
         }
     }
 
@@ -183,10 +152,11 @@ public class BarcodeGenerateResultViewModel : LocalizedViewModelBase
         }
 
         IsPrinting = true;
-        PrintStatus = string.Format(L("desktop.barcode.sendingLabels"), Records.Count);
+        SetPrintStatus("ui.barcode.sendingLabels", Records.Count);
         try
         {
-            var progress = new Progress<LabelPrintProgressDto>(item => PrintStatus = item.StatusText);
+            var progress = new Progress<LabelPrintProgressDto>(item =>
+                SetPrintStatus("ui.barcode.printingProgress", item.Current, item.Total));
             var result = await _printService.PrintAsync(
                 _printService.CreatePrintRequest(
                     MaterialNo,
@@ -195,7 +165,7 @@ public class BarcodeGenerateResultViewModel : LocalizedViewModelBase
                 progress);
 
             HasPrinted = true;
-            PrintStatus = string.Empty;
+            ClearPrintStatus();
             PrintCommand.RaiseCanExecuteChanged();
 
             try
@@ -203,23 +173,49 @@ public class BarcodeGenerateResultViewModel : LocalizedViewModelBase
                 await _recordService.MarkPrintedAsync(_model.GenerateRecordId);
                 HandyControl.Controls.Growl.Success(new HandyControl.Data.GrowlInfo
                 {
-                    Message = result.Message,
+                    Message = TF("ui.barcode.printedLabelsSuccess", result.PrintedCount),
                     WaitTime = 3
                 });
             }
             catch (Exception ex)
             {
-                HandyControl.Controls.Growl.Warning(string.Format(L("desktop.barcode.printStatusUpdateFailed"), ex.Message));
+                HandyControl.Controls.Growl.Warning(TF("ui.barcode.printStatusUpdateFailed", EX(ex)));
             }
         }
         catch (Exception ex)
         {
-            PrintStatus = string.Empty;
-            HandyControl.Controls.Growl.Error(ex.Message);
+            ClearPrintStatus();
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
         finally
         {
             IsPrinting = false;
         }
+    }
+
+    private void SetPrintStatus(string key, params object[] args)
+    {
+        _printStatusKey = key;
+        _printStatusArgs = args;
+        ApplyPrintStatus();
+    }
+
+    private void ClearPrintStatus()
+    {
+        _printStatusKey = null;
+        _printStatusArgs = [];
+        PrintStatus = string.Empty;
+    }
+
+    private void ApplyPrintStatus()
+    {
+        if (_printStatusKey is null)
+        {
+            return;
+        }
+
+        PrintStatus = _printStatusArgs.Length == 0
+            ? L(_printStatusKey)
+            : string.Format(L(_printStatusKey), _printStatusArgs);
     }
 }

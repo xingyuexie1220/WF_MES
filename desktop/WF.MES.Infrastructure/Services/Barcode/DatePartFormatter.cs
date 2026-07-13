@@ -1,5 +1,6 @@
 using System.Globalization;
 using WF.MES.Core.Constants;
+using WF.MES.Core.Exceptions;
 
 namespace WF.MES.Infrastructure.Services.Barcode;
 
@@ -10,7 +11,7 @@ public static class DatePartFormatter
     {
         if (!DatePartFormats.IsValid(format))
         {
-            throw new InvalidOperationException($"不支持的日期格式: {format}");
+            throw new BusinessException("err.dateFormatUnsupported", format);
         }
 
         return format switch
@@ -23,7 +24,7 @@ public static class DatePartFormatter
             "DD" => date.ToString("dd"),
             "D" => DatePartCharMaps.FormatDayOneChar(date.Day),
             "WW" => ISOWeek.GetWeekOfYear(date).ToString("D2"),
-            _ => throw new InvalidOperationException($"不支持的日期格式: {format}")
+            _ => throw new BusinessException("err.dateFormatUnsupported", format)
         };
     }
 }

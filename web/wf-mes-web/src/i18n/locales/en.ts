@@ -33,6 +33,9 @@ export default {
     search: 'Search',
     saveSuccess: 'Saved successfully',
     exportSuccess: 'Exported successfully',
+    requestFailed: 'Request failed',
+    internal_error: 'Internal server error',
+    not_found: 'Resource not found',
     successLabel: 'Success',
     fail: 'Failed'
   },
@@ -131,9 +134,24 @@ export default {
     }
   },
   auth: {
-    invalidCredentials: 'Invalid username or password',
-    userDisabled: 'Account is disabled',
-    sessionReplaced: 'Signed in on another device'
+    invalid_credentials: 'Invalid username or password',
+    user_disabled: 'Account is disabled',
+    user_not_found: 'User not found',
+    refresh_invalid: 'Session expired. Please sign in again',
+    password_same_as_old: 'New password must differ from current',
+    password_too_short: 'Password is too short',
+    factory_required: 'Please select a factory first',
+    factory_forbidden: 'You do not have access to this factory'
+  },
+  session: {
+    replaced_by_other_device: 'Signed in on another device'
+  },
+  factory: {
+    not_found: 'Factory not found',
+    code_exists: 'Factory code already exists'
+  },
+  validation: {
+    failed: 'Invalid request parameters'
   },
   route: {
     dashboard: 'WF MES Manufacturing Execution System',
@@ -345,6 +363,7 @@ export default {
       typeCompany: 'Company',
       typeDepartment: 'Department',
       typeWorkshop: 'Workshop',
+      typeLine: 'Production line',
       typeTeam: 'Team'
     },
     position: {

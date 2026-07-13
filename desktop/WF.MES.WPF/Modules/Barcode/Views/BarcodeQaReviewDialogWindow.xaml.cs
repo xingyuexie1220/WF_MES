@@ -17,8 +17,7 @@ public partial class BarcodeQaReviewDialogWindow : HandyControl.Controls.Window
         _viewModel = new BarcodeQaReviewDialogViewModel(
             qaService,
             ruleId,
-            WpfLocalization.Instance,
-            ResolveUiText());
+            WpfLocalization.Instance);
         _viewModel.RequestClose += OnRequestClose;
         DataContext = _viewModel;
     }
@@ -48,7 +47,4 @@ public partial class BarcodeQaReviewDialogWindow : HandyControl.Controls.Window
         DialogResult = true;
         Close();
     }
-
-    private static IDesktopUiText ResolveUiText() =>
-        ((App)Application.Current).Container.Resolve<IDesktopUiText>();
 }

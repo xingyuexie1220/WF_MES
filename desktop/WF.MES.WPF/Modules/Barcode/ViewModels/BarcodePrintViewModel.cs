@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
@@ -26,6 +26,8 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
     private bool _isGenerating;
     private bool _isPreviewLoading;
     private string _statusMessage = string.Empty;
+    private string? _statusMessageKey;
+    private object[] _statusMessageArgs = [];
     private string _serialConfigPreview = string.Empty;
     private string _resetKeyPreview = string.Empty;
     private string _serialRangePreview = string.Empty;
@@ -40,8 +42,7 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
         ISessionService sessionService,
         ILabelPrintService printService,
         IBarcodeGenerateRecordService recordService,
-        ILocalizationService localization,
-        IDesktopUiText ui)
+        ILocalizationService localization)
         : base(localization)
     {
         _ruleService = ruleService;
@@ -50,7 +51,6 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
         _sessionService = sessionService;
         _printService = printService;
         _recordService = recordService;
-        Ui = ui;
 
         GenerateCommand = new DelegateCommand(async () => await GenerateAsync(), CanGenerate)
             .ObservesProperty(() => SelectedCustomer)
@@ -58,21 +58,11 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
             .ObservesProperty(() => Quantity);
     }
 
-    public IDesktopUiText Ui { get; }
+    public string PageTitle => L("ui.barcode.printTitle");
 
-    public string PageTitle => L("desktop.barcode.printTitle");
+    public string PreviewUpdatingText => L("ui.barcode.previewUpdating");
 
-    public string CustomerLabel => Ui.Customer + "：";
-
-    public string MaterialNoLabel => Ui.MaterialNo + "：";
-
-    public string PrintDateLabel => Ui.PrintDate + "：";
-
-    public string QuantityLabel => Ui.Quantity + "：";
-
-    public string PreviewUpdatingText => L("desktop.barcode.previewUpdating");
-
-    public string MaxQuantityHint => string.Format(L("desktop.barcode.maxQuantityHint"), BarcodeGenerateLimits.MaxQuantityPerBatch);
+    public string MaxQuantityHint => TF("ui.barcode.maxQuantityHint", BarcodeGenerateLimits.MaxQuantityPerBatch);
 
     public ObservableCollection<CustomerListDto> Customers { get; } = [];
     public ObservableCollection<MaterialRuleListDto> Rules { get; } = [];
@@ -146,7 +136,7 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
         private set => SetProperty(ref _statusMessage, value);
     }
 
-    public string GenerateButtonText => IsGenerating ? L("desktop.actions.generating") : L("desktop.actions.generateBarcode");
+    public string GenerateButtonText => IsGenerating ? L("ui.actions.generating") : L("ui.actions.generateBarcode");
 
     public bool IsPreviewLoading
     {
@@ -165,13 +155,7 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
     public string SerialConfigPreview
     {
         get => _serialConfigPreview;
-        set
-        {
-            if (SetProperty(ref _serialConfigPreview, value))
-            {
-                RaisePropertyChanged(nameof(SerialConfigLine));
-            }
-        }
+        set => SetProperty(ref _serialConfigPreview, value);
     }
 
     public string ResetKeyPreview
@@ -183,13 +167,7 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
     public string SerialRangePreview
     {
         get => _serialRangePreview;
-        set
-        {
-            if (SetProperty(ref _serialRangePreview, value))
-            {
-                RaisePropertyChanged(nameof(SerialRangeLine));
-            }
-        }
+        set => SetProperty(ref _serialRangePreview, value);
     }
 
     public string SamplePreview
@@ -206,7 +184,6 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
             if (SetProperty(ref _sampleLengthPreview, value))
             {
                 RaisePropertyChanged(nameof(ShowSampleLengthPreview));
-                RaisePropertyChanged(nameof(SampleLengthLine));
             }
         }
     }
@@ -216,26 +193,8 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
     public string GenerateNo
     {
         get => _generateNo;
-        set
-        {
-            if (SetProperty(ref _generateNo, value))
-            {
-                RaisePropertyChanged(nameof(RecentGenerateNoLine));
-            }
-        }
+        set => SetProperty(ref _generateNo, value);
     }
-
-    public string RecentGenerateNoLine =>
-        string.IsNullOrEmpty(GenerateNo) ? string.Empty : string.Format(L("desktop.barcode.recentGenerateNo"), GenerateNo);
-
-    public string SerialConfigLine =>
-        string.IsNullOrEmpty(SerialConfigPreview) ? string.Empty : string.Format(L("desktop.barcode.serialConfig"), SerialConfigPreview);
-
-    public string SerialRangeLine =>
-        string.IsNullOrEmpty(SerialRangePreview) ? string.Empty : string.Format(L("desktop.barcode.serialRangePreview"), SerialRangePreview);
-
-    public string SampleLengthLine =>
-        ShowSampleLengthPreview ? string.Format(L("desktop.barcode.totalLength"), SampleLengthPreview) : string.Empty;
 
     public DelegateCommand GenerateCommand { get; }
 
@@ -248,17 +207,15 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
     protected override void RefreshLocalizedProperties()
     {
         RaisePropertyChanged(nameof(PageTitle));
-        RaisePropertyChanged(nameof(CustomerLabel));
-        RaisePropertyChanged(nameof(MaterialNoLabel));
-        RaisePropertyChanged(nameof(PrintDateLabel));
-        RaisePropertyChanged(nameof(QuantityLabel));
         RaisePropertyChanged(nameof(PreviewUpdatingText));
         RaisePropertyChanged(nameof(MaxQuantityHint));
         RaisePropertyChanged(nameof(GenerateButtonText));
-        RaisePropertyChanged(nameof(RecentGenerateNoLine));
-        RaisePropertyChanged(nameof(SerialConfigLine));
-        RaisePropertyChanged(nameof(SerialRangeLine));
-        RaisePropertyChanged(nameof(SampleLengthLine));
+        ApplyStatusMessage();
+
+        if (!IsGenerating && SelectedRule != null && Quantity > 0)
+        {
+            _ = UpdateTextPreviewCoreAsync();
+        }
     }
 
     private bool CanGenerate() =>
@@ -289,7 +246,7 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
     }
 
@@ -364,19 +321,24 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
 
             ResetKeyPreview = preview.ResetKey;
             SerialConfigPreview = string.Format(
-                L("desktop.barcode.serialConfigShort"),
+                L("ui.barcode.serialConfigShort"),
                 preview.SerialRadix,
                 preview.SerialDigits);
-            SerialRangePreview = $"{preview.FirstSerialFormatted} ~ {preview.LastSerialFormatted}（{preview.NextSerialStart} ~ {preview.NextSerialEnd}）";
-            SamplePreview = string.Format(L("desktop.barcode.firstSample"), preview.FirstBarcodeSample)
+            SerialRangePreview = string.Format(
+                L("ui.barcode.serialRangeValue"),
+                preview.FirstSerialFormatted,
+                preview.LastSerialFormatted,
+                preview.NextSerialStart,
+                preview.NextSerialEnd);
+            SamplePreview = string.Format(L("ui.barcode.firstSample"), preview.FirstBarcodeSample)
                 + Environment.NewLine
-                + string.Format(L("desktop.barcode.lastSample"), preview.LastBarcodeSample);
+                + string.Format(L("ui.barcode.lastSample"), preview.LastBarcodeSample);
             SampleLengthPreview = preview.FirstBarcodeSample.Length;
         }
         catch (Exception ex)
         {
             ResetPreview();
-            SamplePreview = ex.Message;
+            SamplePreview = EX(ex);
             SampleLengthPreview = 0;
         }
     }
@@ -389,7 +351,7 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
         }
 
         IsGenerating = true;
-        StatusMessage = string.Format(L("desktop.barcode.generatingStatus"), Quantity);
+        SetStatusMessage("ui.barcode.generatingStatus", Quantity);
         try
         {
             var result = await _generateService.GenerateAsync(new BarcodeGenerateRequestDto
@@ -402,10 +364,10 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
 
             GenerateNo = result.GenerateNo;
             await UpdateTextPreviewCoreAsync();
-            StatusMessage = string.Empty;
+            ClearStatusMessage();
             HandyControl.Controls.Growl.Success(new HandyControl.Data.GrowlInfo
             {
-                Message = string.Format(L("desktop.barcode.generatedCount"), result.Records.Count),
+                Message = TF("ui.barcode.generatedCount", result.Records.Count),
                 WaitTime = 3
             });
 
@@ -425,13 +387,39 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
         }
         catch (Exception ex)
         {
-            StatusMessage = string.Empty;
-            HandyControl.Controls.Growl.Error(ex.Message);
+            ClearStatusMessage();
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
         finally
         {
             IsGenerating = false;
         }
+    }
+
+    private void SetStatusMessage(string key, params object[] args)
+    {
+        _statusMessageKey = key;
+        _statusMessageArgs = args;
+        ApplyStatusMessage();
+    }
+
+    private void ClearStatusMessage()
+    {
+        _statusMessageKey = null;
+        _statusMessageArgs = [];
+        StatusMessage = string.Empty;
+    }
+
+    private void ApplyStatusMessage()
+    {
+        if (_statusMessageKey is null)
+        {
+            return;
+        }
+
+        StatusMessage = _statusMessageArgs.Length == 0
+            ? L(_statusMessageKey)
+            : string.Format(L(_statusMessageKey), _statusMessageArgs);
     }
 
     private void ResetPreview()

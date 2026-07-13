@@ -14,9 +14,6 @@ public interface IAuthApi
     [Post("/api/v1/auth/switch-factory")]
     Task<ApiResultDto<LoginResponseDto>> SwitchFactoryAsync([Body] SwitchFactoryRequestDto request, CancellationToken cancellationToken = default);
 
-    [Post("/api/v1/auth/refresh")]
-    Task<ApiResultDto<LoginResponseDto>> RefreshAsync([Body] RefreshTokenRequestDto request, CancellationToken cancellationToken = default);
-
     [Get("/api/v1/auth/info")]
     Task<ApiResultDto<UserInfoDto>> GetInfoAsync(CancellationToken cancellationToken = default);
 

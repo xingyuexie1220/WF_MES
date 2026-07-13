@@ -1,30 +1,44 @@
-/*
+﻿/*
   WF.MES - 删除全部业务表（重建前执行）
+  兼容 SQL Server 2012+；循环删表以处理外键依赖与历史遗留表名
 */
 
-USE [MES];
+USE [WF_MES_DEV];
 GO
 
 SET NOCOUNT ON;
 
-DECLARE @sql NVARCHAR(MAX) = N'';
+DECLARE @dropped INT = 1;
+WHILE @dropped > 0
+BEGIN
+    SET @dropped = 0;
 
-SELECT @sql = @sql + N'DROP TABLE IF EXISTS dbo.' + QUOTENAME(t.name) + N';' + CHAR(13)
-FROM sys.tables t
-WHERE t.schema_id = SCHEMA_ID(N'dbo')
-  AND t.name IN (
-        N'Wh_InboundOrder', N'Prd_PassRecord', N'Prd_WorkOrder',
-        N'Mds_Station', N'Mds_WorkCenter', N'Mds_Route', N'Mds_Material',
-        N'Bcd_Record', N'Bcd_SerialCounter', N'Bcd_RuleSegment', N'Bcd_GenerateRecord',
-        N'Bcd_MaterialRule', N'Bcd_Customer', N'Bcd_PurgeLog',
-        N'Barcode_Record', N'Barcode_SerialCounter', N'Barcode_RuleSegment',
-        N'Barcode_GenerateRecord', N'Barcode_MaterialRule', N'Barcode_Customer', N'Barcode_PurgeLog',
-        N'Sys_Factory_Config', N'Sys_User_Factory', N'Sys_User_Position',
-        N'Sys_Role_Dept', N'Sys_Role_Menu', N'Sys_User_Role', N'Sys_Refresh_Token',
-        N'Sys_Operation_Log', N'Sys_Exception_Log', N'Sys_Dict_Data', N'Sys_Notice', N'Sys_Dict_Type',
-        N'Sys_User', N'Sys_Position', N'Sys_Menu', N'Sys_Role', N'Sys_Dept', N'Sys_Factory', N'Sys_Region'
-    );
+    DECLARE @name SYSNAME;
+    DECLARE @sql NVARCHAR(MAX);
+    DECLARE c CURSOR LOCAL FAST_FORWARD FOR
+        SELECT name FROM sys.tables WHERE is_ms_shipped = 0 ORDER BY name;
 
-EXEC sp_executesql @sql;
-PRINT N'全部业务表已删除';
+    OPEN c;
+    FETCH NEXT FROM c INTO @name;
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        BEGIN TRY
+            SET @sql = N'DROP TABLE dbo.' + QUOTENAME(@name);
+            EXEC sp_executesql @sql;
+            SET @dropped = @dropped + 1;
+            PRINT N'Dropped ' + @name;
+        END TRY
+        BEGIN CATCH
+            /* 外键依赖时跳过，下一轮再删 */
+        END CATCH
+
+        FETCH NEXT FROM c INTO @name;
+    END
+
+    CLOSE c;
+    DEALLOCATE c;
+END
+
+PRINT N'All business tables dropped';
 GO

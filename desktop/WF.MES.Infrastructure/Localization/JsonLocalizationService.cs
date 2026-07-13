@@ -77,8 +77,8 @@ public sealed class JsonLocalizationService : ILocalizationService
 
     private void LoadCatalog(string locale)
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "i18n", $"{locale}.json");
-        if (!File.Exists(path))
+        var path = ResolveCatalogPath(locale);
+        if (path is null)
         {
             _catalogs[locale] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             return;
@@ -89,6 +89,59 @@ public sealed class JsonLocalizationService : ILocalizationService
         var flat = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         Flatten(document.RootElement, string.Empty, flat);
         _catalogs[locale] = flat;
+    }
+
+    private static string? ResolveCatalogPath(string locale)
+    {
+        foreach (var directory in GetCatalogDirectories())
+        {
+            var path = Path.Combine(directory, $"{locale}.json");
+            if (File.Exists(path))
+            {
+                return path;
+            }
+        }
+
+        return null;
+    }
+
+    private static IEnumerable<string> GetCatalogDirectories()
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var directory in EnumerateCatalogDirectories())
+        {
+            if (string.IsNullOrWhiteSpace(directory))
+            {
+                continue;
+            }
+
+            var fullPath = Path.GetFullPath(directory);
+            if (seen.Add(fullPath))
+            {
+                yield return fullPath;
+            }
+        }
+    }
+
+    private static IEnumerable<string> EnumerateCatalogDirectories()
+    {
+        yield return Path.Combine(AppContext.BaseDirectory, "i18n");
+
+        string? probe = Path.GetDirectoryName(typeof(JsonLocalizationService).Assembly.Location);
+        while (!string.IsNullOrWhiteSpace(probe))
+        {
+            yield return Path.Combine(probe, "i18n");
+            yield return Path.Combine(probe, "WF.MES.WPF", "i18n");
+
+            var parent = Path.GetDirectoryName(probe);
+            if (string.IsNullOrWhiteSpace(parent) || parent == probe)
+            {
+                break;
+            }
+
+            probe = parent;
+        }
     }
 
     private static void Flatten(JsonElement element, string prefix, IDictionary<string, string> target)

@@ -1,6 +1,7 @@
 import { appConfig } from '@/config/app'
 import { clearAuthStorage, getAccessToken, getFactoryId, getRefreshToken, getLocale, setTokens, setUserInfo } from '@/utils/auth'
 import { refreshTokenApi } from '@/api/auth'
+import { resolveApiMessage } from '@/utils/apiMessage'
 import { t } from '@/i18n'
 
 interface ApiResult<T> {
@@ -81,7 +82,7 @@ function sendRequest<T>(
         if (result.code === 401) {
           if (result.messageCode === 'session.replaced_by_other_device') {
             if (!options.silent) {
-              uni.showToast({ title: result.message, icon: 'none' })
+              uni.showToast({ title: resolveApiMessage(result), icon: 'none' })
             }
             redirectToLogin()
             reject(result)
@@ -101,7 +102,7 @@ function sendRequest<T>(
         }
 
         if (!options.silent) {
-          uni.showToast({ title: result.message || t('common.requestFailed'), icon: 'none' })
+          uni.showToast({ title: resolveApiMessage(result), icon: 'none' })
         }
         reject(result)
       },

@@ -2,6 +2,7 @@ using System.IO;
 using System.Text;
 using SqlSugar;
 using WF.MES.Core.Constants;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
 using WF.MES.Models.Entities;
@@ -15,17 +16,19 @@ namespace WF.MES.Infrastructure.Services.Barcode;
 public class BarcodeGenerateRecordService : IBarcodeGenerateRecordService
 {
     private readonly ISqlSugarClient _db;
+    private readonly ILocalizationService _localization;
 
-    public BarcodeGenerateRecordService(ISqlSugarClient db)
+    public BarcodeGenerateRecordService(ISqlSugarClient db, ILocalizationService localization)
     {
         _db = db;
+        _localization = localization;
     }
 
     public async Task MarkPrintedAsync(int generateRecordId, CancellationToken cancellationToken = default)
     {
         if (generateRecordId <= 0)
         {
-            throw new InvalidOperationException("生成单无效。");
+            throw new BusinessException("err.generateRecordInvalid");
         }
 
         var updated = await _db.Updateable<BarcodeGenerateRecord>()
@@ -38,7 +41,7 @@ public class BarcodeGenerateRecordService : IBarcodeGenerateRecordService
 
         if (updated == 0)
         {
-            throw new InvalidOperationException("未找到对应的生成单。");
+            throw new BusinessException("err.generateRecordNotFound");
         }
     }
 
@@ -49,12 +52,12 @@ public class BarcodeGenerateRecordService : IBarcodeGenerateRecordService
     {
         if (generateRecordId <= 0)
         {
-            throw new InvalidOperationException("生成单无效。");
+            throw new BusinessException("err.generateRecordInvalid");
         }
 
         if (string.IsNullOrWhiteSpace(reprintedBy))
         {
-            throw new InvalidOperationException("补打操作人不能为空。");
+            throw new BusinessException("err.reprintOperatorRequired");
         }
 
         var updated = await _db.Updateable<BarcodeGenerateRecord>()
@@ -70,7 +73,7 @@ public class BarcodeGenerateRecordService : IBarcodeGenerateRecordService
 
         if (updated == 0)
         {
-            throw new InvalidOperationException("该生成单不可补打（可能已补打或尚未打印）。");
+            throw new BusinessException("err.generateRecordNotReprintable");
         }
     }
 
@@ -147,12 +150,12 @@ public class BarcodeGenerateRecordService : IBarcodeGenerateRecordService
     {
         if (generateRecordId <= 0)
         {
-            throw new InvalidOperationException("生成单无效。");
+            throw new BusinessException("err.generateRecordInvalid");
         }
 
         if (string.IsNullOrWhiteSpace(filePath))
         {
-            throw new InvalidOperationException("导出路径无效。");
+            throw new BusinessException("err.exportPathInvalid");
         }
 
         await using var writer = new StreamWriter(
@@ -160,14 +163,14 @@ public class BarcodeGenerateRecordService : IBarcodeGenerateRecordService
             append: false,
             new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
 
-        await writer.WriteLineAsync($"生成单号,{EscapeCsv(header.GenerateNo)}");
-        await writer.WriteLineAsync($"客户,{EscapeCsv(header.CustomerName)}");
-        await writer.WriteLineAsync($"料号,{EscapeCsv(header.MaterialNo)}");
-        await writer.WriteLineAsync($"打印日期,{header.PrintDate:yyyy-MM-dd}");
-        await writer.WriteLineAsync($"数量,{header.Quantity}");
-        await writer.WriteLineAsync($"流水范围,{EscapeCsv(header.SerialRangeText)}");
+        await writer.WriteLineAsync($"{T("ui.barcode.exportCsv.generateNo")},{EscapeCsv(header.GenerateNo)}");
+        await writer.WriteLineAsync($"{T("ui.barcode.exportCsv.customer")},{EscapeCsv(header.CustomerName)}");
+        await writer.WriteLineAsync($"{T("ui.barcode.exportCsv.materialNo")},{EscapeCsv(header.MaterialNo)}");
+        await writer.WriteLineAsync($"{T("ui.barcode.exportCsv.printDate")},{header.PrintDate:yyyy-MM-dd}");
+        await writer.WriteLineAsync($"{T("ui.barcode.exportCsv.quantity")},{header.Quantity}");
+        await writer.WriteLineAsync($"{T("ui.barcode.exportCsv.serialRange")},{EscapeCsv(header.SerialRangeText)}");
         await writer.WriteLineAsync();
-        await writer.WriteLineAsync("流水值,完整条码");
+        await writer.WriteLineAsync($"{T("ui.barcode.exportCsv.serialValue")},{T("ui.barcode.exportCsv.fullBarcode")}");
 
         var pageIndex = 1;
         var total = 0;
@@ -215,7 +218,7 @@ public class BarcodeGenerateRecordService : IBarcodeGenerateRecordService
     {
         if (generateRecordId <= 0)
         {
-            throw new InvalidOperationException("生成单无效。");
+            throw new BusinessException("err.generateRecordInvalid");
         }
 
         var result = new List<string>();
@@ -247,6 +250,8 @@ public class BarcodeGenerateRecordService : IBarcodeGenerateRecordService
 
         return result;
     }
+
+    private string T(string key) => _localization.T(key);
 
     private static string EscapeCsv(string value)
     {

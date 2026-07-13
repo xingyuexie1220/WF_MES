@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
@@ -22,6 +22,8 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
     private DateTime _filterCreatedFrom = DateTime.Today.AddDays(-BarcodeRetentionPolicy.RetentionDays);
     private string _selectedPrinter = string.Empty;
     private string _printStatus = string.Empty;
+    private string? _printStatusKey;
+    private object[] _printStatusArgs = [];
     private bool _isLoading;
     private bool _isPrinting;
 
@@ -31,8 +33,7 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
         IMaterialBarcodeRuleService ruleService,
         ILabelPrintService printService,
         ISessionService sessionService,
-        ILocalizationService localization,
-        IDesktopUiText ui)
+        ILocalizationService localization)
         : base(localization)
     {
         _generateRecordService = generateRecordService;
@@ -40,7 +41,6 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
         _ruleService = ruleService;
         _printService = printService;
         _sessionService = sessionService;
-        Ui = ui;
 
         foreach (var printer in _printService.GetInstalledPrinters())
         {
@@ -57,25 +57,11 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
             .ObservesProperty(() => SelectedPrinter);
     }
 
-    public IDesktopUiText Ui { get; }
+    public string PageTitle => L("ui.barcode.reprintTitle");
 
-    public string PageTitle => L("desktop.barcode.reprintTitle");
+    public string PageHint => L("ui.barcode.reprintHint");
 
-    public string PageHint => L("desktop.barcode.reprintHint");
-
-    public string ReprintInfoTitle => L("desktop.barcode.reprintInfo");
-
-    public string CustomerLabel => Ui.Customer + "：";
-
-    public string MaterialNoLabel => Ui.MaterialNo + "：";
-
-    public string GenerateNoLabel => Ui.GenerateNo + "：";
-
-    public string GenerateTimeFromLabel => Ui.GenerateTimeFrom + "：";
-
-    public string PrinterLabel => Ui.Printer + "：";
-
-    public string ExecuteReprintText => L("desktop.actions.executeReprint");
+    public string ReprintInfoTitle => L("ui.barcode.reprintInfo");
 
     public ObservableCollection<CustomerListDto> Customers { get; } = [];
     public ObservableCollection<BarcodeGenerateRecordListDto> GenerateRecords { get; } = [];
@@ -95,7 +81,6 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
             if (SetProperty(ref _selectedGenerateRecord, value))
             {
                 ReprintCommand.RaiseCanExecuteChanged();
-                NotifyReprintDetailLines();
             }
         }
     }
@@ -150,31 +135,6 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
 
     public bool ShowPrintingOverlay => IsPrinting;
 
-    public string? ReprintDetailGenerateNoLine => FormatLine(Ui.GenerateNo, SelectedGenerateRecord?.GenerateNo);
-
-    public string? ReprintDetailCustomerLine => FormatLine(Ui.Customer, SelectedGenerateRecord?.CustomerName);
-
-    public string? ReprintDetailMaterialNoLine => FormatLine(Ui.MaterialNo, SelectedGenerateRecord?.MaterialNo);
-
-    public string? ReprintDetailQuantityLine =>
-        SelectedGenerateRecord == null
-            ? null
-            : string.Format(L("desktop.barcode.reprintWholeOrder"), SelectedGenerateRecord.Quantity);
-
-    public string? ReprintDetailSerialRangeLine => FormatLine(Ui.SerialRange, SelectedGenerateRecord?.SerialRangeText);
-
-    public string? ReprintDetailPrintStatusLine => FormatLine(Ui.PrintStatus, SelectedGenerateRecord?.PrintStatusText);
-
-    public string? ReprintDetailReprintAtLine =>
-        SelectedGenerateRecord?.IsReprinted != true
-            ? null
-            : $"{Ui.ReprintAt}：{SelectedGenerateRecord.LastReprintedAt:yyyy-MM-dd HH:mm}";
-
-    public string? ReprintDetailReprintByLine =>
-        SelectedGenerateRecord?.IsReprinted != true
-            ? null
-            : FormatLine(Ui.ReprintBy, SelectedGenerateRecord.LastReprintedBy);
-
     public DelegateCommand RefreshCommand { get; }
     public DelegateCommand ReprintCommand { get; }
 
@@ -193,14 +153,8 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
         RaisePropertyChanged(nameof(PageTitle));
         RaisePropertyChanged(nameof(PageHint));
         RaisePropertyChanged(nameof(ReprintInfoTitle));
-        RaisePropertyChanged(nameof(CustomerLabel));
-        RaisePropertyChanged(nameof(MaterialNoLabel));
-        RaisePropertyChanged(nameof(GenerateNoLabel));
-        RaisePropertyChanged(nameof(GenerateTimeFromLabel));
-        RaisePropertyChanged(nameof(PrinterLabel));
-        RaisePropertyChanged(nameof(ExecuteReprintText));
         RefreshAllCustomerOption();
-        NotifyReprintDetailLines();
+        ApplyPrintStatus();
     }
 
     private void RefreshAllCustomerOption()
@@ -209,27 +163,12 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
         if (index >= 0)
         {
             var selectedId = SelectedCustomer?.CustomerId;
-            Customers[index] = new CustomerListDto { CustomerId = 0, CustomerName = Ui.All };
+            Customers[index] = new CustomerListDto { CustomerId = 0, CustomerName = L("ui.actions.all") };
             if (selectedId == 0)
             {
                 SelectedCustomer = Customers[index];
             }
         }
-    }
-
-    private static string? FormatLine(string label, string? value) =>
-        string.IsNullOrEmpty(value) ? null : $"{label}：{value}";
-
-    private void NotifyReprintDetailLines()
-    {
-        RaisePropertyChanged(nameof(ReprintDetailGenerateNoLine));
-        RaisePropertyChanged(nameof(ReprintDetailCustomerLine));
-        RaisePropertyChanged(nameof(ReprintDetailMaterialNoLine));
-        RaisePropertyChanged(nameof(ReprintDetailQuantityLine));
-        RaisePropertyChanged(nameof(ReprintDetailSerialRangeLine));
-        RaisePropertyChanged(nameof(ReprintDetailPrintStatusLine));
-        RaisePropertyChanged(nameof(ReprintDetailReprintAtLine));
-        RaisePropertyChanged(nameof(ReprintDetailReprintByLine));
     }
 
     private bool CanReprint() =>
@@ -244,7 +183,7 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
     private async Task LoadCustomersAsync()
     {
         Customers.Clear();
-        Customers.Add(new CustomerListDto { CustomerId = 0, CustomerName = Ui.All });
+        Customers.Add(new CustomerListDto { CustomerId = 0, CustomerName = L("ui.actions.all") });
         foreach (var customer in await _customerService.GetCustomerSelectionListAsync())
         {
             Customers.Add(customer);
@@ -289,7 +228,7 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
         finally
         {
@@ -306,7 +245,7 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
         }
 
         IsPrinting = true;
-        PrintStatus = L("desktop.barcode.loadingBarcodes");
+        SetPrintStatus("ui.barcode.loadingBarcodes");
         try
         {
             await _ruleService.EnsureRuleApprovedForPrintAsync(SelectedGenerateRecord.RuleId);
@@ -316,12 +255,13 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
 
             if (barcodes.Count == 0)
             {
-                HandyControl.Controls.Growl.Warning(L("desktop.barcode.noBarcodesToReprint"));
+                HandyControl.Controls.Growl.Warning(L("ui.barcode.noBarcodesToReprint"));
                 return;
             }
 
-            PrintStatus = string.Format(L("desktop.barcode.sendingLabels"), barcodes.Count);
-            var progress = new Progress<LabelPrintProgressDto>(item => PrintStatus = item.StatusText);
+            SetPrintStatus("ui.barcode.sendingLabels", barcodes.Count);
+            var progress = new Progress<LabelPrintProgressDto>(item =>
+                SetPrintStatus("ui.barcode.printingProgress", item.Current, item.Total));
             var result = await _printService.PrintAsync(
                 _printService.CreatePrintRequest(
                     SelectedGenerateRecord.MaterialNo,
@@ -337,21 +277,47 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
             }
             catch (Exception ex)
             {
-                HandyControl.Controls.Growl.Warning(string.Format(L("desktop.barcode.printStatusUpdateFailed"), ex.Message));
+                HandyControl.Controls.Growl.Warning(TF("ui.barcode.printStatusUpdateFailed", EX(ex)));
                 return;
             }
 
-            HandyControl.Controls.Growl.Success(result.Message);
+            HandyControl.Controls.Growl.Success(TF("ui.barcode.printedLabelsSuccess", result.PrintedCount));
             await LoadGenerateRecordsAsync();
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
         finally
         {
-            PrintStatus = string.Empty;
+            ClearPrintStatus();
             IsPrinting = false;
         }
+    }
+
+    private void SetPrintStatus(string key, params object[] args)
+    {
+        _printStatusKey = key;
+        _printStatusArgs = args;
+        ApplyPrintStatus();
+    }
+
+    private void ClearPrintStatus()
+    {
+        _printStatusKey = null;
+        _printStatusArgs = [];
+        PrintStatus = string.Empty;
+    }
+
+    private void ApplyPrintStatus()
+    {
+        if (_printStatusKey is null)
+        {
+            return;
+        }
+
+        PrintStatus = _printStatusArgs.Length == 0
+            ? L(_printStatusKey)
+            : string.Format(L(_printStatusKey), _printStatusArgs);
     }
 }
