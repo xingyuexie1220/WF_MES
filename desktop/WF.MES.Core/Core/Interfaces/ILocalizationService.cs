@@ -8,7 +8,7 @@ public sealed class LocaleOption
     public string LabelKey { get; init; } = "locale.zhCN";
 }
 
-/// <summary>共享 i18n/messages JSON 的多语言服务（与 Web / Mobile 同源）。</summary>
+/// <summary>桌面端 UI 文案包（desktop/WF.MES.WPF/i18n）多语言服务；API 错误键与 i18n/api-codes 协议一致。</summary>
 public interface ILocalizationService : INotifyPropertyChanged
 {
     string CurrentLocale { get; }

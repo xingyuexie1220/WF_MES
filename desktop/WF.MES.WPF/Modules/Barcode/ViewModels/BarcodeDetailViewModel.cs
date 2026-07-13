@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using Microsoft.Win32;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
@@ -24,13 +24,11 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
     public BarcodeDetailViewModel(
         IBarcodeGenerateRecordService generateRecordService,
         ICustomerService customerService,
-        ILocalizationService localization,
-        IDesktopUiText ui)
+        ILocalizationService localization)
         : base(localization)
     {
         _generateRecordService = generateRecordService;
         _customerService = customerService;
-        Ui = ui;
 
         RefreshCommand = new DelegateCommand(async () => await LoadGenerateRecordsAsync(), CanRefresh)
             .ObservesProperty(() => IsLoadingGenerateRecords)
@@ -41,19 +39,9 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
             .ObservesProperty(() => IsExporting);
     }
 
-    public IDesktopUiText Ui { get; }
+    public string PageTitle => L("ui.barcode.detailTitle");
 
-    public string PageTitle => L("desktop.barcode.detailTitle");
-
-    public string CustomerLabel => Ui.Customer + "：";
-
-    public string MaterialFilterLabel => Ui.MaterialFilter + "：";
-
-    public string GenerateNoLabel => Ui.GenerateNo + "：";
-
-    public string GenerateTimeFromLabel => Ui.GenerateTimeFrom + "：";
-
-    public string DetailSectionTitle => L("desktop.barcode.generateDetail");
+    public string DetailSectionTitle => L("ui.barcode.generateDetail");
 
     public ObservableCollection<CustomerListDto> Customers { get; } = [];
     public ObservableCollection<BarcodeGenerateRecordListDto> GenerateRecords { get; } = [];
@@ -67,13 +55,7 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
     public BarcodeGenerateRecordListDto? SelectedGenerateRecord
     {
         get => _selectedGenerateRecord;
-        set
-        {
-            if (SetProperty(ref _selectedGenerateRecord, value))
-            {
-                NotifyDetailLines();
-            }
-        }
+        set => SetProperty(ref _selectedGenerateRecord, value);
     }
 
     public string FilterMaterialNo
@@ -94,9 +76,9 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
         set => SetProperty(ref _filterCreatedFrom, value.Date);
     }
 
-    public string RetentionHint => BarcodeRetentionPolicy.DetailPageHint;
+    public string RetentionHint => TF("ui.barcode.retentionHint", BarcodeRetentionPolicy.RetentionDays);
 
-    public string ExportOnlyHint => L("desktop.barcode.detailHint");
+    public string ExportOnlyHint => L("ui.barcode.detailHint");
 
     public bool IsLoadingGenerateRecords
     {
@@ -109,25 +91,6 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
         get => _isExporting;
         private set => SetProperty(ref _isExporting, value);
     }
-
-    public string? DetailGenerateNoLine => FormatLine(Ui.GenerateNo, SelectedGenerateRecord?.GenerateNo);
-
-    public string? DetailCustomerLine => FormatLine(Ui.Customer, SelectedGenerateRecord?.CustomerName);
-
-    public string? DetailMaterialNoLine => FormatLine(Ui.MaterialNo, SelectedGenerateRecord?.MaterialNo);
-
-    public string? DetailPrintDateLine =>
-        SelectedGenerateRecord == null ? null : $"{Ui.PrintDate}：{SelectedGenerateRecord.PrintDate:yyyy-MM-dd}";
-
-    public string? DetailQuantityLine =>
-        SelectedGenerateRecord == null ? null : $"{Ui.Quantity}：{SelectedGenerateRecord.Quantity:N0}";
-
-    public string? DetailSerialRangeLine => FormatLine(Ui.SerialRange, SelectedGenerateRecord?.SerialRangeText);
-
-    public string? DetailResetKeyLine =>
-        SelectedGenerateRecord == null ? null : $"ResetKey：{SelectedGenerateRecord.ResetKey}";
-
-    public string? DetailPrintStatusLine => FormatLine(Ui.PrintStatus, SelectedGenerateRecord?.PrintStatusText);
 
     public DelegateCommand RefreshCommand { get; }
     public DelegateCommand ExportCommand { get; }
@@ -150,38 +113,20 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
     protected override void RefreshLocalizedProperties()
     {
         RaisePropertyChanged(nameof(PageTitle));
-        RaisePropertyChanged(nameof(CustomerLabel));
-        RaisePropertyChanged(nameof(MaterialFilterLabel));
-        RaisePropertyChanged(nameof(GenerateNoLabel));
-        RaisePropertyChanged(nameof(GenerateTimeFromLabel));
         RaisePropertyChanged(nameof(DetailSectionTitle));
+        RaisePropertyChanged(nameof(RetentionHint));
         RaisePropertyChanged(nameof(ExportOnlyHint));
         var index = Customers.ToList().FindIndex(c => c.CustomerId == 0);
         if (index >= 0)
         {
             var selectedId = SelectedCustomer?.CustomerId;
-            Customers[index] = new CustomerListDto { CustomerId = 0, CustomerName = Ui.All };
+            Customers[index] = new CustomerListDto { CustomerId = 0, CustomerName = L("ui.actions.all") };
             if (selectedId == 0)
             {
                 SelectedCustomer = Customers[index];
             }
         }
-        NotifyDetailLines();
-    }
 
-    private static string? FormatLine(string label, string? value) =>
-        string.IsNullOrEmpty(value) ? null : $"{label}：{value}";
-
-    private void NotifyDetailLines()
-    {
-        RaisePropertyChanged(nameof(DetailGenerateNoLine));
-        RaisePropertyChanged(nameof(DetailCustomerLine));
-        RaisePropertyChanged(nameof(DetailMaterialNoLine));
-        RaisePropertyChanged(nameof(DetailPrintDateLine));
-        RaisePropertyChanged(nameof(DetailQuantityLine));
-        RaisePropertyChanged(nameof(DetailSerialRangeLine));
-        RaisePropertyChanged(nameof(DetailResetKeyLine));
-        RaisePropertyChanged(nameof(DetailPrintStatusLine));
     }
 
     private bool CanRefresh() => !IsLoadingGenerateRecords && !IsExporting;
@@ -192,7 +137,7 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
     private async Task LoadCustomersAsync()
     {
         Customers.Clear();
-        Customers.Add(new CustomerListDto { CustomerId = 0, CustomerName = Ui.All });
+        Customers.Add(new CustomerListDto { CustomerId = 0, CustomerName = L("ui.actions.all") });
         foreach (var customer in await _customerService.GetCustomerSelectionListAsync())
         {
             Customers.Add(customer);
@@ -234,7 +179,7 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
         finally
         {
@@ -251,9 +196,9 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
 
         var dialog = new SaveFileDialog
         {
-            Filter = L("desktop.barcode.csvFilter"),
+            Filter = L("ui.barcode.csvFilter"),
             FileName = $"{SelectedGenerateRecord.GenerateNo}.csv",
-            Title = L("desktop.barcode.exportTitle")
+            Title = L("ui.barcode.exportTitle")
         };
 
         if (dialog.ShowDialog() != true)
@@ -271,15 +216,15 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
 
             if (count == 0)
             {
-                HandyControl.Controls.Growl.Warning(L("desktop.barcode.noBarcodesToExport"));
+                HandyControl.Controls.Growl.Warning(L("ui.barcode.noBarcodesToExport"));
                 return;
             }
 
-            HandyControl.Controls.Growl.Success(string.Format(L("desktop.barcode.exportedCount"), count));
+            HandyControl.Controls.Growl.Success(TF("ui.barcode.exportedCount", count));
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
         finally
         {

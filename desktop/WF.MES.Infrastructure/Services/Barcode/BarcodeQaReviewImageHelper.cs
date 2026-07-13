@@ -1,5 +1,6 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Drawing.Imaging;
+using WF.MES.Core.Exceptions;
 
 namespace WF.MES.Infrastructure.Services.Barcode;
 
@@ -8,6 +9,7 @@ internal static class BarcodeQaReviewImageHelper
 {
     private const int MaxBytes = 5 * 1024 * 1024;
     private const int MaxEdgePixels = 1920;
+    private const int MaxMegabytes = MaxBytes / (1024 * 1024);
     private const long JpegQuality = 80L;
 
     private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".bmp"];
@@ -16,13 +18,13 @@ internal static class BarcodeQaReviewImageHelper
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
-            throw new InvalidOperationException("图片文件不存在");
+            throw new BusinessException("err.imageFileNotFound");
         }
 
         var extension = Path.GetExtension(sourcePath);
         if (!AllowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException("仅支持 JPG、PNG、BMP 图片");
+            throw new BusinessException("err.imageFormatUnsupported");
         }
 
         using var image = Image.FromFile(sourcePath);
@@ -32,7 +34,7 @@ internal static class BarcodeQaReviewImageHelper
 
         if (jpegBytes.Length > MaxBytes)
         {
-            throw new InvalidOperationException($"图片压缩后仍超过 {MaxBytes / (1024 * 1024)}MB，请换较小图片");
+            throw new BusinessException("err.imageCompressedTooLarge", MaxMegabytes);
         }
 
         return jpegBytes;
@@ -47,7 +49,7 @@ internal static class BarcodeQaReviewImageHelper
 
         if (imageBytes.Length > MaxBytes)
         {
-            throw new InvalidOperationException($"单张图片不能超过 {MaxBytes / (1024 * 1024)}MB");
+            throw new BusinessException("err.imageTooLarge", MaxMegabytes);
         }
     }
 

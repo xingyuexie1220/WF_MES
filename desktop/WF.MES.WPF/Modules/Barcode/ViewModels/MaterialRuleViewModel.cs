@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
@@ -23,20 +23,20 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
     private int _previewLength;
     private DateTime _previewDate = DateTime.Today;
     private List<RuleSegmentEditDto>? _savedSegmentSnapshot;
+    private readonly Dictionary<int, string> _segmentSummaryRaw = new();
 
     public MaterialRuleViewModel(
         IMaterialBarcodeRuleService ruleService,
         ICustomerService customerService,
         IBarcodeBuilder barcodeBuilder,
-        ILocalizationService localization,
-        IDesktopUiText ui)
+        ILocalizationService localization)
         : base(localization)
     {
         _ruleService = ruleService;
         _customerService = customerService;
         _barcodeBuilder = barcodeBuilder;
-        Ui = ui;
 
+        RebuildSelectOptions();
         AddCommand = new DelegateCommand(StartAdd);
         EditCommand = new DelegateCommand(async () => await StartEditAsync(), () => SelectedRule != null)
             .ObservesProperty(() => SelectedRule);
@@ -50,27 +50,19 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
         PreviewCommand = new DelegateCommand(UpdatePreview);
     }
 
-    public IDesktopUiText Ui { get; }
+    public string FormTitle => IsNew ? L("ui.barcode.materialRuleFormNew") : L("ui.barcode.materialRuleFormEdit");
 
-    public string PageTitle => L("desktop.barcode.materialRuleTitle");
+    public string PageTitle => L("ui.barcode.materialRuleTitle");
 
-    public string SegmentTitle => L("desktop.barcode.segmentTitle");
+    public string SegmentTitle => L("ui.barcode.segmentTitle");
 
-    public string FixedContentLabel => L("desktop.barcode.fixedContent");
+    public string TotalLengthText => string.Format(L("ui.barcode.totalLength"), PreviewLength);
 
-    public string DateFormatLabel => L("desktop.barcode.dateFormat");
+    public IReadOnlyList<BarcodeSegmentTypeOption> SegmentTypeOptions { get; private set; } = [];
 
-    public string SerialRadixLabel => L("desktop.barcode.serialRadix");
+    public IReadOnlyList<DateFormatOption> DateFormatOptions { get; private set; } = [];
 
-    public string SerialDigitsLabel => L("desktop.barcode.serialDigits");
-
-    public string ResetKeyLabel => L("desktop.barcode.resetKey");
-
-    public string AddSegmentText => L("desktop.actions.addSegment");
-
-    public string SaveRuleText => L("desktop.actions.saveRule");
-
-    public string TotalLengthText => string.Format(L("desktop.barcode.totalLength"), PreviewLength);
+    public IReadOnlyList<SerialRadixOption> SerialRadixOptions { get; private set; } = [];
 
     public ObservableCollection<MaterialRuleListDto> Rules { get; } = [];
     public ObservableCollection<CustomerListDto> Customers { get; } = [];
@@ -178,8 +170,6 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
         }
     }
 
-    public string FormTitle => IsNew ? L("desktop.barcode.materialRuleFormNew") : L("desktop.barcode.materialRuleFormEdit");
-
     public DelegateCommand AddCommand { get; }
     public DelegateCommand EditCommand { get; }
     public DelegateCommand SaveCommand { get; }
@@ -204,16 +194,42 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
     {
         RaisePropertyChanged(nameof(PageTitle));
         RaisePropertyChanged(nameof(SegmentTitle));
-        RaisePropertyChanged(nameof(FixedContentLabel));
-        RaisePropertyChanged(nameof(DateFormatLabel));
-        RaisePropertyChanged(nameof(SerialRadixLabel));
-        RaisePropertyChanged(nameof(SerialDigitsLabel));
-        RaisePropertyChanged(nameof(ResetKeyLabel));
-        RaisePropertyChanged(nameof(AddSegmentText));
-        RaisePropertyChanged(nameof(SaveRuleText));
         RaisePropertyChanged(nameof(TotalLengthText));
         RaisePropertyChanged(nameof(FormTitle));
+        RebuildSelectOptions();
         RefreshSegmentOrderLabels();
+        RefreshSegmentLocalizedTexts();
+        RefreshRuleSummaries();
+    }
+
+    private void RefreshRuleSummaries()
+    {
+        foreach (var rule in Rules)
+        {
+            if (_segmentSummaryRaw.TryGetValue(rule.RuleId, out var raw))
+            {
+                rule.SegmentSummary = LocalizedOptions.TranslateSegmentSummary(raw, key => L(key));
+            }
+        }
+    }
+
+    private void RebuildSelectOptions()
+    {
+        SegmentTypeOptions = LocalizedOptions.SegmentTypes(key => L(key));
+        DateFormatOptions = LocalizedOptions.DateFormats(key => L(key));
+        SerialRadixOptions = LocalizedOptions.SerialRadices(key => L(key));
+
+        RaisePropertyChanged(nameof(SegmentTypeOptions));
+        RaisePropertyChanged(nameof(DateFormatOptions));
+        RaisePropertyChanged(nameof(SerialRadixOptions));
+    }
+
+    private void RefreshSegmentLocalizedTexts()
+    {
+        foreach (var segment in Segments)
+        {
+            segment.RefreshLocalizedText(key => L(key));
+        }
     }
 
     private bool CanSave() =>
@@ -248,8 +264,11 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
         try
         {
             Rules.Clear();
+            _segmentSummaryRaw.Clear();
             foreach (var rule in await _ruleService.GetRulesAsync())
             {
+                _segmentSummaryRaw[rule.RuleId] = rule.SegmentSummary;
+                rule.SegmentSummary = LocalizedOptions.TranslateSegmentSummary(rule.SegmentSummary, key => L(key));
                 Rules.Add(rule);
             }
         }
@@ -312,8 +331,9 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
         RefreshSegmentOrderLabels();
     }
 
-    private RuleSegmentItemViewModel CreateSegmentItem(RuleSegmentEditDto s) =>
-        new()
+    private RuleSegmentItemViewModel CreateSegmentItem(RuleSegmentEditDto s)
+    {
+        var item = new RuleSegmentItemViewModel
         {
             SortOrder = s.SortOrder,
             SegmentType = s.SegmentType,
@@ -323,10 +343,15 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
             SerialRadix = s.SerialRadix,
             SerialDigits = s.SerialDigits
         };
+        item.RefreshLocalizedText(key => L(key));
+        return item;
+    }
 
     private void AddSegment()
     {
-        Segments.Add(new RuleSegmentItemViewModel { SegmentType = BarcodeSegmentTypes.Literal });
+        var item = new RuleSegmentItemViewModel { SegmentType = BarcodeSegmentTypes.Literal };
+        item.RefreshLocalizedText(key => L(key));
+        Segments.Add(item);
         ReorderSegments();
         UpdatePreview();
     }
@@ -355,7 +380,7 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
     {
         foreach (var segment in Segments)
         {
-            segment.SortOrderLabel = string.Format(L("desktop.barcode.segmentOrder"), segment.SortOrder);
+            segment.SortOrderLabel = string.Format(L("ui.barcode.segmentOrder"), segment.SortOrder);
         }
     }
 
@@ -374,7 +399,7 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
         }
         catch (Exception ex)
         {
-            PreviewText = string.Format(L("desktop.barcode.previewFailed"), ex.Message);
+            PreviewText = TF("ui.barcode.previewFailed", EX(ex));
             PreviewLength = 0;
         }
     }
@@ -422,12 +447,12 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
 
             HandyControl.Controls.Growl.Success(
                 isCreate
-                    ? L("desktop.barcode.materialRuleSaveSuccess")
-                    : L("desktop.barcode.materialRuleSaveSuccessReset"));
+                    ? L("ui.barcode.materialRuleSaveSuccess")
+                    : L("ui.barcode.materialRuleSaveSuccessReset"));
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
         finally
         {
@@ -486,16 +511,16 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
             return true;
         }
 
-        var emptyKey = L("desktop.barcode.emptyKey");
+        var emptyKey = L("ui.barcode.emptyKey");
         var message = string.Format(
-            L("desktop.barcode.resetKeyConfirmBody"),
+            L("ui.barcode.resetKeyConfirmBody"),
             PreviewDate,
             string.IsNullOrEmpty(oldKey) ? emptyKey : oldKey,
             string.IsNullOrEmpty(newKey) ? emptyKey : newKey);
 
         return MessageBox.Show(
                    message,
-                   L("desktop.barcode.resetKeyConfirmTitle"),
+                   L("ui.barcode.resetKeyConfirmTitle"),
                    MessageBoxButton.YesNo,
                    MessageBoxImage.Warning,
                    MessageBoxResult.No)

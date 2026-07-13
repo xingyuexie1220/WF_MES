@@ -1,4 +1,5 @@
 using FluentValidation;
+using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
 
 namespace WF.MES.Infrastructure.Validation.Printing;
@@ -6,15 +7,15 @@ namespace WF.MES.Infrastructure.Validation.Printing;
 /// <summary><see cref="LabelPrintRequestDto"/> 校验。</summary>
 public sealed class LabelPrintRequestValidator : AbstractValidator<LabelPrintRequestDto>
 {
-    public LabelPrintRequestValidator()
+    public LabelPrintRequestValidator(ILocalizationService localization)
     {
         RuleFor(x => x.TemplatePath)
-            .NotEmpty().WithMessage("标签模板路径不能为空");
+            .NotEmpty().WithMessage(_ => localization.T("val.templatePathRequired"));
 
         RuleFor(x => x.PrinterName)
-            .NotEmpty().WithMessage("请选择打印机");
+            .NotEmpty().WithMessage(_ => localization.T("val.printerRequired"));
 
         RuleFor(x => x.Jobs)
-            .NotEmpty().WithMessage("没有可打印的标签");
+            .NotEmpty().WithMessage(_ => localization.T("val.labelsRequired"));
     }
 }

@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+using FluentValidation;
+using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
 
 namespace WF.MES.Infrastructure.Validation.Barcode;
@@ -6,8 +7,10 @@ namespace WF.MES.Infrastructure.Validation.Barcode;
 /// <summary>条码资料审核保存附件校验。</summary>
 public class BarcodeQaReviewSaveAttachmentsValidator : AbstractValidator<BarcodeQaReviewSaveAttachmentsDto>
 {
-    public BarcodeQaReviewSaveAttachmentsValidator()
+    public BarcodeQaReviewSaveAttachmentsValidator(ILocalizationService localization)
     {
-        RuleFor(x => x.RuleId).GreaterThan(0).WithMessage("请选择料号规则");
+        RuleFor(x => x.RuleId)
+            .GreaterThan(0)
+            .WithMessage(_ => localization.T("val.ruleIdRequired"));
     }
 }

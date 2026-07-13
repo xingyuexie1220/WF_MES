@@ -21,8 +21,7 @@ public partial class BarcodeGenerateResultWindow : Window
             printService,
             recordService,
             model,
-            WpfLocalization.Instance,
-            ResolveUiText());
+            WpfLocalization.Instance);
         _viewModel.RequestClose += Close;
         DataContext = _viewModel;
         _viewModel.Initialize();
@@ -41,7 +40,4 @@ public partial class BarcodeGenerateResultWindow : Window
         };
         window.ShowDialog();
     }
-
-    private static IDesktopUiText ResolveUiText() =>
-        ((App)Application.Current).Container.Resolve<IDesktopUiText>();
 }

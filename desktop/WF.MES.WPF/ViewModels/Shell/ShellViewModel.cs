@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
 using WF.MES.WPF.Views.Login;
@@ -8,11 +8,12 @@ using WF.MES.Core;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
+using WF.MES.WPF.Infrastructure;
 
 namespace WF.MES.WPF.ViewModels.Shell;
 
-/// <summary>主界面：侧栏权限菜单、Prism 导航、会话心跳与退出</summary>
-public class ShellViewModel : BindableBase
+/// <summary>主界面：侧栏权限菜单、Prism 导航、会话心跳与退出。静态文案走 XAML <c>Loc.Key</c>。</summary>
+public class ShellViewModel : LocalizedViewModelBase
 {
     private readonly ISessionService _sessionService;
     private readonly IAuthService _authService;
@@ -20,14 +21,15 @@ public class ShellViewModel : BindableBase
     private readonly ISopService _sopService;
     private readonly IDatabaseHealthService _databaseHealthService;
     private readonly IApiHealthService _apiHealthService;
-    private readonly ILocalizationService _localization;
     private readonly IMenuPermissionService _menuPermissionService;
     private readonly IAppVersion _appVersion;
     private readonly int _heartbeatIntervalSeconds;
 
     private string _welcomeText = string.Empty;
     private string _emptyHint = string.Empty;
-    private string _selectedLocale = string.Empty;
+    private string? _emptyHintKey;
+    private object[] _emptyHintArgs = [];
+    private LocaleDisplayItem? _selectedLocaleOption;
     private string _apiStatusText = string.Empty;
     private string _databaseStatusText = string.Empty;
     private string _currentTimeText = string.Empty;
@@ -52,6 +54,7 @@ public class ShellViewModel : BindableBase
         IMenuPermissionService menuPermissionService,
         IConfiguration configuration,
         IAppVersion appVersion)
+        : base(localization)
     {
         _sessionService = sessionService;
         _authService = authService;
@@ -59,25 +62,20 @@ public class ShellViewModel : BindableBase
         _sopService = sopService;
         _databaseHealthService = databaseHealthService;
         _apiHealthService = apiHealthService;
-        _localization = localization;
         _menuPermissionService = menuPermissionService;
         _appVersion = appVersion;
         _heartbeatIntervalSeconds = Math.Max(configuration.GetValue("Session:HeartbeatIntervalSeconds", 60), 10);
 
-        LocaleOptions = new ObservableCollection<LocaleDisplayItem>(
-            _localization.LocaleOptions.Select(option =>
-                new LocaleDisplayItem(option.Value, _localization.T(option.LabelKey))));
-        _selectedLocale = _localization.CurrentLocale;
+        LocaleOptions = [];
 
         LogoutCommand = new DelegateCommand(async () => await LogoutAsync());
         OpenSopCommand = new DelegateCommand(OpenSop);
         SwitchFactoryCommand = new DelegateCommand(async () => await SwitchFactoryAsync());
         SelectMenuCommand = new DelegateCommand<MenuNavItem?>(OnSelectMenu);
 
-        _localization.LocaleChanged += async (_, _) => await OnLocaleChangedAsync();
+        Localization.LocaleChanged += async (_, _) => await ReloadMenusOnLocaleChangedAsync();
 
-        RefreshLocalizedTexts();
-        RefreshWelcomeText();
+        RefreshLocalizedProperties();
         RefreshCurrentTime();
         LoadModules();
         StartHeartbeat();
@@ -87,30 +85,26 @@ public class ShellViewModel : BindableBase
 
     public ObservableCollection<LocaleDisplayItem> LocaleOptions { get; }
 
-    public string SelectedLocale
+    public LocaleDisplayItem? SelectedLocaleOption
     {
-        get => _selectedLocale;
+        get => _selectedLocaleOption;
         set
         {
-            if (!SetProperty(ref _selectedLocale, value) || string.IsNullOrWhiteSpace(value))
+            if (!SetProperty(ref _selectedLocaleOption, value) || value is null)
             {
                 return;
             }
 
-            _localization.SetLocale(value);
+            Localization.SetLocale(value.Value);
         }
     }
 
-    public string HeaderTitle => _localization.T("desktop.headerTitle");
-    public string LogoutText => _localization.T("desktop.logout");
-    public string OpenSopText => _localization.T("desktop.openSop");
-    public string SwitchFactoryText => _localization.T("desktop.factory.switch");
-    public string LocaleLabel => _localization.T("desktop.locale.label");
-    public string CurrentFactoryText => _sessionService.CurrentUser?.FactoryName ?? _localization.T("desktop.factory.current");
+    public string CurrentFactoryText => _sessionService.CurrentUser?.FactoryName ?? L("ui.factory.current");
     public bool CanSwitchFactory => (_sessionService.CurrentUser?.AccessibleFactories.Count ?? 0) > 1;
-    public string VersionText => string.Format(_localization.T("desktop.version"), _appVersion.Current);
-    public string MachineNameText => string.Format(_localization.T("desktop.machineName"), Environment.MachineName);
-    public string MenuCountFormat => _localization.T("desktop.menuCount");
+    public string VersionText => TF("ui.version", _appVersion.Current);
+    public string MachineNameText => TF("ui.machineName", Environment.MachineName);
+
+    private string MenuCountFormat => L("ui.menuCount");
 
     /// <summary>Shell 窗口加载并完成 Region 注册后调用，触发首次导航。</summary>
     public void OnShellLoaded()
@@ -235,11 +229,11 @@ public class ShellViewModel : BindableBase
 
         if (Modules.Count == 0)
         {
-            EmptyHint = _localization.T("desktop.noPermission");
+            SetEmptyHint("ui.noPermission");
             return;
         }
 
-        EmptyHint = _localization.T("desktop.emptyHint");
+        SetEmptyHint("ui.emptyHint");
     }
 
     private void ActivateModule(ModuleNavItem module, bool selectFirstMenu)
@@ -255,7 +249,7 @@ public class ShellViewModel : BindableBase
         if (module.SubMenus.Count == 0)
         {
             SelectedMenu = null;
-            EmptyHint = string.Format(_localization.T("desktop.noMenusInModule"), module.ModuleName);
+            SetEmptyHint("ui.noMenusInModule", module.ModuleName);
             return;
         }
 
@@ -287,12 +281,12 @@ public class ShellViewModel : BindableBase
         }
 
         SelectedMenu = menu;
-        EmptyHint = string.Empty;
+        ClearEmptyHint();
 
         if (!_regionManager.Regions.ContainsRegionWithName(RegionNames.MainRegion))
         {
             Log.Warning("主内容区 {Region} 尚未注册，导航推迟", RegionNames.MainRegion);
-            EmptyHint = _localization.T("desktop.regionNotReady");
+            SetEmptyHint("ui.regionNotReady");
             return;
         }
 
@@ -300,9 +294,9 @@ public class ShellViewModel : BindableBase
         {
             if (result.Success != true)
             {
-                var error = result.Exception?.Message ?? "未知错误";
+                var error = result.Exception?.Message ?? L("ui.unknownError");
                 Log.Error(result.Exception, "导航到 {ViewName} 失败: {Error}", menu.ViewName, error);
-                EmptyHint = string.Format(_localization.T("desktop.menuLoadFailed"), menu.MenuName, error);
+                SetEmptyHint("ui.menuLoadFailed", menu.MenuName, error);
             }
         });
     }
@@ -311,8 +305,8 @@ public class ShellViewModel : BindableBase
     {
         var user = _sessionService.CurrentUser;
         WelcomeText = user == null
-            ? _localization.T("desktop.welcomeDefault")
-            : string.Format(_localization.T("desktop.welcomeUser"), user.NickName ?? user.UserName);
+            ? L("ui.welcomeDefault")
+            : TF("ui.welcomeUser", user.NickName ?? user.UserName);
         RaisePropertyChanged(nameof(CurrentFactoryText));
         RaisePropertyChanged(nameof(CanSwitchFactory));
     }
@@ -328,11 +322,11 @@ public class ShellViewModel : BindableBase
         var factories = user.AccessibleFactories;
         if (factories.Count <= 1)
         {
-            HandyControl.Controls.Growl.Info(_localization.T("common.noData"));
+            HandyControl.Controls.Growl.Info(L("common.noData"));
             return;
         }
 
-        var selectWindow = new Views.Login.FactorySelectWindow(factories, _localization)
+        var selectWindow = new Views.Login.FactorySelectWindow(factories, Localization)
         {
             Owner = Application.Current.MainWindow
         };
@@ -350,7 +344,7 @@ public class ShellViewModel : BindableBase
         var result = await _authService.SwitchFactoryAsync(selectWindow.SelectedFactory.Id);
         if (!result.Success || result.User is null)
         {
-            HandyControl.Controls.Growl.Warning(result.ErrorMessage ?? _localization.T("desktop.factory.switchFailed"));
+            HandyControl.Controls.Growl.Warning(result.ErrorMessage ?? L("ui.factory.switchFailed"));
             return;
         }
 
@@ -367,14 +361,11 @@ public class ShellViewModel : BindableBase
             ActivateModule(Modules[0], selectFirstMenu: true);
         }
 
-        HandyControl.Controls.Growl.Success(_localization.T("desktop.factory.switchSuccess"));
+        HandyControl.Controls.Growl.Success(L("ui.factory.switchSuccess"));
     }
 
-    private async Task OnLocaleChangedAsync()
+    private async Task ReloadMenusOnLocaleChangedAsync()
     {
-        RefreshLocalizedTexts();
-        RefreshWelcomeText();
-
         var user = _sessionService.CurrentUser;
         if (user is null)
         {
@@ -386,36 +377,71 @@ public class ShellViewModel : BindableBase
         LoadModules();
     }
 
-    private void RefreshLocalizedTexts()
+    protected override void RefreshLocalizedProperties()
     {
-        if (!string.Equals(_selectedLocale, _localization.CurrentLocale, StringComparison.OrdinalIgnoreCase))
-        {
-            _selectedLocale = _localization.CurrentLocale;
-            RaisePropertyChanged(nameof(SelectedLocale));
-        }
-
         LocaleOptions.Clear();
-        foreach (var option in _localization.LocaleOptions)
+        foreach (var option in Localization.LocaleOptions)
         {
-            LocaleOptions.Add(new LocaleDisplayItem(option.Value, _localization.T(option.LabelKey)));
+            LocaleOptions.Add(new LocaleDisplayItem(option.Value, L(option.LabelKey)));
         }
 
-        RaisePropertyChanged(nameof(HeaderTitle));
-        RaisePropertyChanged(nameof(LogoutText));
-        RaisePropertyChanged(nameof(OpenSopText));
-        RaisePropertyChanged(nameof(SwitchFactoryText));
-        RaisePropertyChanged(nameof(LocaleLabel));
+        SyncSelectedLocaleOption();
+
         RaisePropertyChanged(nameof(CurrentFactoryText));
         RaisePropertyChanged(nameof(CanSwitchFactory));
         RaisePropertyChanged(nameof(VersionText));
         RaisePropertyChanged(nameof(MachineNameText));
-        RaisePropertyChanged(nameof(MenuCountFormat));
+
+        ApiStatusText = IsApiConnected ? L("ui.apiConnected") : L("ui.apiDisconnected");
+        DatabaseStatusText = IsDatabaseConnected ? L("ui.dbConnected") : L("ui.dbDisconnected");
+        ApplyEmptyHint();
 
         var countFormat = MenuCountFormat;
         foreach (var module in Modules)
         {
             module.RefreshSubMenuCountText(countFormat);
         }
+
+        RefreshWelcomeText();
+    }
+
+    private void SetEmptyHint(string key, params object[] args)
+    {
+        _emptyHintKey = key;
+        _emptyHintArgs = args;
+        ApplyEmptyHint();
+    }
+
+    private void ClearEmptyHint()
+    {
+        _emptyHintKey = null;
+        _emptyHintArgs = [];
+        EmptyHint = string.Empty;
+    }
+
+    private void ApplyEmptyHint()
+    {
+        if (_emptyHintKey is null)
+        {
+            return;
+        }
+
+        EmptyHint = _emptyHintArgs.Length == 0
+            ? L(_emptyHintKey)
+            : string.Format(L(_emptyHintKey), _emptyHintArgs);
+    }
+
+    private void SyncSelectedLocaleOption()
+    {
+        var match = LocaleOptions.FirstOrDefault(option =>
+            string.Equals(option.Value, Localization.CurrentLocale, StringComparison.OrdinalIgnoreCase));
+
+        if (SetProperty(ref _selectedLocaleOption, match, nameof(SelectedLocaleOption)))
+        {
+            return;
+        }
+
+        RaisePropertyChanged(nameof(SelectedLocaleOption));
     }
 
     private void OpenSop()
@@ -427,7 +453,7 @@ public class ShellViewModel : BindableBase
         catch (Exception ex)
         {
             Log.Error(ex, "打开 SOP 文档失败");
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
     }
 
@@ -458,20 +484,20 @@ public class ShellViewModel : BindableBase
         {
             IsApiConnected = await _apiHealthService.CheckConnectionAsync();
             ApiStatusText = IsApiConnected
-                ? _localization.T("desktop.apiConnected")
-                : _localization.T("desktop.apiDisconnected");
+                ? L("ui.apiConnected")
+                : L("ui.apiDisconnected");
 
             IsDatabaseConnected = await _databaseHealthService.CheckConnectionAsync();
             DatabaseStatusText = IsDatabaseConnected
-                ? _localization.T("desktop.dbConnected")
-                : _localization.T("desktop.dbDisconnected");
+                ? L("ui.dbConnected")
+                : L("ui.dbDisconnected");
         }
         catch (Exception ex)
         {
             Log.Warning(ex, "连接状态检测失败");
             IsApiConnected = false;
-            ApiStatusText = _localization.T("desktop.apiDisconnected");
-            DatabaseStatusText = _localization.T("desktop.dbDisconnected");
+            ApiStatusText = L("ui.apiDisconnected");
+            DatabaseStatusText = L("ui.dbDisconnected");
             IsDatabaseConnected = false;
         }
     }
@@ -536,7 +562,7 @@ public class ShellViewModel : BindableBase
     {
         _heartbeatTimer?.Stop();
         _clockTimer?.Stop();
-        HandyControl.Controls.Growl.Warning(_localization.T("desktop.sessionExpired"));
+        HandyControl.Controls.Growl.Warning(L("ui.sessionExpired"));
         _sessionService.Clear();
         Application.Current.Shutdown();
     }

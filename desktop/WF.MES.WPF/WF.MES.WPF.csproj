@@ -98,7 +98,7 @@
 
     </None>
 
-    <Content Include="..\..\i18n\messages\*.json" Link="i18n\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="i18n\*.json" CopyToOutputDirectory="PreserveNewest" />
 
   </ItemGroup>
 

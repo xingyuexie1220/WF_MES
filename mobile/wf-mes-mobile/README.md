@@ -6,7 +6,7 @@ Android / iOS 原生 App：**uni-app + Vue3 + Pinia + uView Plus + vue-i18n**。
 
 | 能力 | 说明 |
 |------|------|
-| 多语言 | 简体中文 / 繁體中文 / English，与 Web 共用 `i18n/messages/*.json` |
+| 多语言 | 简体中文 / 繁體中文 / English，UI 包见 `src/i18n/locales/`（独立维护） |
 | 多工厂 | 登录选厂、我的页切换工厂（`switch-factory` API） |
 | Tab 布局 | 工作台 / 扫码 / 我的（借鉴示例项目布局） |
 | 鉴权 | JWT 双 Token、401 无感刷新、同端互踢跳转登录 |
@@ -22,7 +22,9 @@ src/
 ├── types/auth.ts         # 与后端 DTO 对齐
 ├── utils/auth.ts         # Token / 工厂 / 语言持久化
 ├── utils/request.ts      # uni.request 封装 + Refresh
-└── i18n/index.ts         # vue-i18n（引用仓库根 i18n/messages）
+└── i18n/
+    ├── index.ts            # vue-i18n
+    └── locales/*.json      # 手机 UI 文案包（API messageCode 见 i18n/api-codes）
 ```
 
 ## 安装与运行

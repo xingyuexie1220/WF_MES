@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using WF.MES.Core.Interfaces;
 using WF.MES.Infrastructure.Validation;
 using WF.MES.Models.Dtos;
@@ -6,7 +6,7 @@ using WF.MES.WPF.Infrastructure;
 
 namespace WF.MES.WPF.ViewModels.Login;
 
-/// <summary>首次登录或修改密码对话框逻辑。</summary>
+/// <summary>首次登录或修改密码对话框。静态文案走 XAML <c>Loc.Key</c>。</summary>
 public class ChangePasswordViewModel : LocalizedViewModelBase
 {
     private readonly IAuthService _authService;
@@ -42,13 +42,11 @@ public class ChangePasswordViewModel : LocalizedViewModelBase
 
     public string UserDisplayName { get; }
 
-    public string TitleText => L("desktop.password.firstLoginTitle");
-    public string HintText => string.Format(L("desktop.password.firstLoginHint"), UserDisplayName);
-    public string NewPasswordLabel => L("mobile.password.new");
-    public string ConfirmPasswordLabel => L("mobile.password.confirm");
-    public string RuleHintText => L("desktop.password.ruleHint");
-    public string CancelText => L("common.cancel");
-    public string ConfirmText => L("desktop.password.confirmChange");
+    /// <summary>窗口 Title 与标题共用；含用户名的提示见 <see cref="HintText"/>。</summary>
+    public string TitleText => L("ui.password.firstLoginTitle");
+
+    /// <summary>含用户名的动态提示。</summary>
+    public string HintText => TF("ui.password.firstLoginHint", UserDisplayName);
 
     public string NewPassword
     {
@@ -78,11 +76,6 @@ public class ChangePasswordViewModel : LocalizedViewModelBase
     {
         RaisePropertyChanged(nameof(TitleText));
         RaisePropertyChanged(nameof(HintText));
-        RaisePropertyChanged(nameof(NewPasswordLabel));
-        RaisePropertyChanged(nameof(ConfirmPasswordLabel));
-        RaisePropertyChanged(nameof(RuleHintText));
-        RaisePropertyChanged(nameof(CancelText));
-        RaisePropertyChanged(nameof(ConfirmText));
     }
 
     private bool CanConfirm() => !IsBusy && !string.IsNullOrWhiteSpace(NewPassword) && !string.IsNullOrWhiteSpace(ConfirmPassword);
@@ -115,12 +108,12 @@ public class ChangePasswordViewModel : LocalizedViewModelBase
         {
             await _authService.ChangePasswordAsync(_currentPassword, NewPassword);
             IsSuccess = true;
-            HandyControl.Controls.Growl.Success(L("mobile.password.success"));
+            HandyControl.Controls.Growl.Success(L("ui.password.success"));
             RequestClose?.Invoke();
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
         finally
         {

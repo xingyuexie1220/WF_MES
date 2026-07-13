@@ -13,7 +13,7 @@ public class LabelPrintRequestDto
 /// <summary>打印完成结果。</summary>
 public class LabelPrintResultDto
 {
-    public string Message { get; init; } = string.Empty;
+    public int PrintedCount { get; init; }
 }
 
 /// <summary>打印进度（绑定 UI 状态文本）。</summary>
@@ -22,6 +22,4 @@ public class LabelPrintProgressDto
     public int Current { get; init; }
 
     public int Total { get; init; }
-
-    public string StatusText => $"正在打印 {Current}/{Total}";
 }

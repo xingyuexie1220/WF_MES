@@ -1,9 +1,9 @@
-using SqlSugar;
+﻿using SqlSugar;
 
 namespace WF.MES.Models.Entities;
 
-/// <summary>料号条码规则头表（Bcd_MaterialRule）。</summary>
-[SugarTable("Bcd_MaterialRule")]
+/// <summary>料号条码规则头表（Barcode_MaterialRule）。</summary>
+[SugarTable("Barcode_MaterialRule")]
 public class BarcodeMaterialRule
 {
     [SugarColumn(IsPrimaryKey = true, IsIdentity = true, ColumnName = "Rule_Id")]

@@ -1,4 +1,4 @@
-using SqlSugar;
+﻿using SqlSugar;
 using WF.MES.Application.Notices;
 using WF.MES.Application.Notices.Dtos;
 using WF.MES.Domain.Entities;
@@ -12,7 +12,7 @@ public class NoticeService(ISqlSugarClient db) : INoticeService
     public async Task<PagedResult<NoticeDto>> GetPagedListAsync(NoticeQueryRequest request, CancellationToken cancellationToken = default)
     {
         RefAsync<int> total = 0;
-        var items = await db.Queryable<SysNotice>()
+        var items = await db.Queryable<SystemNotice>()
             .Where(n => !n.IsDeleted)
             .WhereIF(!string.IsNullOrWhiteSpace(request.Title), n => n.Title.Contains(request.Title!))
             .WhereIF(request.NoticeType.HasValue, n => n.NoticeType == request.NoticeType)
@@ -46,7 +46,7 @@ public class NoticeService(ISqlSugarClient db) : INoticeService
 
     public async Task<List<NoticePushDto>> GetPublishedRecentAsync(int count = 20, CancellationToken cancellationToken = default)
     {
-        return await db.Queryable<SysNotice>()
+        return await db.Queryable<SystemNotice>()
             .Where(n => !n.IsDeleted && n.Status == 1)
             .OrderByDescending(n => n.PublishTime)
             .Take(count)
@@ -63,7 +63,7 @@ public class NoticeService(ISqlSugarClient db) : INoticeService
 
     public async Task<NoticeDto?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        var item = await db.Queryable<SysNotice>()
+        var item = await db.Queryable<SystemNotice>()
             .Where(n => n.Id == id && !n.IsDeleted)
             .Select(n => new NoticeDto
             {
@@ -92,7 +92,7 @@ public class NoticeService(ISqlSugarClient db) : INoticeService
     public async Task<long> CreateAsync(CreateNoticeRequest request, long operatorId, CancellationToken cancellationToken = default)
     {
         var now = DateTime.Now;
-        var notice = new SysNotice
+        var notice = new SystemNotice
         {
             Title = request.Title.Trim(),
             Content = request.Content.Trim(),
@@ -108,7 +108,7 @@ public class NoticeService(ISqlSugarClient db) : INoticeService
 
     public async Task UpdateAsync(long id, UpdateNoticeRequest request, long operatorId, CancellationToken cancellationToken = default)
     {
-        var notice = await db.Queryable<SysNotice>().FirstAsync(n => n.Id == id && !n.IsDeleted)
+        var notice = await db.Queryable<SystemNotice>().FirstAsync(n => n.Id == id && !n.IsDeleted)
             ?? throw new BusinessException("公告不存在");
 
         notice.Title = request.Title.Trim();
@@ -124,7 +124,7 @@ public class NoticeService(ISqlSugarClient db) : INoticeService
 
     public async Task DeleteAsync(long id, long operatorId, CancellationToken cancellationToken = default)
     {
-        var notice = await db.Queryable<SysNotice>().FirstAsync(n => n.Id == id && !n.IsDeleted)
+        var notice = await db.Queryable<SystemNotice>().FirstAsync(n => n.Id == id && !n.IsDeleted)
             ?? throw new BusinessException("公告不存在");
 
         notice.IsDeleted = true;
@@ -135,7 +135,7 @@ public class NoticeService(ISqlSugarClient db) : INoticeService
 
     public async Task<NoticePushDto> PublishAsync(long id, long operatorId, CancellationToken cancellationToken = default)
     {
-        var notice = await db.Queryable<SysNotice>().FirstAsync(n => n.Id == id && !n.IsDeleted)
+        var notice = await db.Queryable<SystemNotice>().FirstAsync(n => n.Id == id && !n.IsDeleted)
             ?? throw new BusinessException("公告不存在");
 
         notice.Status = 1;
@@ -168,7 +168,7 @@ public class NoticeService(ISqlSugarClient db) : INoticeService
             return;
         }
 
-        var users = await db.Queryable<SysUser>()
+        var users = await db.Queryable<SystemUser>()
             .Where(u => userIds.Contains(u.Id))
             .Select(u => new { u.Id, u.NickName, u.UserName })
             .ToListAsync();

@@ -1,7 +1,8 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Serilog;
 using SqlSugar;
 using WF.MES.Core.Constants;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Extensions;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
@@ -174,11 +175,11 @@ public class BarcodeQaReviewService : IBarcodeQaReviewService
         await _saveAttachmentsValidator.ValidateRequestAsync(dto, cancellationToken);
 
         var rule = await _db.Queryable<BarcodeMaterialRule>().InSingleAsync(dto.RuleId)
-            ?? throw new InvalidOperationException("料号条码规则不存在");
+            ?? throw new BusinessException("err.materialRuleNotFound");
 
         if (!BarcodeQaStatus.CanUpload(rule.QaStatus))
         {
-            throw new InvalidOperationException("当前状态不允许上传资料");
+            throw new BusinessException("err.uploadNotAllowed");
         }
 
         BarcodeQaReviewImageHelper.ValidateImageBytes(dto.DrawingImage);
@@ -196,7 +197,7 @@ public class BarcodeQaReviewService : IBarcodeQaReviewService
 
         if (rule.DrawingImage is not { Length: > 0 } || rule.PrintSampleImage is not { Length: > 0 })
         {
-            throw new InvalidOperationException("请同时上传图纸与打印实物图");
+            throw new BusinessException("err.attachmentsBothRequired");
         }
 
         var operatorName = BarcodeAuditHelper.GetCurrentOperator(_sessionService);
@@ -237,16 +238,16 @@ public class BarcodeQaReviewService : IBarcodeQaReviewService
     {
         _authorization.EnsureAction(MenuActions.BarcodeQaReview.Review);
         var rule = await _db.Queryable<BarcodeMaterialRule>().InSingleAsync(ruleId)
-            ?? throw new InvalidOperationException("料号条码规则不存在");
+            ?? throw new BusinessException("err.materialRuleNotFound");
 
         if (!BarcodeQaStatus.CanReview(rule.QaStatus))
         {
-            throw new InvalidOperationException("仅「待 QA 审核」状态可确认通过");
+            throw new BusinessException("err.qaApproveStateInvalid");
         }
 
         if (rule.DrawingImage is not { Length: > 0 } || rule.PrintSampleImage is not { Length: > 0 })
         {
-            throw new InvalidOperationException("请先上传图纸与打印实物图");
+            throw new BusinessException("err.attachmentsRequiredForReview");
         }
 
         var operatorName = BarcodeAuditHelper.GetCurrentOperator(_sessionService);
@@ -261,11 +262,11 @@ public class BarcodeQaReviewService : IBarcodeQaReviewService
         await _rejectValidator.ValidateRequestAsync(dto, cancellationToken);
 
         var rule = await _db.Queryable<BarcodeMaterialRule>().InSingleAsync(dto.RuleId)
-            ?? throw new InvalidOperationException("料号条码规则不存在");
+            ?? throw new BusinessException("err.materialRuleNotFound");
 
         if (!BarcodeQaStatus.CanReview(rule.QaStatus))
         {
-            throw new InvalidOperationException("仅「待 QA 审核」状态可驳回");
+            throw new BusinessException("err.qaRejectStateInvalid");
         }
 
         var operatorName = BarcodeAuditHelper.GetCurrentOperator(_sessionService);

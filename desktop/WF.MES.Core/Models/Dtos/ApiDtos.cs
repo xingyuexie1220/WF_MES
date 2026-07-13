@@ -35,17 +35,11 @@ public class FactorySummaryDto
     public bool IsDefault { get; set; }
 }
 
-public class RefreshTokenRequestDto
-{
-    public string RefreshToken { get; set; } = string.Empty;
-}
-
 public class LoginResponseDto
 {
     public bool NeedSelectFactory { get; set; }
     public List<FactorySummaryDto> Factories { get; set; } = [];
     public string AccessToken { get; set; } = string.Empty;
-    public string RefreshToken { get; set; } = string.Empty;
     public int ExpiresIn { get; set; }
     public UserInfoDto UserInfo { get; set; } = new();
 }
@@ -100,6 +94,4 @@ public class LoginResultDto
     public List<FactorySummaryDto> Factories { get; set; } = [];
     public string? ErrorMessage { get; set; }
     public UserInfoDto? User { get; set; }
-    public string? AccessToken { get; set; }
-    public string? RefreshToken { get; set; }
 }

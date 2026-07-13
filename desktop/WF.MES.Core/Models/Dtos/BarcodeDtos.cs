@@ -1,5 +1,6 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using WF.MES.Core.Constants;
+using WF.MES.Core.Exceptions;
 
 namespace WF.MES.Models.Dtos;
 
@@ -11,8 +12,6 @@ public class CustomerListDto : IAuditFieldsDto
     public string CustomerName { get; init; } = string.Empty;
 
     public int Enable { get; init; }
-
-    public string EnableText => Enable == 1 ? "启用" : "禁用";
 
     public string? CreatedBy { get; init; }
 
@@ -68,7 +67,7 @@ public class MaterialRuleListDto : IAuditFieldsDto
 
     public string MaterialNo { get; init; } = string.Empty;
 
-    public string SegmentSummary { get; init; } = string.Empty;
+    public string SegmentSummary { get; set; } = string.Empty;
 
     public int BarcodeLength { get; init; }
 
@@ -232,18 +231,11 @@ public class BarcodeGenerateRecordListDto
 
     public int PrintStatus { get; init; }
 
-    public string PrintStatusText => BarcodeOrderPrintStatus.GetText(PrintStatus);
-
     public DateTime? LastReprintedAt { get; init; }
 
     public string? LastReprintedBy { get; init; }
 
     public bool IsReprinted => PrintStatus == BarcodeOrderPrintStatus.Reprinted;
-
-    public string LastReprintSummary =>
-        LastReprintedAt == null
-            ? string.Empty
-            : $"最后补打：{LastReprintedAt:yyyy-MM-dd HH:mm}（{LastReprintedBy}）";
 
     public string SerialRangeText => $"{SerialStart} ~ {SerialEnd}";
 }
@@ -289,8 +281,6 @@ public abstract class BarcodeQaReviewRowDto
 
     public string? QaReviewRemark { get; init; }
 
-    public string QaStatusText => BarcodeQaStatus.GetText(QaStatus);
-
     public string AttachmentUploadedByText => AuditFieldDisplay.FormatUser(AttachmentUploadedBy);
 
     public string AttachmentUploadedAtText => AuditFieldDisplay.FormatDateTime(AttachmentUploadedAt);
@@ -306,10 +296,6 @@ public class BarcodeQaReviewListDto : BarcodeQaReviewRowDto
     public bool HasDrawingImage { get; init; }
 
     public bool HasPrintSampleImage { get; init; }
-
-    public string DrawingImageText => HasDrawingImage ? "已上传" : "未上传";
-
-    public string PrintSampleImageText => HasPrintSampleImage ? "已上传" : "未上传";
 
     public string QaReviewRemarkText => string.IsNullOrWhiteSpace(QaReviewRemark) ? "-" : QaReviewRemark;
 }
@@ -359,7 +345,7 @@ public static class RuleSegmentConfigMapper
         }
         catch (JsonException ex)
         {
-            throw new InvalidOperationException($"规则段配置解析失败: {entity.SegmentType}", ex);
+            throw new BusinessException("err.segmentConfigParseFailed", ex, entity.SegmentType);
         }
 
         return dto;

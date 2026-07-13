@@ -1,4 +1,5 @@
 using WF.MES.Core.Constants;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
 using WF.MES.Models.Entities;
@@ -19,13 +20,13 @@ public class BarcodeBuilder : IBarcodeBuilder
     {
         if (segments.Count == 0)
         {
-            throw new InvalidOperationException("条码规则至少需要一个组成段");
+            throw new BusinessException("err.segmentRequired");
         }
 
         var serialCount = segments.Count(s => s.SegmentType == BarcodeSegmentTypes.Serial);
         if (serialCount != 1)
         {
-            throw new InvalidOperationException("每条料号条码规则必须有且仅有一个流水号段");
+            throw new BusinessException("err.serialSegmentRequired");
         }
 
         var serialSegment = segments.First(s => s.SegmentType == BarcodeSegmentTypes.Serial);
@@ -47,12 +48,12 @@ public class BarcodeBuilder : IBarcodeBuilder
         var value = RuleSegmentConfigHelper.ParseLiteral(configJson);
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new InvalidOperationException($"第{sortOrder}段固定符号内容不能为空");
+            throw new BusinessException("err.literalEmptyAtSegment", sortOrder);
         }
 
         if (value != value.Trim())
         {
-            throw new InvalidOperationException($"第{sortOrder}段固定符号内容首尾不能有空格");
+            throw new BusinessException("err.literalTrimAtSegment", sortOrder);
         }
     }
 
@@ -61,7 +62,7 @@ public class BarcodeBuilder : IBarcodeBuilder
         var format = RuleSegmentConfigHelper.ParseDateFormat(configJson);
         if (!DatePartFormats.IsValid(format))
         {
-            throw new InvalidOperationException($"日期格式无效: {format}");
+            throw new BusinessException("err.dateFormatUnsupported", format);
         }
     }
 
@@ -70,12 +71,12 @@ public class BarcodeBuilder : IBarcodeBuilder
         var config = RuleSegmentConfigHelper.ParseSerial(configJson);
         if (!SerialRadixDefinitions.IsSupported(config.Radix))
         {
-            throw new InvalidOperationException("流水码进制仅支持 10 / 16 / 32 / 34 / 36");
+            throw new BusinessException("err.serialRadixUnsupported");
         }
 
         if (config.Digits <= 0 || config.Digits > 20)
         {
-            throw new InvalidOperationException("流水号位数必须在 1 ~ 20 之间");
+            throw new BusinessException("err.serialDigitsOutOfRange");
         }
     }
 
@@ -129,7 +130,7 @@ public class BarcodeBuilder : IBarcodeBuilder
             BarcodeSegmentTypes.Literal => RuleSegmentConfigHelper.ParseLiteral(segment.ConfigJson),
             BarcodeSegmentTypes.Date => DatePartFormatter.Format(context.PrintDate, RuleSegmentConfigHelper.ParseDateFormat(segment.ConfigJson)),
             BarcodeSegmentTypes.Serial => FormatSerial(segment.ConfigJson, serialValue),
-            _ => throw new InvalidOperationException($"未知段类型: {segment.SegmentType}")
+            _ => throw new BusinessException("err.segmentTypeUnknown", segment.SegmentType)
         };
     }
 

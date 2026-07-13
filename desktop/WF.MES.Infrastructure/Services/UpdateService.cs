@@ -6,6 +6,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using WF.MES.Core;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
 
@@ -62,13 +63,13 @@ public class UpdateService : IUpdateService
             {
                 var localJson = await File.ReadAllTextAsync(checkUrl, cancellationToken);
                 manifest = JsonSerializer.Deserialize<UpdateManifest>(localJson, JsonOptions)
-                    ?? throw new InvalidOperationException("更新清单解析失败");
+                    ?? throw new BusinessException("err.updateManifestParseFailed");
             }
             else if (Uri.IsWellFormedUriString(checkUrl, UriKind.Absolute))
             {
                 var remoteJson = await _httpClient.GetStringAsync(checkUrl, cancellationToken);
                 manifest = JsonSerializer.Deserialize<UpdateManifest>(remoteJson, JsonOptions)
-                    ?? throw new InvalidOperationException("更新清单解析失败");
+                    ?? throw new BusinessException("err.updateManifestParseFailed");
             }
             else
             {

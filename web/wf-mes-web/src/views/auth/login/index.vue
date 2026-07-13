@@ -7,7 +7,6 @@ import { Lock, User, View } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/auth/user'
 import WfLocaleSwitch from '@/components/WfLocaleSwitch.vue'
 import WfBrand from '@/components/WfBrand.vue'
-import loginBg from '@/assets/images/login-bg.png'
 import type { FactorySummary } from '@/types/common/factory'
 import type { LoginResponse } from '@/types/auth/login'
 
@@ -81,7 +80,7 @@ async function handleSelectFactory(factory: FactorySummary) {
 
 <template>
   <div class="login-page">
-    <div class="login-page__bg" :style="{ backgroundImage: `url(${loginBg})` }" aria-hidden="true" />
+    <div class="login-page__bg" aria-hidden="true" />
     <div class="login-page__project-name">
       <WfBrand />
     </div>
@@ -183,9 +182,10 @@ $input-height: 45px;
     width: 50%;
     height: 100%;
     z-index: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 30%, rgba(255, 255, 255, 0.18), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 80% 70%, rgba(255, 255, 255, 0.1), transparent 50%),
+      linear-gradient(155deg, #1e4f9c 0%, var(--wf-primary, #2d8cf0) 48%, #69c0ff 100%);
   }
 
   &__project-name {

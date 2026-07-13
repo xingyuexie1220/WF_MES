@@ -4,6 +4,7 @@ using WF.MES.Application.Common;
 using WF.MES.Application.Logs;
 using WF.MES.Application.Logs.Dtos;
 using WF.MES.Shared.Common;
+using WF.MES.Shared.Constants;
 using WF.MES.Shared.Exceptions;
 
 namespace WF.MES.Api.Middleware;
@@ -25,7 +26,7 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
         {
             logger.LogError(ex, "Unhandled exception");
             await WriteExceptionLogAsync(context, ex);
-            await WriteResponseAsync(context, (int)HttpStatusCode.InternalServerError, "服务器内部错误");
+            await WriteResponseAsync(context, (int)HttpStatusCode.InternalServerError, string.Empty, WfMessageCodes.CommonInternalError);
         }
     }
 
@@ -71,12 +72,14 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
         }
     }
 
-    private static async Task WriteResponseAsync(HttpContext context, int code, string message, string? messageCode = null, object? messageArgs = null)
+    private static async Task WriteResponseAsync(HttpContext context, int code, string messageOrCode, string? messageCode = null, object? messageArgs = null)
     {
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = code >= 500 ? StatusCodes.Status500InternalServerError : StatusCodes.Status200OK;
 
-        var result = ApiResult.Fail(message, code, messageCode, messageArgs);
+        var result = !string.IsNullOrWhiteSpace(messageCode)
+            ? ApiResult.FailByCode(messageCode, code, messageArgs)
+            : ApiResult.Fail(messageOrCode, code, null, messageArgs);
         await context.Response.WriteAsync(JsonSerializer.Serialize(result, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase

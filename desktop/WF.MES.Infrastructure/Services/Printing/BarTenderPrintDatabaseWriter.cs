@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using WF.MES.Core.Exceptions;
 
 namespace WF.MES.Infrastructure.Services.Printing;
 
@@ -12,12 +13,12 @@ internal static class BarTenderPrintDatabaseWriter
     {
         if (jobs.Count == 0)
         {
-            throw new InvalidOperationException("没有可写入数据库的打印数据");
+            throw new BusinessException("err.printDataEmpty");
         }
 
         if (string.IsNullOrWhiteSpace(databaseFieldName))
         {
-            throw new InvalidOperationException("数据库字段名不能为空");
+            throw new BusinessException("err.databaseFieldNameRequired");
         }
 
         var filePath = Path.Combine(Path.GetTempPath(), $"wf-mes-barcodes-{Guid.NewGuid():N}.csv");

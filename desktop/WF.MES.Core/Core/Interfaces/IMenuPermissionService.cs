@@ -6,6 +6,4 @@ namespace WF.MES.Core.Interfaces;
 public interface IMenuPermissionService
 {
     Task<IReadOnlyList<ModuleMenuPermissionDto>> GetUserPermissionsAsync(int userId, CancellationToken cancellationToken = default);
-
-    Task<IReadOnlySet<string>> GetUserActionCodesAsync(int userId, CancellationToken cancellationToken = default);
 }

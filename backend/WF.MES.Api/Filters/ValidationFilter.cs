@@ -35,8 +35,7 @@ public class ValidationFilter : IAsyncActionFilter
                 continue;
             }
 
-            var message = result.Errors.FirstOrDefault()?.ErrorMessage ?? "请求参数无效";
-            context.Result = new OkObjectResult(ApiResult.Fail(message, 400, WfMessageCodes.ValidationFailed));
+            context.Result = new OkObjectResult(ApiResult.FailByCode(WfMessageCodes.ValidationFailed, 400));
             return;
         }
 

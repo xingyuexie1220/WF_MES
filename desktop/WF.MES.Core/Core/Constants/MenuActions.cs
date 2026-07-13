@@ -1,7 +1,7 @@
-namespace WF.MES.Core.Constants;
+﻿namespace WF.MES.Core.Constants;
 
 /// <summary>
-/// 受控操作权限码（与 Sys_Menu.Permission 一致，MenuType=3）。
+/// 受控操作权限码（与 System_Menu.Permission 一致，MenuType=3）。
 /// </summary>
 public static class MenuActions
 {

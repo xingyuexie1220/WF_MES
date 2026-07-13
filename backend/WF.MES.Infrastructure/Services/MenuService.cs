@@ -1,4 +1,4 @@
-using SqlSugar;
+﻿using SqlSugar;
 using WF.MES.Application.Common;
 using WF.MES.Application.Menus;
 using WF.MES.Application.Menus.Dtos;
@@ -12,7 +12,7 @@ public class MenuService(ISqlSugarClient db, Application.Common.ICacheService ca
 {
     public async Task<List<MenuDto>> GetTreeAsync(ClientType? clientType = null, CancellationToken cancellationToken = default)
     {
-        var menus = await db.Queryable<SysMenu>()
+        var menus = await db.Queryable<SystemMenu>()
             .Where(m => !m.IsDeleted)
             .WhereIF(clientType.HasValue, m => m.ClientType == clientType)
             .OrderBy(m => m.Sort)
@@ -56,7 +56,7 @@ public class MenuService(ISqlSugarClient db, Application.Common.ICacheService ca
 
     public async Task<MenuDto?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        var menu = await db.Queryable<SysMenu>()
+        var menu = await db.Queryable<SystemMenu>()
             .Where(m => m.Id == id && !m.IsDeleted)
             .Select(m => new MenuDto
             {
@@ -94,7 +94,7 @@ public class MenuService(ISqlSugarClient db, Application.Common.ICacheService ca
     {
         await ValidateParentClientTypeAsync(request.ParentId, request.ClientType, cancellationToken);
 
-        var menu = new SysMenu
+        var menu = new SystemMenu
         {
             ParentId = request.ParentId,
             MenuName = request.MenuName,
@@ -127,7 +127,7 @@ public class MenuService(ISqlSugarClient db, Application.Common.ICacheService ca
 
         await ValidateParentClientTypeAsync(request.ParentId, request.ClientType, cancellationToken);
 
-        var menu = await db.Queryable<SysMenu>().FirstAsync(m => m.Id == id && !m.IsDeleted)
+        var menu = await db.Queryable<SystemMenu>().FirstAsync(m => m.Id == id && !m.IsDeleted)
             ?? throw new BusinessException("菜单不存在", 404);
 
         menu.ParentId = request.ParentId;
@@ -152,12 +152,12 @@ public class MenuService(ISqlSugarClient db, Application.Common.ICacheService ca
 
     public async Task DeleteAsync(long id, long operatorId, CancellationToken cancellationToken = default)
     {
-        if (await db.Queryable<SysMenu>().AnyAsync(m => m.ParentId == id && !m.IsDeleted))
+        if (await db.Queryable<SystemMenu>().AnyAsync(m => m.ParentId == id && !m.IsDeleted))
         {
             throw new BusinessException("存在子菜单，不能删除");
         }
 
-        var menu = await db.Queryable<SysMenu>().FirstAsync(m => m.Id == id && !m.IsDeleted)
+        var menu = await db.Queryable<SystemMenu>().FirstAsync(m => m.Id == id && !m.IsDeleted)
             ?? throw new BusinessException("菜单不存在", 404);
 
         menu.IsDeleted = true;
@@ -174,7 +174,7 @@ public class MenuService(ISqlSugarClient db, Application.Common.ICacheService ca
             return;
         }
 
-        var parent = await db.Queryable<SysMenu>()
+        var parent = await db.Queryable<SystemMenu>()
             .Where(m => m.Id == parentId && !m.IsDeleted)
             .Select(m => new { m.ClientType })
             .FirstAsync(cancellationToken)
@@ -217,7 +217,7 @@ public class MenuService(ISqlSugarClient db, Application.Common.ICacheService ca
             return;
         }
 
-        var operators = await db.Queryable<SysUser>()
+        var operators = await db.Queryable<SystemUser>()
             .Where(u => userIds.Contains(u.Id) && !u.IsDeleted)
             .Select(u => new { u.Id, u.NickName, u.UserName })
             .ToListAsync(cancellationToken);

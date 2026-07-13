@@ -1,9 +1,9 @@
-using SqlSugar;
+﻿using SqlSugar;
 
 namespace WF.MES.Models.Entities;
 
 /// <summary>流水号计数器，按 ResetKey 递增（Barcode_SerialCounter）。</summary>
-[SugarTable("Bcd_SerialCounter")]
+[SugarTable("Barcode_SerialCounter")]
 public class BarcodeSerialCounter
 {
     [SugarColumn(IsPrimaryKey = true, IsIdentity = true, ColumnName = "Id")]

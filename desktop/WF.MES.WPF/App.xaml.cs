@@ -1,11 +1,10 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using WF.MES.Core;
 using WF.MES.Core.Interfaces;
 using WF.MES.Infrastructure;
-using WF.MES.WPF.Infrastructure;
 using WF.MES.WPF.Infrastructure;
 using WF.MES.WPF.Modules.Mes.ViewModels;
 using WF.MES.WPF.Modules.Mes.Views;
@@ -38,7 +37,7 @@ public partial class App : PrismApplication
         if (!SingleInstanceGuard.TryAcquire(out _singleInstanceGuard))
         {
             Log.Warning("检测到重复启动，已拒绝");
-            MessageBox.Show(WpfLocalization.T("desktop.app.singleInstance"), WpfLocalization.T("desktop.app.tip"), MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(WpfLocalization.T("ui.app.singleInstance"), WpfLocalization.T("ui.app.tip"), MessageBoxButton.OK, MessageBoxImage.Information);
             Shutdown();
             return;
         }
@@ -59,6 +58,9 @@ public partial class App : PrismApplication
 
     protected override Window CreateShell()
     {
+        // Prism 先 CreateShell 再 OnInitialized；必须在解析 LoginView 前挂好 Loc，
+        // 否则 Loc.Key 会绑到 DesignTime Fallback，语言切换只更新 VM、不更新 XAML。
+        EnsureUiLocalization();
         return Container.Resolve<LoginView>();
     }
 
@@ -66,7 +68,6 @@ public partial class App : PrismApplication
     {
         InfrastructureServiceRegistration.RegisterServices(containerRegistry, AppConfiguration, ApplicationVersion);
         containerRegistry.RegisterSingleton<DeviceAdapterRegistry>();
-        containerRegistry.RegisterSingleton<IDesktopUiText, DesktopUiTextService>();
 
         containerRegistry.Register<LoginView>();
         containerRegistry.Register<ShellView>();
@@ -79,12 +80,21 @@ public partial class App : PrismApplication
 
     protected override void OnInitialized()
     {
-        WpfLocalization.Use(Container.Resolve<ILocalizationService>());
+        EnsureUiLocalization();
         base.OnInitialized();
     }
 
+    private void EnsureUiLocalization()
+    {
+        WpfLocalization.Use(Container.Resolve<ILocalizationService>());
+        if (Resources["Loc"] is not LocalizationBindingSource)
+        {
+            Resources["Loc"] = new LocalizationBindingSource(WpfLocalization.Instance);
+        }
+    }
+
     /// <summary>
-    /// Prism 导航注册；Component 须与 Sys_Menu.Component 一致。
+    /// Prism 导航注册；Component 须与 System_Menu.Component 一致。
     /// </summary>
     private static void RegisterModuleViews(IContainerRegistry containerRegistry)
     {
@@ -141,7 +151,7 @@ public partial class App : PrismApplication
     private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         Log.Error(e.Exception, "UI 线程未捕获异常");
-        NotifyUser(e.Exception, WpfLocalization.T("desktop.app.runtimeError"));
+        NotifyUser(e.Exception, WpfLocalization.T("ui.app.runtimeError"));
         // 标记已处理，避免 WPF 默认行为直接终止进程
         e.Handled = true;
     }
@@ -154,7 +164,7 @@ public partial class App : PrismApplication
         if (e.ExceptionObject is Exception ex)
         {
             Log.Fatal(ex, "进程级未捕获异常，IsTerminating={IsTerminating}", e.IsTerminating);
-            TryNotifyOnUiThread(ex, WpfLocalization.T("desktop.app.fatalError"));
+            TryNotifyOnUiThread(ex, WpfLocalization.T("ui.app.fatalError"));
         }
         else
         {
@@ -173,7 +183,7 @@ public partial class App : PrismApplication
         Log.Error(e.Exception, "后台任务未观察到的异常");
         // 防止 .NET 因未观察 Task 异常而终止进程
         e.SetObserved();
-        TryNotifyOnUiThread(e.Exception, WpfLocalization.T("desktop.app.backgroundError"));
+        TryNotifyOnUiThread(e.Exception, WpfLocalization.T("ui.app.backgroundError"));
     }
 
     private static void TryNotifyOnUiThread(Exception exception, string title)
@@ -196,7 +206,7 @@ public partial class App : PrismApplication
 
     private static void NotifyUser(Exception exception, string title)
     {
-        var message = $"{title}：{exception.Message}";
+        var message = string.Format(WpfLocalization.T("ui.app.errorDetail"), title, exception.Message);
         try
         {
             HandyControl.Controls.Growl.Error(new HandyControl.Data.GrowlInfo

@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
@@ -24,14 +24,12 @@ public class BarcodeQaReviewViewModel : LocalizedViewModelBase, INavigationAware
         IBarcodeQaReviewService qaService,
         ICustomerService customerService,
         IMenuActionAuthorization auth,
-        ILocalizationService localization,
-        IDesktopUiText ui)
+        ILocalizationService localization)
         : base(localization)
     {
         _qaService = qaService;
         _customerService = customerService;
         _auth = auth;
-        Ui = ui;
 
         RebuildStatusFilters();
 
@@ -47,9 +45,7 @@ public class BarcodeQaReviewViewModel : LocalizedViewModelBase, INavigationAware
         _selectedStatusFilter = StatusFilters[0];
     }
 
-    public IDesktopUiText Ui { get; }
-
-    public string PageTitle => L("desktop.barcode.qaTitle");
+    public string PageTitle => L("ui.barcode.qaTitle");
 
     public ObservableCollection<BarcodeQaReviewListDto> Items { get; } = [];
     public ObservableCollection<CustomerListDto> Customers { get; } = [];
@@ -163,28 +159,29 @@ public class BarcodeQaReviewViewModel : LocalizedViewModelBase, INavigationAware
         if (index >= 0)
         {
             var selectedId = SelectedCustomer?.CustomerId;
-            Customers[index] = new CustomerListDto { CustomerId = 0, CustomerName = Ui.All };
+            Customers[index] = new CustomerListDto { CustomerId = 0, CustomerName = L("ui.actions.all") };
             if (selectedId == 0)
             {
                 SelectedCustomer = Customers[index];
             }
         }
+
     }
 
     private void RebuildStatusFilters()
     {
         StatusFilters.Clear();
-        StatusFilters.Add(new QaStatusFilterItem(null, Ui.All));
-        StatusFilters.Add(new QaStatusFilterItem(BarcodeQaStatus.PendingUpload, BarcodeQaStatus.GetText(BarcodeQaStatus.PendingUpload)));
-        StatusFilters.Add(new QaStatusFilterItem(BarcodeQaStatus.PendingReview, BarcodeQaStatus.GetText(BarcodeQaStatus.PendingReview)));
-        StatusFilters.Add(new QaStatusFilterItem(BarcodeQaStatus.Approved, BarcodeQaStatus.GetText(BarcodeQaStatus.Approved)));
-        StatusFilters.Add(new QaStatusFilterItem(BarcodeQaStatus.Rejected, BarcodeQaStatus.GetText(BarcodeQaStatus.Rejected)));
+        StatusFilters.Add(new QaStatusFilterItem(null, L("ui.actions.all")));
+        StatusFilters.Add(new QaStatusFilterItem(BarcodeQaStatus.PendingUpload, LocalizedOptions.TranslateQaStatus(BarcodeQaStatus.PendingUpload, key => L(key))));
+        StatusFilters.Add(new QaStatusFilterItem(BarcodeQaStatus.PendingReview, LocalizedOptions.TranslateQaStatus(BarcodeQaStatus.PendingReview, key => L(key))));
+        StatusFilters.Add(new QaStatusFilterItem(BarcodeQaStatus.Approved, LocalizedOptions.TranslateQaStatus(BarcodeQaStatus.Approved, key => L(key))));
+        StatusFilters.Add(new QaStatusFilterItem(BarcodeQaStatus.Rejected, LocalizedOptions.TranslateQaStatus(BarcodeQaStatus.Rejected, key => L(key))));
     }
 
     private async Task LoadCustomersAsync()
     {
         Customers.Clear();
-        Customers.Add(new CustomerListDto { CustomerId = 0, CustomerName = Ui.All });
+        Customers.Add(new CustomerListDto { CustomerId = 0, CustomerName = L("ui.actions.all") });
         foreach (var customer in await _customerService.GetCustomerSelectionListAsync())
         {
             Customers.Add(customer);
@@ -229,7 +226,7 @@ public class BarcodeQaReviewViewModel : LocalizedViewModelBase, INavigationAware
         {
             if (loadVersion == _loadListVersion)
             {
-                HandyControl.Controls.Growl.Error(ex.Message);
+                HandyControl.Controls.Growl.Error(EX(ex));
             }
         }
         finally

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using WF.MES.Core.Interfaces;
+using WF.MES.Infrastructure.Api;
 
 namespace WF.MES.Infrastructure.Services;
 
@@ -16,13 +17,10 @@ public sealed class ApiHealthService(IConfiguration configuration) : IApiHealthS
 
         try
         {
-            using var client = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(configuration.GetValue("Api:TimeoutSeconds", 30))
-            };
+            using var client = ApiHttpClientFactory.CreateClient(configuration);
 
             using var response = await client.GetAsync(
-                $"{baseUrl.TrimEnd('/')}/api/v1/auth/info",
+                "api/v1/auth/info",
                 cancellationToken);
 
             return response.IsSuccessStatusCode

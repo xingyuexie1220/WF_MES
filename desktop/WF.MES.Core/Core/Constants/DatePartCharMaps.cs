@@ -1,3 +1,5 @@
+using WF.MES.Core.Exceptions;
+
 namespace WF.MES.Core.Constants;
 
 /// <summary>
@@ -5,13 +7,14 @@ namespace WF.MES.Core.Constants;
 /// </summary>
 public static class DatePartCharMaps
 {
-    private static readonly char[] DayOneCharMap = BuildDayOneCharMap();
+    /// <summary>10~31 日对应字母（A~Z 去掉 I、O、Q，共 22 个）。</summary>
+    private static readonly char[] DayOneCharMap = "ABCDEFGHJKLMNPRSTUVWXY".ToCharArray();
 
     public static string FormatMonthOneChar(int month)
     {
         if (month is < 1 or > 12)
         {
-            throw new ArgumentOutOfRangeException(nameof(month), month, "月份必须在 1~12 之间");
+            throw new BusinessException("err.monthOutOfRange", month);
         }
 
         return month <= 9 ? month.ToString() : ((char)('A' + month - 10)).ToString();
@@ -21,27 +24,9 @@ public static class DatePartCharMaps
     {
         if (day is < 1 or > 31)
         {
-            throw new ArgumentOutOfRangeException(nameof(day), day, "日期必须在 1~31 之间");
+            throw new BusinessException("err.dayOutOfRange", day);
         }
 
         return day <= 9 ? day.ToString() : DayOneCharMap[day - 10].ToString();
-    }
-
-    private static char[] BuildDayOneCharMap()
-    {
-        ReadOnlySpan<char> excluded = ['I', 'O', 'Q'];
-        var chars = new char[22];
-        var index = 0;
-        for (var c = 'A'; index < chars.Length; c++)
-        {
-            if (excluded.Contains(c))
-            {
-                continue;
-            }
-
-            chars[index++] = c;
-        }
-
-        return chars;
     }
 }

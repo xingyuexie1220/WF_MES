@@ -1,4 +1,4 @@
-/*
+﻿/*
   数据迁移：NMES 条码业务数据 → MES
   =====================================
   前置条件：
@@ -9,8 +9,8 @@
          BACKUP DATABASE NMES TO DISK = N'D:\Backup\NMES_before_nmes_migrate.bak' WITH INIT, COMPRESSION;
 
   说明：
-    - 仅迁移条码业务表（7 张），不迁移 NMES 的 Sys_User / Sys_Menu 等 legacy 权限表
-    - 用户/角色/菜单统一使用 MES 的 Sys_* 表，在 Web 后台维护
+    - 仅迁移条码业务表（7 张），不迁移 NMES 的 System_User / System_Menu 等 legacy 权限表
+    - 用户/角色/菜单统一使用 MES 的 System_* 表，在 Web 后台维护
     - 若 MES 条码表已有数据，本脚本中止（避免重复迁移）
 
   用法 (sqlcmd)：

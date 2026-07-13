@@ -1,7 +1,8 @@
-﻿<UserControl x:Class="WF.MES.WPF.Modules.Barcode.Views.BarcodePrintView"
+<UserControl x:Class="WF.MES.WPF.Modules.Barcode.Views.BarcodePrintView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:infra="clr-namespace:WF.MES.WPF.Infrastructure"
              xmlns:prism="http://prismlibrary.com/"
              prism:ViewModelLocator.AutoWireViewModel="True">
     <Grid Margin="{StaticResource PageRootMargin}">
@@ -35,7 +36,7 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock VerticalAlignment="Center"
-                           Text="{Binding CustomerLabel}" />
+                           infra:Loc.FieldLabelKey="ui.fields.customer" />
                 <ComboBox Grid.Column="1"
                           Margin="8,0,0,0"
                           VerticalAlignment="Center"
@@ -46,7 +47,7 @@
                 <TextBlock Grid.Column="2"
                            Margin="16,0,0,0"
                            VerticalAlignment="Center"
-                           Text="{Binding MaterialNoLabel}" />
+                           infra:Loc.FieldLabelKey="ui.fields.materialNo" />
                 <ComboBox Grid.Column="3"
                           Margin="8,0,0,0"
                           VerticalAlignment="Center"
@@ -57,7 +58,7 @@
                 <TextBlock Grid.Column="4"
                            Margin="16,0,0,0"
                            VerticalAlignment="Center"
-                           Text="{Binding PrintDateLabel}" />
+                           infra:Loc.FieldLabelKey="ui.fields.printDate" />
                 <DatePicker Grid.Column="5"
                             Margin="8,0,0,0"
                             VerticalAlignment="Center"
@@ -66,7 +67,7 @@
                 <TextBlock Grid.Column="6"
                            Margin="16,0,0,0"
                            VerticalAlignment="Center"
-                           Text="{Binding QuantityLabel}" />
+                           infra:Loc.FieldLabelKey="ui.fields.quantity" />
                 <TextBox Grid.Column="7"
                          Margin="8,0,0,0"
                          VerticalAlignment="Center"
@@ -105,19 +106,50 @@
                 Style="{StaticResource InfoPanelBorderStyle}">
             <Grid>
                 <StackPanel>
-                    <TextBlock Text="{Binding RecentGenerateNoLine}" />
-                    <TextBlock Style="{StaticResource InfoPanelLineStyle}"
-                               Text="{Binding SerialConfigLine}" />
-                    <TextBlock Style="{StaticResource InfoPanelLineStyle}"
-                               Text="{Binding ResetKeyPreview, StringFormat=ResetKey：{0}}" />
-                    <TextBlock Style="{StaticResource InfoPanelLineStyle}"
-                               Text="{Binding SerialRangeLine}" />
-                    <TextBlock Style="{StaticResource InfoPanelLineStyle}"
+                    <TextBlock>
+                        <TextBlock.Text>
+                            <MultiBinding Converter="{x:Static infra:LocFormatConverter.Instance}"
+                                          ConverterParameter="ui.barcode.recentGenerateNo">
+                                <Binding Path="GenerateNo" />
+                                <Binding Source="{x:Static infra:Loc.LocSource}" Path="Revision" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                    <TextBlock Margin="{StaticResource InfoLineMargin}">
+                        <TextBlock.Text>
+                            <MultiBinding Converter="{x:Static infra:LocFormatConverter.Instance}"
+                                          ConverterParameter="ui.barcode.serialConfig">
+                                <Binding Path="SerialConfigPreview" />
+                                <Binding Source="{x:Static infra:Loc.LocSource}" Path="Revision" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                    <infra:LocInfoField Margin="{StaticResource InfoLineMargin}"
+                                        LabelKey="ui.fields.resetKeyLabel"
+                                        ValuePath="ResetKeyPreview"
+                                        ValueTextWrapping="Wrap" />
+                    <TextBlock Margin="{StaticResource InfoLineMargin}">
+                        <TextBlock.Text>
+                            <MultiBinding Converter="{x:Static infra:LocFormatConverter.Instance}"
+                                          ConverterParameter="ui.barcode.serialRangePreview">
+                                <Binding Path="SerialRangePreview" />
+                                <Binding Source="{x:Static infra:Loc.LocSource}" Path="Revision" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                    <TextBlock Margin="{StaticResource InfoLineMargin}"
                                Text="{Binding SamplePreview}" />
-                    <TextBlock Style="{StaticResource InfoPanelLineStyle}"
+                    <TextBlock Margin="{StaticResource InfoLineMargin}"
                                Foreground="{DynamicResource SecondaryTextBrush}"
-                               Text="{Binding SampleLengthLine}"
-                               Visibility="{Binding ShowSampleLengthPreview, Converter={StaticResource Boolean2VisibilityConverter}}" />
+                               Visibility="{Binding ShowSampleLengthPreview, Converter={StaticResource Boolean2VisibilityConverter}}">
+                        <TextBlock.Text>
+                            <MultiBinding Converter="{x:Static infra:LocFormatConverter.Instance}"
+                                          ConverterParameter="ui.barcode.totalLength">
+                                <Binding Path="SampleLengthPreview" />
+                                <Binding Source="{x:Static infra:Loc.LocSource}" Path="Revision" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
                 </StackPanel>
                 <TextBlock HorizontalAlignment="Right"
                            VerticalAlignment="Top"

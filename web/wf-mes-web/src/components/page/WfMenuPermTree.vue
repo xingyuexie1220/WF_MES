@@ -47,6 +47,22 @@ const displayTree = computed(() => buildDisplayTree(props.data))
 
 const checkedSet = computed(() => new Set(props.modelValue))
 
+const pageIdSet = computed(() => {
+  const set = new Set<number>()
+  const walk = (nodes: MenuItem[]) => {
+    for (const node of nodes) {
+      if (node.menuType === MENU_PAGE) {
+        set.add(node.id)
+      }
+      if (node.children?.length) {
+        walk(node.children)
+      }
+    }
+  }
+  walk(props.data)
+  return set
+})
+
 const buttonIdSet = computed(() => {
   const set = new Set<number>()
   const walk = (nodes: MenuItem[]) => {
@@ -63,13 +79,43 @@ const buttonIdSet = computed(() => {
   return set
 })
 
-const treeCheckedKeys = computed(() => props.modelValue.filter((id) => !buttonIdSet.value.has(id)))
+/** 仅同步页面节点到 el-tree，避免把目录 id 写入 checkedKeys 触发「假全选」。 */
+const treeCheckedKeys = computed(() =>
+  props.modelValue.filter((id) => pageIdSet.value.has(id)).map((id) => Number(id))
+)
 
-function collectAllIds(nodes: MenuItem[]): number[] {
+const selectedCount = computed(
+  () =>
+    props.modelValue.filter((id) => pageIdSet.value.has(id) || buttonIdSet.value.has(id)).length
+)
+
+const buttonParentPageMap = computed(() => {
+  const map = new Map<number, number>()
+  const walk = (nodes: MenuItem[]) => {
+    for (const node of nodes) {
+      if (node.menuType === MENU_PAGE) {
+        for (const child of node.children ?? []) {
+          if (child.menuType === MENU_BUTTON) {
+            map.set(child.id, node.id)
+          }
+        }
+      }
+      if (node.children?.length) {
+        walk(node.children)
+      }
+    }
+  }
+  walk(props.data)
+  return map
+})
+
+function collectPageAndButtonIds(nodes: MenuItem[]): number[] {
   const ids: number[] = []
   const walk = (list: MenuItem[]) => {
     for (const node of list) {
-      ids.push(node.id)
+      if (node.menuType === MENU_PAGE || node.menuType === MENU_BUTTON) {
+        ids.push(node.id)
+      }
       if (node.children?.length) {
         walk(node.children)
       }
@@ -79,63 +125,36 @@ function collectAllIds(nodes: MenuItem[]): number[] {
   return ids
 }
 
-function findDisplayNode(nodes: PermDisplayNode[], id: number): PermDisplayNode | null {
-  for (const node of nodes) {
-    if (node.id === id) {
-      return node
-    }
-    if (node.children?.length) {
-      const found = findDisplayNode(node.children as PermDisplayNode[], id)
-      if (found) {
-        return found
-      }
-    }
-  }
-  return null
-}
-
-function collectAncestorIds(nodes: MenuItem[], targetId: number, ancestors: number[] = []): number[] | null {
-  for (const node of nodes) {
-    if (node.id === targetId) {
-      return ancestors
-    }
-    if (node.children?.length) {
-      const found = collectAncestorIds(node.children, targetId, [...ancestors, node.id])
-      if (found) {
-        return found
-      }
-    }
-  }
-  return null
-}
-
-function expandWithAncestors(ids: number[]) {
-  const result = new Set<number>(ids)
-  for (const id of ids) {
-    const ancestors = collectAncestorIds(props.data, id)
-    ancestors?.forEach((ancestorId) => result.add(ancestorId))
-  }
-  return [...result]
+function normalizeIds(ids: number[]) {
+  return [...new Set(ids.filter((id) => pageIdSet.value.has(id) || buttonIdSet.value.has(id)))]
 }
 
 function emitIds(ids: number[]) {
-  emit('update:modelValue', expandWithAncestors(ids))
+  emit('update:modelValue', normalizeIds(ids))
 }
 
 function syncTreeKeys() {
   nextTick(() => {
-    const keys = treeCheckedKeys.value.map((id) => Number(id))
-    treeRef.value?.setCheckedKeys(keys, false)
+    treeRef.value?.setCheckedKeys(treeCheckedKeys.value, false)
   })
 }
 
 function syncFromTree() {
-  const checkedKeys = (treeRef.value?.getCheckedKeys(false) as number[]) ?? []
-  const next = new Set<number>(checkedKeys)
-  for (const key of checkedKeys) {
-    const node = findDisplayNode(displayTree.value, key)
-    node?.buttons?.forEach((button) => next.add(button.id))
+  // leafOnly=true：只取页面叶子，目录半选不会误当成全选子孙
+  const leafKeys = ((treeRef.value?.getCheckedKeys(true) as number[]) ?? []).map(Number)
+  const pageIds = new Set(leafKeys.filter((id) => pageIdSet.value.has(id)))
+  const next = new Set<number>(pageIds)
+
+  for (const id of props.modelValue) {
+    if (!buttonIdSet.value.has(id)) {
+      continue
+    }
+    const parentPageId = buttonParentPageMap.value.get(id)
+    if (parentPageId != null && pageIds.has(parentPageId)) {
+      next.add(id)
+    }
   }
+
   emitIds([...next])
 }
 
@@ -144,9 +163,13 @@ function handleTreeCheck() {
 }
 
 function toggleButton(buttonId: number, checked: boolean | string | number) {
-  const next = new Set(props.modelValue)
+  const next = new Set(normalizeIds(props.modelValue))
   if (checked) {
     next.add(buttonId)
+    const pageId = buttonParentPageMap.value.get(buttonId)
+    if (pageId != null) {
+      next.add(pageId)
+    }
   } else {
     next.delete(buttonId)
   }
@@ -154,7 +177,7 @@ function toggleButton(buttonId: number, checked: boolean | string | number) {
 }
 
 function checkAll() {
-  emitIds(collectAllIds(props.data))
+  emitIds(collectPageAndButtonIds(props.data))
   syncTreeKeys()
 }
 
@@ -186,7 +209,7 @@ watch(displayTree, syncTreeKeys, { immediate: true, flush: 'post' })
       <el-button link type="primary" @click="expandAll">{{ t('system.role.permExpandAll') }}</el-button>
       <el-button link type="primary" @click="collapseAll">{{ t('system.role.permCollapseAll') }}</el-button>
       <span class="wf-menu-perm-tree__count">
-        {{ t('system.role.permSelectedCount', { count: modelValue.length }) }}
+        {{ t('system.role.permSelectedCount', { count: selectedCount }) }}
       </span>
     </div>
     <div class="wf-menu-perm-tree__body">

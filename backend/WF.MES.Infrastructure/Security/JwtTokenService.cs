@@ -1,4 +1,4 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -16,7 +16,7 @@ public class JwtTokenService(IOptions<JwtOptions> options)
     private readonly JwtOptions _options = options.Value;
 
     public (string AccessToken, DateTime ExpireAt) CreateAccessToken(
-        SysUser user,
+        SystemUser user,
         IEnumerable<string> roles,
         IEnumerable<string> permissions,
         ClientType clientType,

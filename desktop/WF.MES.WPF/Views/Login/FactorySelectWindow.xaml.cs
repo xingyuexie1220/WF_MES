@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Windows;
 using WF.MES.Core.Interfaces;
 
@@ -14,27 +13,18 @@ public partial class FactorySelectWindow : HandyControl.Controls.Window
     {
         _localization = localization;
         InitializeComponent();
+        Title = _localization.T("ui.factory.selectTitle");
         FactoryList.ItemsSource = factories;
-        ApplyTexts();
     }
 
     public WF.MES.Models.Dtos.FactorySummaryDto? SelectedFactory { get; private set; }
-
-    private void ApplyTexts()
-    {
-        Title = _localization.T("desktop.factory.selectTitle");
-        TitleText.Text = _localization.T("desktop.factory.selectTitle");
-        HintText.Text = _localization.T("desktop.factory.selectHint");
-        CancelButton.Content = _localization.T("common.cancel");
-        ConfirmButton.Content = _localization.T("common.confirm");
-    }
 
     private void Confirm_Click(object sender, RoutedEventArgs e)
     {
         SelectedFactory = FactoryList.SelectedItem as WF.MES.Models.Dtos.FactorySummaryDto;
         if (SelectedFactory == null)
         {
-            HandyControl.Controls.Growl.Warning(_localization.T("desktop.factory.selectRequired"));
+            HandyControl.Controls.Growl.Warning(_localization.T("ui.factory.selectRequired"));
             return;
         }
 

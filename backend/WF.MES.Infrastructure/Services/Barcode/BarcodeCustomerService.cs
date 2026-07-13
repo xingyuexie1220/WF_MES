@@ -10,7 +10,7 @@ public class BarcodeCustomerService(ISqlSugarClient db, IFactoryContext factoryC
 {
     public async Task<List<BarcodeCustomerDto>> GetListAsync(CancellationToken cancellationToken = default)
     {
-        return await db.Queryable<BcdCustomer>()
+        return await db.Queryable<BarcodeCustomer>()
             .OrderBy(c => c.CustomerName)
             .Select(c => new BarcodeCustomerDto
             {
@@ -27,7 +27,7 @@ public class BarcodeCustomerService(ISqlSugarClient db, IFactoryContext factoryC
 
     public async Task<BarcodeCustomerDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await db.Queryable<BcdCustomer>()
+        return await db.Queryable<BarcodeCustomer>()
             .Where(c => c.CustomerId == id)
             .Select(c => new BarcodeCustomerDto
             {
@@ -57,7 +57,7 @@ public class BarcodeCustomerService(ISqlSugarClient db, IFactoryContext factoryC
 
         if (request.CustomerId > 0)
         {
-            var entity = await db.Queryable<BcdCustomer>().FirstAsync(c => c.CustomerId == request.CustomerId, cancellationToken)
+            var entity = await db.Queryable<BarcodeCustomer>().FirstAsync(c => c.CustomerId == request.CustomerId, cancellationToken)
                 ?? throw new BusinessException("客户不存在", 404);
 
             entity.CustomerName = request.CustomerName.Trim();
@@ -68,12 +68,12 @@ public class BarcodeCustomerService(ISqlSugarClient db, IFactoryContext factoryC
             return entity.CustomerId;
         }
 
-        if (await db.Queryable<BcdCustomer>().AnyAsync(c => c.FactoryId == factoryId && c.CustomerName == request.CustomerName.Trim(), cancellationToken))
+        if (await db.Queryable<BarcodeCustomer>().AnyAsync(c => c.FactoryId == factoryId && c.CustomerName == request.CustomerName.Trim(), cancellationToken))
         {
             throw new BusinessException("客户名称已存在");
         }
 
-        var id = await db.Insertable(new BcdCustomer
+        var id = await db.Insertable(new BarcodeCustomer
         {
             FactoryId = factoryId,
             CustomerName = request.CustomerName.Trim(),

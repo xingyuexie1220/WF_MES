@@ -1,4 +1,5 @@
 using WF.MES.Core.Constants;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Interfaces;
 
 namespace WF.MES.Infrastructure.Services.Barcode;
@@ -10,7 +11,7 @@ public class SerialNumberFormatter : ISerialNumberFormatter
     {
         if (value < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(value), "流水号不能为负数");
+            throw new BusinessException("err.serialNegative");
         }
 
         var text = radix switch
@@ -20,12 +21,12 @@ public class SerialNumberFormatter : ISerialNumberFormatter
             32 => ToCustomBase(value, SerialRadixDefinitions.Base32Chars),
             34 => ToCustomBase(value, SerialRadixDefinitions.Base34Chars),
             36 => ToCustomBase(value, SerialRadixDefinitions.Base36Chars),
-            _ => throw new NotSupportedException($"不支持的进制: {radix}")
+            _ => throw new BusinessException("err.radixUnsupported", radix)
         };
 
         if (text.Length > width)
         {
-            throw new InvalidOperationException($"流水号 {value} 超出宽度 {width}（{radix}进制）");
+            throw new BusinessException("err.serialOverflow", value, width, radix);
         }
 
         return text.PadLeft(width, '0');
@@ -40,7 +41,7 @@ public class SerialNumberFormatter : ISerialNumberFormatter
             32 => (long)Math.Pow(SerialRadixDefinitions.Base32Chars.Length, width) - 1,
             34 => (long)Math.Pow(SerialRadixDefinitions.Base34Chars.Length, width) - 1,
             36 => (long)Math.Pow(SerialRadixDefinitions.Base36Chars.Length, width) - 1,
-            _ => throw new NotSupportedException($"不支持的进制: {radix}")
+            _ => throw new BusinessException("err.radixUnsupported", radix)
         };
     }
 

@@ -8,28 +8,26 @@ public class EquipmentTestViewModel : LocalizedViewModelBase
 {
     private readonly DeviceAdapterRegistry _devices;
     private string _serialNo = string.Empty;
-    private string _resultMessage;
+    private string _resultMessage = string.Empty;
+    private string _resultMessageKey = "ui.mes.waitingTest";
+    private object[] _resultMessageArgs = [];
 
     public EquipmentTestViewModel(
         DeviceAdapterRegistry devices,
-        ILocalizationService localization,
-        IDesktopUiText ui)
+        ILocalizationService localization)
         : base(localization)
     {
         _devices = devices;
-        Ui = ui;
-        _resultMessage = L("desktop.mes.waitingTest");
+        ApplyResultMessage();
 
         SubmitCommand = new DelegateCommand(async () => await SubmitAsync());
     }
 
-    public IDesktopUiText Ui { get; }
+    public string PageTitle => L("ui.mes.equipmentTitle");
 
-    public string PageTitle => L("desktop.mes.equipmentTitle");
+    public string HintText => L("ui.mes.equipmentHint");
 
-    public string HintText => L("desktop.mes.equipmentHint");
-
-    public string SubmitText => L("desktop.actions.submitTest");
+    public string SubmitText => L("ui.actions.submitTest");
 
     public string SerialNo
     {
@@ -40,7 +38,7 @@ public class EquipmentTestViewModel : LocalizedViewModelBase
     public string ResultMessage
     {
         get => _resultMessage;
-        set => SetProperty(ref _resultMessage, value);
+        private set => SetProperty(ref _resultMessage, value);
     }
 
     public DelegateCommand SubmitCommand { get; }
@@ -50,19 +48,34 @@ public class EquipmentTestViewModel : LocalizedViewModelBase
         RaisePropertyChanged(nameof(PageTitle));
         RaisePropertyChanged(nameof(HintText));
         RaisePropertyChanged(nameof(SubmitText));
+        ApplyResultMessage();
     }
 
     private async Task SubmitAsync()
     {
         if (string.IsNullOrWhiteSpace(SerialNo))
         {
-            ResultMessage = L("desktop.mes.serialRequired");
+            SetResultMessage("ui.mes.serialRequired");
             return;
         }
 
         var result = await _devices.EquipmentTester.RunTestAsync(SerialNo.Trim());
-        ResultMessage = result.Passed
-            ? string.Format(L("desktop.mes.testPassed"), result.Message)
-            : string.Format(L("desktop.mes.testFailed"), result.Message);
+        SetResultMessage(
+            result.Passed ? "ui.mes.testPassed" : "ui.mes.testFailed",
+            result.Message);
+    }
+
+    private void SetResultMessage(string key, params object[] args)
+    {
+        _resultMessageKey = key;
+        _resultMessageArgs = args;
+        ApplyResultMessage();
+    }
+
+    private void ApplyResultMessage()
+    {
+        ResultMessage = _resultMessageArgs.Length == 0
+            ? L(_resultMessageKey)
+            : string.Format(L(_resultMessageKey), _resultMessageArgs);
     }
 }

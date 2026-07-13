@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using SqlSugar;
 using WF.MES.Application.Auth;
@@ -79,7 +79,7 @@ public class AuthService(
 
     public async Task<LoginResponse> SwitchFactoryAsync(long userId, SwitchFactoryRequest request, CancellationToken cancellationToken = default)
     {
-        var user = await db.Queryable<SysUser>().FirstAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken)
+        var user = await db.Queryable<SystemUser>().FirstAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken)
             ?? throw new BusinessException("用户不存在", 404, WfMessageCodes.AuthUserNotFound);
 
         if (user.Status != UserStatus.Enabled)
@@ -100,7 +100,7 @@ public class AuthService(
             throw new BusinessException("Refresh Token 无效或已过期", 401, WfMessageCodes.AuthRefreshInvalid);
         }
 
-        var tokenEntity = await db.Queryable<SysRefreshToken>()
+        var tokenEntity = await db.Queryable<SystemRefreshToken>()
             .FirstAsync(t => t.Token == request.RefreshToken && !t.IsRevoked, cancellationToken);
 
         if (tokenEntity is null || tokenEntity.ExpireTime < DateTime.Now)
@@ -108,7 +108,7 @@ public class AuthService(
             throw new BusinessException("Refresh Token 无效或已过期", 401, WfMessageCodes.AuthRefreshInvalid);
         }
 
-        var user = await db.Queryable<SysUser>().FirstAsync(u => u.Id == tokenEntity.UserId && !u.IsDeleted, cancellationToken);
+        var user = await db.Queryable<SystemUser>().FirstAsync(u => u.Id == tokenEntity.UserId && !u.IsDeleted, cancellationToken);
         if (user is null || user.Status != UserStatus.Enabled)
         {
             throw new BusinessException("用户不存在或已禁用", 401, WfMessageCodes.AuthUserNotFound);
@@ -129,7 +129,7 @@ public class AuthService(
 
     public async Task LogoutAsync(long userId, ClientType clientType, long? factoryId, CancellationToken cancellationToken = default)
     {
-        var tokens = await db.Queryable<SysRefreshToken>()
+        var tokens = await db.Queryable<SystemRefreshToken>()
             .Where(t => t.UserId == userId && t.ClientType == clientType && !t.IsRevoked)
             .WhereIF(factoryId.HasValue, t => t.FactoryId == factoryId)
             .ToListAsync(cancellationToken);
@@ -139,7 +139,7 @@ public class AuthService(
             await BlacklistRefreshTokenAsync(token.Token, token.ExpireTime, cancellationToken);
         }
 
-        await db.Updateable<SysRefreshToken>()
+        await db.Updateable<SystemRefreshToken>()
             .SetColumns(t => t.IsRevoked == true)
             .Where(t => t.UserId == userId && t.ClientType == clientType && !t.IsRevoked)
             .WhereIF(factoryId.HasValue, t => t.FactoryId == factoryId)
@@ -150,7 +150,7 @@ public class AuthService(
 
     public async Task<UserInfoDto> GetCurrentUserInfoAsync(long userId, CancellationToken cancellationToken = default)
     {
-        var user = await db.Queryable<SysUser>().FirstAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken)
+        var user = await db.Queryable<SystemUser>().FirstAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken)
             ?? throw new BusinessException("用户不存在", 404, WfMessageCodes.AuthUserNotFound);
 
         var roles = await GetUserRolesAsync(userId);
@@ -176,7 +176,7 @@ public class AuthService(
             throw new BusinessException("新密码不能与当前密码相同", 400, WfMessageCodes.AuthPasswordSameAsOld);
         }
 
-        var user = await db.Queryable<SysUser>().FirstAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken)
+        var user = await db.Queryable<SystemUser>().FirstAsync(u => u.Id == userId && !u.IsDeleted, cancellationToken)
             ?? throw new BusinessException("用户不存在", 404, WfMessageCodes.AuthUserNotFound);
 
         if (!PasswordHasher.Verify(request.OldPassword, user.PasswordHash))
@@ -256,13 +256,13 @@ public class AuthService(
     }
 
     private async Task<LoginResponse> IssueTokensAsync(
-        SysUser user,
+        SystemUser user,
         ClientType clientType,
         long factoryId,
         CancellationToken cancellationToken,
         string? existingSessionId = null)
     {
-        var factory = await db.Queryable<SysFactory>().FirstAsync(f => f.Id == factoryId && !f.IsDeleted, cancellationToken)
+        var factory = await db.Queryable<SystemFactory>().FirstAsync(f => f.Id == factoryId && !f.IsDeleted, cancellationToken)
             ?? throw new BusinessException("工厂不存在", 404, WfMessageCodes.FactoryNotFound);
 
         var roles = await GetUserRolesAsync(user.Id);
@@ -275,7 +275,7 @@ public class AuthService(
         var refreshToken = jwtTokenService.CreateRefreshToken();
         var sessionExpiry = TimeSpan.FromDays(_jwtOptions.RefreshTokenExpireDays);
 
-        await db.Insertable(new SysRefreshToken
+        await db.Insertable(new SystemRefreshToken
         {
             UserId = user.Id,
             ClientType = clientType,
@@ -312,9 +312,9 @@ public class AuthService(
         };
     }
 
-    private async Task<SysUser> ValidateCredentialsAsync(string userName, string password, CancellationToken cancellationToken)
+    private async Task<SystemUser> ValidateCredentialsAsync(string userName, string password, CancellationToken cancellationToken)
     {
-        var user = await db.Queryable<SysUser>()
+        var user = await db.Queryable<SystemUser>()
             .FirstAsync(u => u.UserName == userName && !u.IsDeleted, cancellationToken);
 
         if (user is null || !PasswordHasher.Verify(password, user.PasswordHash))
@@ -332,7 +332,7 @@ public class AuthService(
 
     private async Task<ClientType> GetLatestClientTypeAsync(long userId, CancellationToken cancellationToken)
     {
-        var latest = await db.Queryable<SysRefreshToken>()
+        var latest = await db.Queryable<SystemRefreshToken>()
             .Where(t => t.UserId == userId && !t.IsRevoked)
             .OrderByDescending(t => t.CreateTime)
             .Select(t => t.ClientType)
@@ -341,15 +341,15 @@ public class AuthService(
         return latest == 0 ? ClientType.Web : latest;
     }
 
-    private async Task<List<SysMenu>> GetPermittedMenusAsync(long userId, ClientType clientType, CancellationToken cancellationToken)
+    private async Task<List<SystemMenu>> GetPermittedMenusAsync(long userId, ClientType clientType, CancellationToken cancellationToken)
     {
-        var roleIds = await db.Queryable<SysUserRole>().Where(ur => ur.UserId == userId).Select(ur => ur.RoleId).ToListAsync();
+        var roleIds = await db.Queryable<SystemUserRole>().Where(ur => ur.UserId == userId).Select(ur => ur.RoleId).ToListAsync();
         if (roleIds.Count == 0)
         {
             return [];
         }
 
-        var menuIds = await db.Queryable<SysRoleMenu>().Where(rm => roleIds.Contains(rm.RoleId)).Select(rm => rm.MenuId).Distinct().ToListAsync();
+        var menuIds = await db.Queryable<SystemRoleMenu>().Where(rm => roleIds.Contains(rm.RoleId)).Select(rm => rm.MenuId).Distinct().ToListAsync();
         if (menuIds.Count == 0)
         {
             return [];
@@ -358,7 +358,7 @@ public class AuthService(
         var parentMap = await BuildMenuParentMapAsync(clientType, cancellationToken);
         var expandedMenuIds = MenuPermissionHelper.ExpandWithAncestors(menuIds, parentMap);
 
-        return await db.Queryable<SysMenu>()
+        return await db.Queryable<SystemMenu>()
             .Where(m => expandedMenuIds.Contains(m.Id) && !m.IsDeleted && m.Status == UserStatus.Enabled
                 && m.MenuType != MenuType.Button && m.ClientType == clientType)
             .OrderBy(m => m.Sort)
@@ -367,7 +367,7 @@ public class AuthService(
 
     private async Task<Dictionary<long, long>> BuildMenuParentMapAsync(ClientType clientType, CancellationToken cancellationToken)
     {
-        var menus = await db.Queryable<SysMenu>()
+        var menus = await db.Queryable<SystemMenu>()
             .Where(m => !m.IsDeleted && m.ClientType == clientType && m.MenuType != MenuType.Button)
             .Select(m => new { m.Id, m.ParentId })
             .ToListAsync(cancellationToken);
@@ -377,7 +377,7 @@ public class AuthService(
 
     private async Task RevokeClientTokensAsync(long userId, ClientType clientType, long factoryId, CancellationToken cancellationToken)
     {
-        var tokens = await db.Queryable<SysRefreshToken>()
+        var tokens = await db.Queryable<SystemRefreshToken>()
             .Where(t => t.UserId == userId && t.ClientType == clientType && t.FactoryId == factoryId && !t.IsRevoked)
             .ToListAsync(cancellationToken);
 
@@ -386,7 +386,7 @@ public class AuthService(
             await BlacklistRefreshTokenAsync(token.Token, token.ExpireTime, cancellationToken);
         }
 
-        await db.Updateable<SysRefreshToken>()
+        await db.Updateable<SystemRefreshToken>()
             .SetColumns(t => t.IsRevoked == true)
             .Where(t => t.UserId == userId && t.ClientType == clientType && t.FactoryId == factoryId && !t.IsRevoked)
             .ExecuteCommandAsync(cancellationToken);
@@ -404,19 +404,19 @@ public class AuthService(
     }
 
     private async Task<UserInfoDto> BuildUserInfoAsync(
-        SysUser user,
+        SystemUser user,
         List<string> roles,
         List<string> permissions,
         long? factoryId,
         CancellationToken cancellationToken,
-        SysFactory? factory = null)
+        SystemFactory? factory = null)
     {
-        var deptName = await db.Queryable<SysDept>().Where(d => d.Id == user.DeptId).Select(d => d.DeptName).FirstAsync(cancellationToken);
+        var deptName = await db.Queryable<SystemDept>().Where(d => d.Id == user.DeptId).Select(d => d.DeptName).FirstAsync(cancellationToken);
         var accessibleFactories = await factoryService.GetAccessibleFactoriesAsync(user.Id, cancellationToken);
 
         if (factory is null && factoryId.HasValue)
         {
-            factory = await db.Queryable<SysFactory>().FirstAsync(f => f.Id == factoryId && !f.IsDeleted, cancellationToken);
+            factory = await db.Queryable<SystemFactory>().FirstAsync(f => f.Id == factoryId && !f.IsDeleted, cancellationToken);
         }
 
         return new UserInfoDto
@@ -438,8 +438,8 @@ public class AuthService(
 
     private async Task<List<string>> GetUserRolesAsync(long userId)
     {
-        return await db.Queryable<SysUserRole>()
-            .InnerJoin<SysRole>((ur, r) => ur.RoleId == r.Id)
+        return await db.Queryable<SystemUserRole>()
+            .InnerJoin<SystemRole>((ur, r) => ur.RoleId == r.Id)
             .Where((ur, r) => ur.UserId == userId && !r.IsDeleted && r.Status == UserStatus.Enabled)
             .Select((ur, r) => r.RoleCode)
             .ToListAsync();
@@ -447,21 +447,21 @@ public class AuthService(
 
     private async Task<List<string>> GetUserPermissionsAsync(long userId)
     {
-        var roleIds = await db.Queryable<SysUserRole>().Where(ur => ur.UserId == userId).Select(ur => ur.RoleId).ToListAsync();
+        var roleIds = await db.Queryable<SystemUserRole>().Where(ur => ur.UserId == userId).Select(ur => ur.RoleId).ToListAsync();
         if (roleIds.Count == 0)
         {
             return [];
         }
 
-        return await db.Queryable<SysRoleMenu>()
-            .InnerJoin<SysMenu>((rm, m) => rm.MenuId == m.Id)
+        return await db.Queryable<SystemRoleMenu>()
+            .InnerJoin<SystemMenu>((rm, m) => rm.MenuId == m.Id)
             .Where((rm, m) => roleIds.Contains(rm.RoleId) && !m.IsDeleted && m.Status == UserStatus.Enabled && m.Permission != null)
             .Select((rm, m) => m.Permission!)
             .Distinct()
             .ToListAsync();
     }
 
-    private static List<ClientMenuDto> BuildClientMenuTree(List<SysMenu> menus, long parentId)
+    private static List<ClientMenuDto> BuildClientMenuTree(List<SystemMenu> menus, long parentId)
     {
         return menus
             .Where(m => m.ParentId == parentId)
@@ -483,7 +483,7 @@ public class AuthService(
             .ToList();
     }
 
-    private static List<RouterMenuDto> BuildRouterTree(List<SysMenu> menus, long parentId)
+    private static List<RouterMenuDto> BuildRouterTree(List<SystemMenu> menus, long parentId)
     {
         return menus
             .Where(m => m.ParentId == parentId)
@@ -505,7 +505,7 @@ public class AuthService(
             .ToList();
     }
 
-    private static List<MobileMenuDto> BuildMobileMenuTree(List<SysMenu> menus, long parentId)
+    private static List<MobileMenuDto> BuildMobileMenuTree(List<SystemMenu> menus, long parentId)
     {
         return menus
             .Where(m => m.ParentId == parentId)

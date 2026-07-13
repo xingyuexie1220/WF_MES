@@ -14,4 +14,6 @@ public static class WfMessageCodes
     public const string FactoryNotFound = "factory.not_found";
     public const string FactoryCodeExists = "factory.code_exists";
     public const string ValidationFailed = "validation.failed";
+    public const string CommonInternalError = "common.internal_error";
+    public const string CommonNotFound = "common.not_found";
 }

@@ -3,7 +3,7 @@ using WF.MES.WPF.ViewModels.Shell;
 
 namespace WF.MES.WPF.Views.Shell;
 
-/// <summary>主窗口：承载 MainRegion，关闭时释放 DB 会话。</summary>
+/// <summary>主窗口：承载 MainRegion，关闭时注销 API 会话。</summary>
 public partial class ShellView : HandyControl.Controls.Window
 {
     private readonly IRegionManager _regionManager;

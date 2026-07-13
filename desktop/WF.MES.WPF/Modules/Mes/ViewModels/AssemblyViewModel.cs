@@ -5,17 +5,14 @@ namespace WF.MES.WPF.Modules.Mes.ViewModels;
 
 public class AssemblyViewModel : LocalizedViewModelBase
 {
-    public AssemblyViewModel(ILocalizationService localization, IDesktopUiText ui)
+    public AssemblyViewModel(ILocalizationService localization)
         : base(localization)
     {
-        Ui = ui;
     }
 
-    public IDesktopUiText Ui { get; }
+    public string PageTitle => L("ui.mes.assemblyTitle");
 
-    public string PageTitle => L("desktop.mes.assemblyTitle");
-
-    public string HintText => L("desktop.mes.assemblyHint");
+    public string HintText => L("ui.mes.assemblyHint");
 
     protected override void RefreshLocalizedProperties()
     {

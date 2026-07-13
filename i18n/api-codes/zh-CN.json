@@ -1,0 +1,28 @@
+{
+  "_comment": "API messageCode 契约文案（权威参考）。新增 WfMessageCodes 时须同步到三端 UI 包。",
+  "common": {
+    "internal_error": "服务器内部错误",
+    "not_found": "资源不存在",
+    "requestFailed": "请求失败"
+  },
+  "auth": {
+    "invalid_credentials": "用户名或密码错误",
+    "user_disabled": "账号已禁用",
+    "user_not_found": "用户不存在",
+    "refresh_invalid": "登录已过期，请重新登录",
+    "password_same_as_old": "新密码不能与旧密码相同",
+    "password_too_short": "密码长度不足",
+    "factory_required": "请先选择工厂",
+    "factory_forbidden": "无权访问该工厂"
+  },
+  "session": {
+    "replaced_by_other_device": "账号已在其他设备登录"
+  },
+  "factory": {
+    "not_found": "工厂不存在",
+    "code_exists": "工厂编码已存在"
+  },
+  "validation": {
+    "failed": "请求参数无效"
+  }
+}

@@ -1,9 +1,9 @@
-using SqlSugar;
+﻿using SqlSugar;
 
 namespace WF.MES.Models.Entities;
 
-/// <summary>条码生成单（Bcd_GenerateRecord）。</summary>
-[SugarTable("Bcd_GenerateRecord")]
+/// <summary>条码生成单（Barcode_GenerateRecord）。</summary>
+[SugarTable("Barcode_GenerateRecord")]
 public class BarcodeGenerateRecord
 {
     [SugarColumn(IsPrimaryKey = true, IsIdentity = true, ColumnName = "Generate_Record_Id")]

@@ -4,6 +4,7 @@ using System.Drawing.Printing;
 using System.IO;
 using System.Reflection;
 using Serilog;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
 using WF.MES.Infrastructure.Validation;
@@ -34,7 +35,7 @@ public class BarTenderLabelPrintService : ILabelPrintService
     {
         if (string.IsNullOrWhiteSpace(materialNo))
         {
-            throw new InvalidOperationException("料号不能为空");
+            throw new BusinessException("err.materialNoRequired");
         }
 
         var folder = BarcodeLabelPrintRequests.GetTemplateFolderPath();
@@ -60,7 +61,7 @@ public class BarTenderLabelPrintService : ILabelPrintService
             UseShellExecute = true
         });
 
-        throw new FileNotFoundException($"未找到料号「{materialNo}」的标签模板 {materialNo}.btw，已打开 Labels 文件夹，请放入模板后重试。", templatePath);
+        throw new BusinessException("err.labelTemplateNotFound", materialNo);
     }
 
     public LabelPrintRequestDto CreatePrintRequest(string materialNo, string printerName, IEnumerable<string> barcodes) =>
@@ -76,7 +77,7 @@ public class BarTenderLabelPrintService : ILabelPrintService
 
         if (!File.Exists(request.TemplatePath))
         {
-            throw new FileNotFoundException($"未找到标签模板：{request.TemplatePath}", request.TemplatePath);
+            throw new BusinessException("err.labelTemplatePathNotFound", request.TemplatePath);
         }
 
         var total = request.Jobs.Count;
@@ -101,7 +102,7 @@ public class BarTenderLabelPrintService : ILabelPrintService
 
                 return new LabelPrintResultDto
                 {
-                    Message = $"已打印 {total} 张标签"
+                    PrintedCount = total
                 };
             }
             catch (Exception ex)

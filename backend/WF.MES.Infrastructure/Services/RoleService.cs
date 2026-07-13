@@ -1,4 +1,4 @@
-using SqlSugar;
+﻿using SqlSugar;
 using WF.MES.Application.Roles;
 using WF.MES.Application.Roles.Dtos;
 using WF.MES.Domain.Entities;
@@ -13,7 +13,7 @@ public class RoleService(ISqlSugarClient db) : IRoleService
     public async Task<PagedResult<RoleDto>> GetPagedListAsync(RoleQueryRequest request, CancellationToken cancellationToken = default)
     {
         RefAsync<int> total = 0;
-        var items = await db.Queryable<SysRole>()
+        var items = await db.Queryable<SystemRole>()
             .Where(r => !r.IsDeleted)
             .WhereIF(!string.IsNullOrWhiteSpace(request.RoleName), r => r.RoleName.Contains(request.RoleName!))
             .WhereIF(request.Status.HasValue, r => r.Status == request.Status)
@@ -36,8 +36,8 @@ public class RoleService(ISqlSugarClient db) : IRoleService
 
         foreach (var item in items)
         {
-            item.MenuIds = await db.Queryable<SysRoleMenu>().Where(x => x.RoleId == item.Id).Select(x => x.MenuId).ToListAsync();
-            item.DeptIds = await db.Queryable<SysRoleDept>().Where(x => x.RoleId == item.Id).Select(x => x.DeptId).ToListAsync();
+            item.MenuIds = await db.Queryable<SystemRoleMenu>().Where(x => x.RoleId == item.Id).Select(x => x.MenuId).ToListAsync();
+            item.DeptIds = await db.Queryable<SystemRoleDept>().Where(x => x.RoleId == item.Id).Select(x => x.DeptId).ToListAsync();
         }
 
         await FillRoleAuditNamesAsync(items, cancellationToken);
@@ -53,7 +53,7 @@ public class RoleService(ISqlSugarClient db) : IRoleService
 
     public async Task<List<RoleDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var items = await db.Queryable<SysRole>()
+        var items = await db.Queryable<SystemRole>()
             .Where(r => !r.IsDeleted && r.Status == UserStatus.Enabled)
             .OrderBy(r => r.Sort)
             .Select(r => new RoleDto
@@ -79,7 +79,7 @@ public class RoleService(ISqlSugarClient db) : IRoleService
 
     public async Task<RoleDto?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        var role = await db.Queryable<SysRole>()
+        var role = await db.Queryable<SystemRole>()
             .Where(r => r.Id == id && !r.IsDeleted)
             .Select(r => new RoleDto
             {
@@ -102,20 +102,20 @@ public class RoleService(ISqlSugarClient db) : IRoleService
             return null;
         }
 
-        role.MenuIds = await db.Queryable<SysRoleMenu>().Where(x => x.RoleId == id).Select(x => x.MenuId).ToListAsync();
-        role.DeptIds = await db.Queryable<SysRoleDept>().Where(x => x.RoleId == id).Select(x => x.DeptId).ToListAsync();
+        role.MenuIds = await db.Queryable<SystemRoleMenu>().Where(x => x.RoleId == id).Select(x => x.MenuId).ToListAsync();
+        role.DeptIds = await db.Queryable<SystemRoleDept>().Where(x => x.RoleId == id).Select(x => x.DeptId).ToListAsync();
         await FillRoleAuditNamesAsync([role], cancellationToken);
         return role;
     }
 
     public async Task<long> CreateAsync(CreateRoleRequest request, long operatorId, CancellationToken cancellationToken = default)
     {
-        if (await db.Queryable<SysRole>().AnyAsync(r => r.RoleCode == request.RoleCode && !r.IsDeleted))
+        if (await db.Queryable<SystemRole>().AnyAsync(r => r.RoleCode == request.RoleCode && !r.IsDeleted))
         {
             throw new BusinessException("角色编码已存在");
         }
 
-        var role = new SysRole
+        var role = new SystemRole
         {
             RoleCode = request.RoleCode,
             RoleName = request.RoleName,
@@ -134,7 +134,7 @@ public class RoleService(ISqlSugarClient db) : IRoleService
 
     public async Task UpdateAsync(long id, UpdateRoleRequest request, long operatorId, CancellationToken cancellationToken = default)
     {
-        var role = await db.Queryable<SysRole>().FirstAsync(r => r.Id == id && !r.IsDeleted)
+        var role = await db.Queryable<SystemRole>().FirstAsync(r => r.Id == id && !r.IsDeleted)
             ?? throw new BusinessException("角色不存在", 404);
 
         role.RoleName = request.RoleName;
@@ -146,14 +146,14 @@ public class RoleService(ISqlSugarClient db) : IRoleService
         role.UpdateTime = DateTime.Now;
 
         await db.Updateable(role).ExecuteCommandAsync();
-        await db.Deleteable<SysRoleMenu>().Where(x => x.RoleId == id).ExecuteCommandAsync();
-        await db.Deleteable<SysRoleDept>().Where(x => x.RoleId == id).ExecuteCommandAsync();
+        await db.Deleteable<SystemRoleMenu>().Where(x => x.RoleId == id).ExecuteCommandAsync();
+        await db.Deleteable<SystemRoleDept>().Where(x => x.RoleId == id).ExecuteCommandAsync();
         await SaveRoleRelationsAsync(id, request.MenuIds, request.DeptIds);
     }
 
     public async Task DeleteAsync(long id, long operatorId, CancellationToken cancellationToken = default)
     {
-        var role = await db.Queryable<SysRole>().FirstAsync(r => r.Id == id && !r.IsDeleted)
+        var role = await db.Queryable<SystemRole>().FirstAsync(r => r.Id == id && !r.IsDeleted)
             ?? throw new BusinessException("角色不存在", 404);
 
         if (role.RoleCode == "admin")
@@ -171,18 +171,18 @@ public class RoleService(ISqlSugarClient db) : IRoleService
     {
         if (menuIds.Count > 0)
         {
-            var parentMap = await db.Queryable<SysMenu>()
+            var parentMap = await db.Queryable<SystemMenu>()
                 .Where(m => !m.IsDeleted && m.MenuType != MenuType.Button)
                 .Select(m => new { m.Id, m.ParentId })
                 .ToListAsync();
 
             var expandedMenuIds = MenuPermissionHelper.ExpandWithAncestors(menuIds, parentMap.ToDictionary(m => m.Id, m => m.ParentId));
-            await db.Insertable(expandedMenuIds.Select(menuId => new SysRoleMenu { RoleId = roleId, MenuId = menuId }).ToList()).ExecuteCommandAsync();
+            await db.Insertable(expandedMenuIds.Select(menuId => new SystemRoleMenu { RoleId = roleId, MenuId = menuId }).ToList()).ExecuteCommandAsync();
         }
 
         if (deptIds.Count > 0)
         {
-            await db.Insertable(deptIds.Select(deptId => new SysRoleDept { RoleId = roleId, DeptId = deptId }).ToList()).ExecuteCommandAsync();
+            await db.Insertable(deptIds.Select(deptId => new SystemRoleDept { RoleId = roleId, DeptId = deptId }).ToList()).ExecuteCommandAsync();
         }
     }
 
@@ -205,7 +205,7 @@ public class RoleService(ISqlSugarClient db) : IRoleService
             return;
         }
 
-        var operators = await db.Queryable<SysUser>()
+        var operators = await db.Queryable<SystemUser>()
             .Where(u => userIds.Contains(u.Id) && !u.IsDeleted)
             .Select(u => new { u.Id, u.NickName, u.UserName })
             .ToListAsync(cancellationToken);

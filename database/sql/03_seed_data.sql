@@ -1,4 +1,4 @@
-/*
+﻿/*
   WF.MES - 案例种子数据（全新库 / 重建后执行）
   账号:
     admin    / Admin@123    系统管理员（Web + Mobile + Desktop 全权限）
@@ -8,52 +8,54 @@
   ClientType: 1=Web 2=Mobile 3=Desktop
 */
 
-USE [MES];
+USE [WF_MES_DEV];
 GO
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
 SET NOCOUNT ON;
 
 /* ========== 地区 ========== */
-SET IDENTITY_INSERT dbo.Sys_Region ON;
-INSERT INTO dbo.Sys_Region (Id, RegionCode, RegionName, Sort, Status, CreateTime, IsDeleted)
+SET IDENTITY_INSERT dbo.System_Region ON;
+INSERT INTO dbo.System_Region (Id, RegionCode, RegionName, Sort, Status, CreateTime, IsDeleted)
 VALUES (1, N'SOUTH-CN', N'华南地区', 1, 1, GETDATE(), 0);
-SET IDENTITY_INSERT dbo.Sys_Region OFF;
+SET IDENTITY_INSERT dbo.System_Region OFF;
 GO
 
 /* ========== 工厂 ========== */
-SET IDENTITY_INSERT dbo.Sys_Factory ON;
-INSERT INTO dbo.Sys_Factory (Id, RegionId, FactoryCode, FactoryName, TimeZone, Sort, Status, CreateTime, IsDeleted)
+SET IDENTITY_INSERT dbo.System_Factory ON;
+INSERT INTO dbo.System_Factory (Id, RegionId, FactoryCode, FactoryName, TimeZone, Sort, Status, CreateTime, IsDeleted)
 VALUES
     (1, 1, N'FAB-DG-A', N'WF东莞A厂', N'Asia/Shanghai', 1, 1, GETDATE(), 0),
     (2, 1, N'FAB-DG-B', N'WF东莞B厂', N'Asia/Shanghai', 2, 1, GETDATE(), 0);
-SET IDENTITY_INSERT dbo.Sys_Factory OFF;
+SET IDENTITY_INSERT dbo.System_Factory OFF;
 GO
 
 /* ========== 部门（工厂内：车间/产线/班组） ========== */
-SET IDENTITY_INSERT dbo.Sys_Dept ON;
-INSERT INTO dbo.Sys_Dept (Id, FactoryId, ParentId, DeptCode, DeptName, DeptType, Sort, Status, CreateTime, IsDeleted)
+SET IDENTITY_INSERT dbo.System_Dept ON;
+INSERT INTO dbo.System_Dept (Id, FactoryId, ParentId, DeptCode, DeptName, DeptType, Sort, Status, CreateTime, IsDeleted)
 VALUES
     (1,  1, 0, N'WF-A-M01',  N'A厂机加工一车间', 1, 1, 1, GETDATE(), 0),
     (2,  1, 1, N'WF-A-L01',  N'A厂产线1',        2, 1, 1, GETDATE(), 0),
     (3,  1, 2, N'WF-A-T01',  N'A厂班组1',        3, 1, 1, GETDATE(), 0),
     (4,  1, 0, N'WF-A-WH',   N'A厂仓储部',       1, 2, 1, GETDATE(), 0),
     (5,  2, 0, N'WF-B-M01',  N'B厂机加工一车间', 1, 1, 1, GETDATE(), 0);
-SET IDENTITY_INSERT dbo.Sys_Dept OFF;
-DBCC CHECKIDENT ('dbo.Sys_Dept', RESEED, 5);
+SET IDENTITY_INSERT dbo.System_Dept OFF;
+DBCC CHECKIDENT ('dbo.System_Dept', RESEED, 5);
 GO
 
 /* ========== 角色 ========== */
-SET IDENTITY_INSERT dbo.Sys_Role ON;
-INSERT INTO dbo.Sys_Role (Id, RoleCode, RoleName, Sort, DataScope, Status, Remark, CreateTime, IsDeleted)
+SET IDENTITY_INSERT dbo.System_Role ON;
+INSERT INTO dbo.System_Role (Id, RoleCode, RoleName, Sort, DataScope, Status, Remark, CreateTime, IsDeleted)
 VALUES
     (1, N'admin',    N'系统管理员', 1, 1, 1, N'Web 后台全权限', GETDATE(), 0),
     (2, N'operator', N'车间操作员', 2, 3, 1, N'Mobile + Desktop 生产端', GETDATE(), 0);
-SET IDENTITY_INSERT dbo.Sys_Role OFF;
+SET IDENTITY_INSERT dbo.System_Role OFF;
 GO
 
 /* ========== 菜单 ========== */
-SET IDENTITY_INSERT dbo.Sys_Menu ON;
-INSERT INTO dbo.Sys_Menu
+SET IDENTITY_INSERT dbo.System_Menu ON;
+INSERT INTO dbo.System_Menu
     (Id, ParentId, MenuName, MenuType, [Path], Component, Permission, Icon, Sort, ClientType, Visible, Status, I18nKey, CreateTime, IsDeleted)
 VALUES
     /* Web (ClientType=1) */
@@ -142,52 +144,52 @@ VALUES
     (319, 301, N'组装作业',   2, N'/desktop/mes/assembly',     N'Mes.Assembly',     N'mes:assembly:list',      N'SetUp',        5, 3, 1, 1, N'menu.desktop.assembly',     GETDATE(), 0),
     (320, 300, N'设备测试',   1, N'/desktop/equipment',        NULL,                NULL,                      N'Cpu',          3, 3, 1, 1, N'menu.desktop.equipment',    GETDATE(), 0),
     (321, 320, N'测试对接',   2, N'/desktop/equipment/test',     N'Equipment.Test',   N'equipment:test:submit',  N'Connection',   1, 3, 1, 1, N'menu.desktop.equipmentTest',GETDATE(), 0);
-SET IDENTITY_INSERT dbo.Sys_Menu OFF;
-DBCC CHECKIDENT ('dbo.Sys_Menu', RESEED, 421);
+SET IDENTITY_INSERT dbo.System_Menu OFF;
+DBCC CHECKIDENT ('dbo.System_Menu', RESEED, 421);
 GO
 
 /* ========== 角色菜单 ========== */
-INSERT INTO dbo.Sys_Role_Menu (RoleId, MenuId)
-SELECT 1, Id FROM dbo.Sys_Menu WHERE IsDeleted = 0;
+INSERT INTO dbo.System_Role_Menu (RoleId, MenuId)
+SELECT 1, Id FROM dbo.System_Menu WHERE IsDeleted = 0;
 
-INSERT INTO dbo.Sys_Role_Menu (RoleId, MenuId)
-SELECT 2, Id FROM dbo.Sys_Menu
+INSERT INTO dbo.System_Role_Menu (RoleId, MenuId)
+SELECT 2, Id FROM dbo.System_Menu
 WHERE IsDeleted = 0
   AND Id IN (200, 201, 202, 203, 204, 205, 206, 300, 301, 302, 303, 304, 305, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321);
 GO
 
 /* ========== 岗位 ========== */
-SET IDENTITY_INSERT dbo.Sys_Position ON;
-INSERT INTO dbo.Sys_Position (Id, PositionCode, PositionName, ProcessCode, DeptId, Sort, Status, CreateTime, IsDeleted)
+SET IDENTITY_INSERT dbo.System_Position ON;
+INSERT INTO dbo.System_Position (Id, PositionCode, PositionName, ProcessCode, DeptId, Sort, Status, CreateTime, IsDeleted)
 VALUES (1, N'OP-001', N'报工员', N'PROC-REPORT', 1, 1, 1, GETDATE(), 0);
-SET IDENTITY_INSERT dbo.Sys_Position OFF;
+SET IDENTITY_INSERT dbo.System_Position OFF;
 GO
 
 /* ========== 用户 ========== */
-SET IDENTITY_INSERT dbo.Sys_User ON;
-INSERT INTO dbo.Sys_User (Id, UserName, PasswordHash, NickName, DeptId, DefaultFactoryId, Status, MustChangePassword, CreateTime, IsDeleted)
+SET IDENTITY_INSERT dbo.[System_User] ON;
+INSERT INTO dbo.[System_User] (Id, UserName, PasswordHash, NickName, DeptId, DefaultFactoryId, Status, MustChangePassword, CreateTime, IsDeleted)
 VALUES
     (1, N'admin',    N'WHrWZ1xysjyC07VVYvq/MA==.tl/J7JvJsvoGFNlrZ+wa/vGixz72EZHVs5IfJIe74xU=', N'超级管理员',     1, 1, 1, 0, GETDATE(), 0),
     (2, N'operator', N'1UGdzqaud8R1Yl1klTtzsg==.IIJrXx/BBFgvsMoJdQryYkIWid7IAFJQ4Zpf0B7Tz3o=', N'东莞A厂操作员', 3, 1, 1, 1, GETDATE(), 0);
-SET IDENTITY_INSERT dbo.Sys_User OFF;
+SET IDENTITY_INSERT dbo.[System_User] OFF;
 GO
 
-INSERT INTO dbo.Sys_User_Role (UserId, RoleId) VALUES (1, 1), (2, 2);
-INSERT INTO dbo.Sys_User_Position (UserId, PositionId) VALUES (2, 1);
-INSERT INTO dbo.Sys_User_Factory (UserId, FactoryId, IsDefault) VALUES
+INSERT INTO dbo.System_User_Role (UserId, RoleId) VALUES (1, 1), (2, 2);
+INSERT INTO dbo.System_User_Position (UserId, PositionId) VALUES (2, 1);
+INSERT INTO dbo.System_User_Factory (UserId, FactoryId, IsDefault) VALUES
     (1, 1, 1), (1, 2, 0),
     (2, 1, 1);
 GO
 
 /* ========== 数据字典 ========== */
-SET IDENTITY_INSERT dbo.Sys_Dict_Type ON;
-INSERT INTO dbo.Sys_Dict_Type (Id, DictName, DictType, Status, Remark, CreateTime, IsDeleted)
+SET IDENTITY_INSERT dbo.System_Dict_Type ON;
+INSERT INTO dbo.System_Dict_Type (Id, DictName, DictType, Status, Remark, CreateTime, IsDeleted)
 VALUES
     (1, N'公告类型', N'sys_notice_type',   1, N'消息公告分类', GETDATE(), 0),
     (2, N'公告状态', N'sys_notice_status', 1, N'消息公告发布状态', GETDATE(), 0);
-SET IDENTITY_INSERT dbo.Sys_Dict_Type OFF;
+SET IDENTITY_INSERT dbo.System_Dict_Type OFF;
 
-INSERT INTO dbo.Sys_Dict_Data (DictTypeId, DictType, DictLabel, DictValue, Sort, Status, CreateTime, IsDeleted)
+INSERT INTO dbo.System_Dict_Data (DictTypeId, DictType, DictLabel, DictValue, Sort, Status, CreateTime, IsDeleted)
 VALUES
     (1, N'sys_notice_type',   N'通知',   N'1', 1, 1, GETDATE(), 0),
     (1, N'sys_notice_type',   N'公告',   N'2', 2, 1, GETDATE(), 0),
@@ -196,12 +198,12 @@ VALUES
 GO
 
 /* ========== 案例公告 ========== */
-INSERT INTO dbo.Sys_Notice (Title, Content, NoticeType, Status, PublishTime, CreateBy, CreateTime, IsDeleted)
+INSERT INTO dbo.System_Notice (Title, Content, NoticeType, Status, PublishTime, CreateBy, CreateTime, IsDeleted)
 VALUES
     (N'系统上线通知', N'WF MES 平台已部署完成，请各工位使用 operator 账号登录桌面端与移动端。', 1, 1, SYSDATETIME(), 1, SYSDATETIME(), 0);
 GO
 
-PRINT N'种子数据写入完成';
+PRINT N'Seed data completed';
 PRINT N'  admin    / Admin@123';
 PRINT N'  operator / Operator@123';
 GO

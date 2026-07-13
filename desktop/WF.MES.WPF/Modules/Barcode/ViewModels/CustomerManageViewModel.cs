@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
 using WF.MES.WPF.Infrastructure;
@@ -17,12 +17,10 @@ public class CustomerManageViewModel : LocalizedViewModelBase, INavigationAware
 
     public CustomerManageViewModel(
         ICustomerService customerService,
-        ILocalizationService localization,
-        IDesktopUiText ui)
+        ILocalizationService localization)
         : base(localization)
     {
         _customerService = customerService;
-        Ui = ui;
 
         AddCommand = new DelegateCommand(StartAdd);
         EditCommand = new DelegateCommand(async () => await StartEditAsync(), () => SelectedCustomer != null)
@@ -33,13 +31,7 @@ public class CustomerManageViewModel : LocalizedViewModelBase, INavigationAware
         RefreshCommand = new DelegateCommand(async () => await LoadCustomersAsync());
     }
 
-    public IDesktopUiText Ui { get; }
-
-    public string PageTitle => L("desktop.barcode.customerTitle");
-
-    public string CustomerNameLabel => Ui.CustomerName;
-
-    public string SaveCustomerText => L("desktop.actions.saveCustomer");
+    public string PageTitle => L("ui.barcode.customerTitle");
 
     public ObservableCollection<CustomerListDto> Customers { get; } = [];
 
@@ -103,7 +95,7 @@ public class CustomerManageViewModel : LocalizedViewModelBase, INavigationAware
         }
     }
 
-    public string FormTitle => IsNew ? L("desktop.barcode.customerFormNew") : L("desktop.barcode.customerFormEdit");
+    public string FormTitle => IsNew ? L("ui.barcode.customerFormNew") : L("ui.barcode.customerFormEdit");
 
     public DelegateCommand AddCommand { get; }
     public DelegateCommand EditCommand { get; }
@@ -119,8 +111,6 @@ public class CustomerManageViewModel : LocalizedViewModelBase, INavigationAware
     protected override void RefreshLocalizedProperties()
     {
         RaisePropertyChanged(nameof(PageTitle));
-        RaisePropertyChanged(nameof(CustomerNameLabel));
-        RaisePropertyChanged(nameof(SaveCustomerText));
         RaisePropertyChanged(nameof(FormTitle));
     }
 
@@ -137,6 +127,10 @@ public class CustomerManageViewModel : LocalizedViewModelBase, INavigationAware
             {
                 Customers.Add(item);
             }
+        }
+        catch (Exception ex)
+        {
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
         finally
         {
@@ -188,12 +182,12 @@ public class CustomerManageViewModel : LocalizedViewModelBase, INavigationAware
                 EditModel = saved;
             }
 
-            HandyControl.Controls.Growl.Success(L("desktop.barcode.customerSaveSuccess"));
+            HandyControl.Controls.Growl.Success(L("ui.barcode.customerSaveSuccess"));
             await LoadCustomersAsync();
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(ex.Message);
+            HandyControl.Controls.Growl.Error(EX(ex));
         }
         finally
         {

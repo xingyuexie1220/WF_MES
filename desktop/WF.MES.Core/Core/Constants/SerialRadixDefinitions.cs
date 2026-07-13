@@ -15,24 +15,4 @@ public static class SerialRadixDefinitions
     public static readonly char[] Base36Chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
 
     public static bool IsSupported(int radix) => SupportedRadices.Contains(radix);
-
-    public static string GetDisplayName(int radix) => radix switch
-    {
-        10 => "10进制",
-        16 => "16进制",
-        32 => "32进制",
-        34 => "34进制",
-        36 => "36进制",
-        _ => $"{radix}进制"
-    };
-
-    public static string GetDescription(int radix) => radix switch
-    {
-        10 => "纯数字 0~9",
-        16 => "数字 0~9 与字母 A~F",
-        32 => "数字 0~9 与 24 个字母（不含 I、L、O、U）",
-        34 => "数字 0~9 与 24 个字母（不含 I、O）",
-        36 => "数字 0~9 与字母 A~Z",
-        _ => string.Empty
-    };
 }

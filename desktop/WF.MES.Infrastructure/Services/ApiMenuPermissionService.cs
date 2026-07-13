@@ -8,7 +8,6 @@ namespace WF.MES.Infrastructure.Services;
 /// <summary>从 /auth/desktop-menus 构建侧栏模组/菜单树。</summary>
 public sealed class ApiMenuPermissionService(
     IAuthApi authApi,
-    ISessionService sessionService,
     ILocalizationService localization) : IMenuPermissionService
 {
     private const int DesktopRootMenuId = 300;
@@ -20,19 +19,13 @@ public sealed class ApiMenuPermissionService(
         CancellationToken cancellationToken = default)
     {
         var response = await authApi.GetDesktopMenusAsync(cancellationToken);
-        var tree = ApiResponseHelper.EnsureData(response, "加载菜单失败");
+        var tree = ApiResponseHelper.EnsureData(response, "err.loadMenusFailed");
         var modules = MapToModules(tree);
 
         Log.Information("用户 {UserId} 加载 API 菜单：{ModuleCount} 个模组，{MenuCount} 个页面",
             userId, modules.Count, modules.Sum(m => m.Menus.Count));
 
         return modules;
-    }
-
-    public Task<IReadOnlySet<string>> GetUserActionCodesAsync(int userId, CancellationToken cancellationToken = default)
-    {
-        var permissions = sessionService.PermittedActionCodes;
-        return Task.FromResult(permissions);
     }
 
     private List<ModuleMenuPermissionDto> MapToModules(IReadOnlyList<ClientMenuDto> tree)

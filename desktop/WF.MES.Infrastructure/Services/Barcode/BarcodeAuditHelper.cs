@@ -1,4 +1,5 @@
 using WF.MES.Core.Constants;
+using WF.MES.Core.Exceptions;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Entities;
 
@@ -8,6 +9,10 @@ namespace WF.MES.Infrastructure.Services.Barcode;
 internal static class BarcodeAuditHelper
 {
     public static string? GetCurrentOperator(ISessionService sessionService) => sessionService.CurrentOperatorName;
+
+    public static long GetCurrentFactoryId(ISessionService sessionService) =>
+        sessionService.CurrentUser?.FactoryId
+        ?? throw new BusinessException("err.factoryRequired");
 
     public static void ApplyCreateAudit(BarcodeCustomer entity, string? operatorName)
     {

@@ -1,5 +1,5 @@
 {
   "version": "1.0.1.2",
-  "downloadUrl": "192.168.254.10/updates/WF.MES.WPF.zip",
+  "downloadUrl": "127.0.0.1/updates/WF.MES.WPF.zip",
   "releaseNotes": "初始版本"
 }

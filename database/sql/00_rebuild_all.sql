@@ -10,6 +10,7 @@
 :r .\20_drop_all_tables.sql
 :r .\02_create_tables.sql
 :r .\03_seed_data.sql
+:r .\04_seed_business_data.sql
 
-PRINT N'MES 数据库重建完成';
+PRINT N'WF_MES_DEV database rebuild completed';
 GO

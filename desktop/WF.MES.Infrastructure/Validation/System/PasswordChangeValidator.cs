@@ -10,17 +10,17 @@ public sealed class PasswordChangeValidator : AbstractValidator<PasswordChangeDt
     public PasswordChangeValidator(ILocalizationService localization)
     {
         RuleFor(x => x.NewPassword)
-            .NotEmpty().WithMessage(_ => localization.T("mobile.password.newRequired"))
-            .MinimumLength(6).WithMessage(_ => localization.T("mobile.password.tooShort"));
+            .NotEmpty().WithMessage(_ => localization.T("val.passwordNewRequired"))
+            .MinimumLength(6).WithMessage(_ => localization.T("auth.password_too_short"));
 
         RuleFor(x => x.ConfirmPassword)
             .Equal(x => x.NewPassword)
             .When(x => !string.IsNullOrEmpty(x.ConfirmPassword))
-            .WithMessage(_ => localization.T("mobile.password.mismatch"));
+            .WithMessage(_ => localization.T("val.passwordMismatch"));
 
         RuleFor(x => x)
             .Must(dto => dto.NewPassword != dto.CurrentPassword)
             .When(x => !string.IsNullOrEmpty(x.CurrentPassword))
-            .WithMessage(_ => localization.T("mobile.password.sameAsOld"));
+            .WithMessage(_ => localization.T("auth.password_same_as_old"));
     }
 }
