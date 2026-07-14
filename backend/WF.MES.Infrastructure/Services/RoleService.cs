@@ -8,7 +8,7 @@ using WF.MES.Shared.Exceptions;
 
 namespace WF.MES.Infrastructure.Services;
 
-public class RoleService(ISqlSugarClient db) : IRoleService
+public class RoleService(ISqlSugarClient db, Application.Common.ICacheService cache) : IRoleService
 {
     public async Task<PagedResult<RoleDto>> GetPagedListAsync(RoleQueryRequest request, CancellationToken cancellationToken = default)
     {
@@ -129,6 +129,7 @@ public class RoleService(ISqlSugarClient db) : IRoleService
 
         var roleId = await db.Insertable(role).ExecuteReturnBigIdentityAsync();
         await SaveRoleRelationsAsync(roleId, request.MenuIds, request.DeptIds);
+        await cache.RemoveCategoryAsync("menu");
         return roleId;
     }
 
@@ -149,6 +150,7 @@ public class RoleService(ISqlSugarClient db) : IRoleService
         await db.Deleteable<SystemRoleMenu>().Where(x => x.RoleId == id).ExecuteCommandAsync();
         await db.Deleteable<SystemRoleDept>().Where(x => x.RoleId == id).ExecuteCommandAsync();
         await SaveRoleRelationsAsync(id, request.MenuIds, request.DeptIds);
+        await cache.RemoveCategoryAsync("menu");
     }
 
     public async Task DeleteAsync(long id, long operatorId, CancellationToken cancellationToken = default)
@@ -165,14 +167,16 @@ public class RoleService(ISqlSugarClient db) : IRoleService
         role.UpdateBy = operatorId;
         role.UpdateTime = DateTime.Now;
         await db.Updateable(role).ExecuteCommandAsync();
+        await cache.RemoveCategoryAsync("menu");
     }
 
     private async Task SaveRoleRelationsAsync(long roleId, List<long> menuIds, List<long> deptIds)
     {
         if (menuIds.Count > 0)
         {
+            // 含按钮节点，便于从按钮 id 补全父级页面/目录
             var parentMap = await db.Queryable<SystemMenu>()
-                .Where(m => !m.IsDeleted && m.MenuType != MenuType.Button)
+                .Where(m => !m.IsDeleted)
                 .Select(m => new { m.Id, m.ParentId })
                 .ToListAsync();
 

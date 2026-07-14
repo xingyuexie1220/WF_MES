@@ -1,7 +1,7 @@
-<UserControl x:Class="WF.MES.WPF.Modules.Barcode.Views.BarcodeDetailView"
+﻿<UserControl x:Class="WF.MES.WPF.Modules.Barcode.Views.BarcodeDetailView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:infra="clr-namespace:WF.MES.WPF.Infrastructure"
+             xmlns:infra="clr-namespace:WF.MES.WPF.Ui"
              xmlns:prism="http://prismlibrary.com/"
              prism:ViewModelLocator.AutoWireViewModel="True">
     <Grid Margin="{StaticResource PageRootMargin}">
@@ -150,7 +150,6 @@
                                                   ConverterParameter="ui.barcode.lastReprintSummary">
                                         <Binding Path="LastReprintedAt" StringFormat="{}{0:yyyy-MM-dd HH:mm}" />
                                         <Binding Path="LastReprintedBy" TargetNullValue="-" />
-                                        <Binding Source="{x:Static infra:Loc.LocSource}" Path="Revision" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>

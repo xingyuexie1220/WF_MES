@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
-using WF.MES.WPF.Infrastructure;
+using WF.MES.WPF.Ui;
 
 namespace WF.MES.WPF.Modules.Barcode.ViewModels;
 
@@ -148,29 +148,6 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
 
     public void OnNavigatedFrom(NavigationContext navigationContext) { }
 
-    protected override void RefreshLocalizedProperties()
-    {
-        RaisePropertyChanged(nameof(PageTitle));
-        RaisePropertyChanged(nameof(PageHint));
-        RaisePropertyChanged(nameof(ReprintInfoTitle));
-        RefreshAllCustomerOption();
-        ApplyPrintStatus();
-    }
-
-    private void RefreshAllCustomerOption()
-    {
-        var index = Customers.ToList().FindIndex(c => c.CustomerId == 0);
-        if (index >= 0)
-        {
-            var selectedId = SelectedCustomer?.CustomerId;
-            Customers[index] = new CustomerListDto { CustomerId = 0, CustomerName = L("ui.actions.all") };
-            if (selectedId == 0)
-            {
-                SelectedCustomer = Customers[index];
-            }
-        }
-    }
-
     private bool CanReprint() =>
         !IsLoading && !IsPrinting
         && SelectedGenerateRecord != null
@@ -228,7 +205,7 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(EX(ex));
+            HandyControl.Controls.Growl.Error(Ex(ex));
         }
         finally
         {
@@ -277,16 +254,16 @@ public class BarcodeReprintViewModel : LocalizedViewModelBase, INavigationAware
             }
             catch (Exception ex)
             {
-                HandyControl.Controls.Growl.Warning(TF("ui.barcode.printStatusUpdateFailed", EX(ex)));
+                HandyControl.Controls.Growl.Warning(Lf("ui.barcode.printStatusUpdateFailed", Ex(ex)));
                 return;
             }
 
-            HandyControl.Controls.Growl.Success(TF("ui.barcode.printedLabelsSuccess", result.PrintedCount));
+            HandyControl.Controls.Growl.Success(Lf("ui.barcode.printedLabelsSuccess", result.PrintedCount));
             await LoadGenerateRecordsAsync();
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(EX(ex));
+            HandyControl.Controls.Growl.Error(Ex(ex));
         }
         finally
         {

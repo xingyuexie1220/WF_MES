@@ -20,15 +20,26 @@ namespace WF.MES.Infrastructure;
 public static class InfrastructureServiceRegistration
 {
     /// <summary>注册 API 客户端、数据库、业务 Service 与 FluentValidation。</summary>
-    public static void RegisterServices(IContainerRegistry containerRegistry, IConfiguration configuration, IAppVersion appVersion)
+    public static void RegisterServices(
+        IContainerRegistry containerRegistry,
+        IConfiguration configuration,
+        IAppVersion appVersion,
+        ILocalizationService? localization = null)
     {
         containerRegistry.RegisterInstance(configuration);
         containerRegistry.RegisterInstance(appVersion);
 
-        containerRegistry.RegisterSingleton<ILocalizationService, JsonLocalizationService>();
+        if (localization is null)
+        {
+            containerRegistry.RegisterSingleton<ILocalizationService, JsonLocalizationService>();
+        }
+        else
+        {
+            containerRegistry.RegisterInstance(localization);
+        }
         containerRegistry.RegisterSingleton<IApiTokenStore, ApiTokenStore>();
         containerRegistry.RegisterSingleton<IAuthApi>(container =>
-            ApiClientRegistration.CreateAuthApi(
+            AuthApiFactory.Create(
                 container.Resolve<IConfiguration>(),
                 container.Resolve<IApiTokenStore>(),
                 container.Resolve<ILocalizationService>()));

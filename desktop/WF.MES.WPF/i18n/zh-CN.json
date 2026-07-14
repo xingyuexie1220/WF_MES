@@ -78,6 +78,9 @@
     }
   },
   "ui": {
+    "locale": {
+      "label": "语言"
+    },
     "loginHint": "请输入您的账号和密码以继续",
     "headerTitle": "WF MES制造执行系统",
     "logout": "退出",
@@ -97,6 +100,9 @@
     "machineName": "本机：{0}",
     "version": "版本 {0}",
     "menuCount": "{0} 项",
+    "punct": {
+      "colon": "："
+    },
     "checkingUpdate": "正在检查更新...",
     "updateFound": "发现新版本 {0}，正在自动更新...",
     "readyToLogin": "当前版本 {0}，请输入账号密码登录",
@@ -112,9 +118,6 @@
     "updateCompleteRestart": "更新完成，程序即将重启",
     "updateFailedContinue": "自动更新失败，请登录继续使用",
     "noDesktopMenu": "当前账号未分配桌面端菜单权限，请联系管理员",
-    "locale": {
-      "label": "语言"
-    },
     "fields": {
       "customer": "客户",
       "customerName": "客户名称",
@@ -202,9 +205,6 @@
       "selectTitle": "选择工厂",
       "selectHint": "您的账号可访问多个工厂，请选择本次登录的工厂",
       "selectRequired": "请选择工厂",
-      "switch": "切换工厂",
-      "switchSuccess": "已切换工厂",
-      "switchFailed": "切换工厂失败",
       "selectFailed": "选厂失败",
       "current": "当前工厂"
     },
@@ -295,6 +295,7 @@
       "generateDetail": "生成明细",
       "noBarcodesToExport": "当前生成单没有可导出的条码",
       "exportedCount": "已导出 {0} 条条码",
+      "exportedCountPath": "已导出 {0} 条条码\n{1}",
       "exportTitle": "导出条码",
       "printedLabelsSuccess": "已打印 {0} 张标签",
       "exportCsv": {

@@ -546,5 +546,161 @@ CREATE TABLE dbo.Warehouse_InboundOrder (
 CREATE UNIQUE INDEX UX_Warehouse_InboundOrder_Factory_No ON dbo.Warehouse_InboundOrder(FactoryId, InboundNo) WHERE IsDeleted = 0;
 GO
 
+/* ========== Mes_* 简易报工（CNC 外壳等） ========== */
+CREATE TABLE dbo.Mes_Process (
+    Id          BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    FactoryId   BIGINT NOT NULL,
+    ProcessCode NVARCHAR(64) NOT NULL,
+    ProcessName NVARCHAR(128) NOT NULL,
+    DefaultSeq  INT NOT NULL CONSTRAINT DF_Mes_Process_DefaultSeq DEFAULT (0),
+    Enabled     BIT NOT NULL CONSTRAINT DF_Mes_Process_Enabled DEFAULT (1),
+    Remark      NVARCHAR(256) NULL,
+    CreateTime  DATETIME NOT NULL CONSTRAINT DF_Mes_Process_CreateTime DEFAULT (GETDATE()),
+    CreateBy    BIGINT NULL,
+    UpdateTime  DATETIME NULL,
+    UpdateBy    BIGINT NULL,
+    IsDeleted   BIT NOT NULL CONSTRAINT DF_Mes_Process_IsDeleted DEFAULT (0),
+    CONSTRAINT FK_Mes_Process_Factory FOREIGN KEY (FactoryId) REFERENCES dbo.System_Factory(Id)
+);
+CREATE UNIQUE INDEX UX_Mes_Process_Factory_Code ON dbo.Mes_Process(FactoryId, ProcessCode) WHERE IsDeleted = 0;
+GO
+
+CREATE TABLE dbo.Mes_Routing (
+    Id          BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    FactoryId   BIGINT NOT NULL,
+    RoutingCode NVARCHAR(64) NOT NULL,
+    RoutingName NVARCHAR(128) NOT NULL,
+    MaterialNo  NVARCHAR(64) NULL,
+    Enabled     BIT NOT NULL CONSTRAINT DF_Mes_Routing_Enabled DEFAULT (1),
+    Remark      NVARCHAR(256) NULL,
+    CreateTime  DATETIME NOT NULL CONSTRAINT DF_Mes_Routing_CreateTime DEFAULT (GETDATE()),
+    CreateBy    BIGINT NULL,
+    UpdateTime  DATETIME NULL,
+    UpdateBy    BIGINT NULL,
+    IsDeleted   BIT NOT NULL CONSTRAINT DF_Mes_Routing_IsDeleted DEFAULT (0),
+    CONSTRAINT FK_Mes_Routing_Factory FOREIGN KEY (FactoryId) REFERENCES dbo.System_Factory(Id)
+);
+CREATE UNIQUE INDEX UX_Mes_Routing_Factory_Code ON dbo.Mes_Routing(FactoryId, RoutingCode) WHERE IsDeleted = 0;
+GO
+
+CREATE TABLE dbo.Mes_Routing_Step (
+    Id          BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    FactoryId   BIGINT NOT NULL,
+    RoutingId   BIGINT NOT NULL,
+    ProcessCode NVARCHAR(64) NOT NULL,
+    Seq         INT NOT NULL,
+    CreateTime  DATETIME NOT NULL CONSTRAINT DF_Mes_Routing_Step_CreateTime DEFAULT (GETDATE()),
+    CreateBy    BIGINT NULL,
+    UpdateTime  DATETIME NULL,
+    UpdateBy    BIGINT NULL,
+    IsDeleted   BIT NOT NULL CONSTRAINT DF_Mes_Routing_Step_IsDeleted DEFAULT (0),
+    CONSTRAINT FK_Mes_Routing_Step_Factory FOREIGN KEY (FactoryId) REFERENCES dbo.System_Factory(Id),
+    CONSTRAINT FK_Mes_Routing_Step_Routing FOREIGN KEY (RoutingId) REFERENCES dbo.Mes_Routing(Id)
+);
+CREATE INDEX IX_Mes_Routing_Step_Routing ON dbo.Mes_Routing_Step(RoutingId, Seq) WHERE IsDeleted = 0;
+GO
+
+CREATE TABLE dbo.Mes_Material (
+    Id           BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    FactoryId    BIGINT NOT NULL,
+    MaterialNo   NVARCHAR(64) NOT NULL,
+    MaterialName NVARCHAR(256) NOT NULL,
+    Spec         NVARCHAR(128) NULL,
+    Unit         NVARCHAR(32) NULL,
+    Source       NVARCHAR(32) NOT NULL CONSTRAINT DF_Mes_Material_Source DEFAULT (N'local'),
+    ErpId        NVARCHAR(64) NULL,
+    Enabled      BIT NOT NULL CONSTRAINT DF_Mes_Material_Enabled DEFAULT (1),
+    CreateTime   DATETIME NOT NULL CONSTRAINT DF_Mes_Material_CreateTime DEFAULT (GETDATE()),
+    CreateBy     BIGINT NULL,
+    UpdateTime   DATETIME NULL,
+    UpdateBy     BIGINT NULL,
+    IsDeleted    BIT NOT NULL CONSTRAINT DF_Mes_Material_IsDeleted DEFAULT (0),
+    CONSTRAINT FK_Mes_Material_Factory FOREIGN KEY (FactoryId) REFERENCES dbo.System_Factory(Id)
+);
+CREATE UNIQUE INDEX UX_Mes_Material_Factory_No ON dbo.Mes_Material(FactoryId, MaterialNo) WHERE IsDeleted = 0;
+GO
+
+CREATE TABLE dbo.Mes_Machine (
+    Id          BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    FactoryId   BIGINT NOT NULL,
+    MachineNo   NVARCHAR(64) NOT NULL,
+    MachineName NVARCHAR(128) NOT NULL,
+    Enabled     BIT NOT NULL CONSTRAINT DF_Mes_Machine_Enabled DEFAULT (1),
+    Remark      NVARCHAR(256) NULL,
+    CreateTime  DATETIME NOT NULL CONSTRAINT DF_Mes_Machine_CreateTime DEFAULT (GETDATE()),
+    CreateBy    BIGINT NULL,
+    UpdateTime  DATETIME NULL,
+    UpdateBy    BIGINT NULL,
+    IsDeleted   BIT NOT NULL CONSTRAINT DF_Mes_Machine_IsDeleted DEFAULT (0),
+    CONSTRAINT FK_Mes_Machine_Factory FOREIGN KEY (FactoryId) REFERENCES dbo.System_Factory(Id)
+);
+CREATE UNIQUE INDEX UX_Mes_Machine_Factory_No ON dbo.Mes_Machine(FactoryId, MachineNo) WHERE IsDeleted = 0;
+GO
+
+CREATE TABLE dbo.Mes_Defect_Code (
+    Id          BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    FactoryId   BIGINT NOT NULL,
+    DefectCode  NVARCHAR(32) NOT NULL,
+    DefectName  NVARCHAR(128) NOT NULL,
+    Sort        INT NOT NULL CONSTRAINT DF_Mes_Defect_Code_Sort DEFAULT (0),
+    Enabled     BIT NOT NULL CONSTRAINT DF_Mes_Defect_Code_Enabled DEFAULT (1),
+    CreateTime  DATETIME NOT NULL CONSTRAINT DF_Mes_Defect_Code_CreateTime DEFAULT (GETDATE()),
+    CreateBy    BIGINT NULL,
+    UpdateTime  DATETIME NULL,
+    UpdateBy    BIGINT NULL,
+    IsDeleted   BIT NOT NULL CONSTRAINT DF_Mes_Defect_Code_IsDeleted DEFAULT (0),
+    CONSTRAINT FK_Mes_Defect_Code_Factory FOREIGN KEY (FactoryId) REFERENCES dbo.System_Factory(Id)
+);
+CREATE UNIQUE INDEX UX_Mes_Defect_Code_Factory_Code ON dbo.Mes_Defect_Code(FactoryId, DefectCode) WHERE IsDeleted = 0;
+GO
+
+CREATE TABLE dbo.Mes_Work_Order (
+    Id          BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    FactoryId   BIGINT NOT NULL,
+    WorkOrderNo NVARCHAR(64) NOT NULL,
+    MaterialNo  NVARCHAR(64) NOT NULL,
+    RoutingId   BIGINT NOT NULL,
+    PlanQty     INT NOT NULL,
+    DueDate     DATETIME NOT NULL,
+    Status      NVARCHAR(16) NOT NULL CONSTRAINT DF_Mes_Work_Order_Status DEFAULT (N'open'),
+    Source      NVARCHAR(32) NOT NULL CONSTRAINT DF_Mes_Work_Order_Source DEFAULT (N'local'),
+    ErpBillId   NVARCHAR(64) NULL,
+    SyncedAt    DATETIME NOT NULL CONSTRAINT DF_Mes_Work_Order_SyncedAt DEFAULT (GETDATE()),
+    Remark      NVARCHAR(256) NULL,
+    CreateTime  DATETIME NOT NULL CONSTRAINT DF_Mes_Work_Order_CreateTime DEFAULT (GETDATE()),
+    CreateBy    BIGINT NULL,
+    UpdateTime  DATETIME NULL,
+    UpdateBy    BIGINT NULL,
+    IsDeleted   BIT NOT NULL CONSTRAINT DF_Mes_Work_Order_IsDeleted DEFAULT (0),
+    CONSTRAINT FK_Mes_Work_Order_Factory FOREIGN KEY (FactoryId) REFERENCES dbo.System_Factory(Id),
+    CONSTRAINT FK_Mes_Work_Order_Routing FOREIGN KEY (RoutingId) REFERENCES dbo.Mes_Routing(Id)
+);
+CREATE UNIQUE INDEX UX_Mes_Work_Order_Factory_No ON dbo.Mes_Work_Order(FactoryId, WorkOrderNo) WHERE IsDeleted = 0;
+GO
+
+CREATE TABLE dbo.Mes_Report_Record (
+    Id              BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    FactoryId       BIGINT NOT NULL,
+    WorkOrderNo     NVARCHAR(64) NOT NULL,
+    ProcessCode     NVARCHAR(64) NOT NULL,
+    GoodQty         INT NOT NULL CONSTRAINT DF_Mes_Report_Record_GoodQty DEFAULT (0),
+    DefectQty       INT NOT NULL CONSTRAINT DF_Mes_Report_Record_DefectQty DEFAULT (0),
+    DefectCode      NVARCHAR(32) NULL,
+    Disposition     NVARCHAR(16) NULL,
+    ReworkToProcess NVARCHAR(64) NULL,
+    MachineNo       NVARCHAR(64) NULL,
+    OperatorName    NVARCHAR(64) NULL,
+    ReportTime      DATETIME NOT NULL CONSTRAINT DF_Mes_Report_Record_ReportTime DEFAULT (GETDATE()),
+    IsVoided        BIT NOT NULL CONSTRAINT DF_Mes_Report_Record_IsVoided DEFAULT (0),
+    CreateTime      DATETIME NOT NULL CONSTRAINT DF_Mes_Report_Record_CreateTime DEFAULT (GETDATE()),
+    CreateBy        BIGINT NULL,
+    UpdateTime      DATETIME NULL,
+    UpdateBy        BIGINT NULL,
+    IsDeleted       BIT NOT NULL CONSTRAINT DF_Mes_Report_Record_IsDeleted DEFAULT (0),
+    CONSTRAINT FK_Mes_Report_Record_Factory FOREIGN KEY (FactoryId) REFERENCES dbo.System_Factory(Id)
+);
+CREATE INDEX IX_Mes_Report_Record_WO ON dbo.Mes_Report_Record(FactoryId, WorkOrderNo, ReportTime DESC) WHERE IsDeleted = 0 AND IsVoided = 0;
+GO
+
 PRINT N'Tables created';
 GO

@@ -1,36 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="WF">
-  <defs>
-    <linearGradient id="wf-split" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="0.52" stop-color="#ffffff"/>
-      <stop offset="0.52" stop-color="#7fd3ff"/>
-      <stop offset="1" stop-color="#7fd3ff"/>
-    </linearGradient>
-  </defs>
+  <!-- 六边形外框：留足描边边距，避免被 viewBox 裁切 -->
   <path
-    d="M32 4 54 16.5V47.5L32 60 10 47.5V16.5L32 4Z"
-    stroke="url(#wf-split)"
-    stroke-width="3.2"
+    d="M32 6 52 17.5V46.5L32 58 12 46.5V17.5L32 6Z"
+    stroke="currentColor"
+    stroke-width="3"
     stroke-linejoin="round"
   />
+  <!-- W -->
   <path
-    d="M18 42 24 22 30 34 36 22 42 42"
-    stroke="url(#wf-split)"
-    stroke-width="3.4"
+    d="M18 42 24.5 22 30.5 34 36.5 22 43 42"
+    stroke="currentColor"
+    stroke-width="3.2"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
+  <!-- F -->
   <path
     d="M40 22H48V42"
-    stroke="url(#wf-split)"
-    stroke-width="3.4"
+    stroke="currentColor"
+    stroke-width="3.2"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
   <path
     d="M40 31H47"
-    stroke="url(#wf-split)"
-    stroke-width="3.4"
+    stroke="currentColor"
+    stroke-width="3.2"
     stroke-linecap="round"
   />
 </svg>

@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { useLocaleStore } from '@/stores/locale'
 import type { AppLocale } from '@/i18n'
 
-const props = withDefaults(defineProps<{ showLabel?: boolean }>(), { showLabel: true })
+withDefaults(defineProps<{ showLabel?: boolean }>(), { showLabel: true })
 
 const { t } = useI18n()
 const localeStore = useLocaleStore()
@@ -22,7 +22,7 @@ function openPicker() {
 </script>
 
 <template>
-  <view class="locale-picker" @click="openPicker">
+  <view class="locale-picker" :class="{ 'locale-picker--compact': !showLabel }" @click="openPicker">
     <text v-if="showLabel" class="label">{{ t('locale.title') }}</text>
     <text class="value">{{ t(localeStore.getLocaleLabel(localeStore.locale)) }}</text>
     <text class="arrow">›</text>
@@ -33,21 +33,41 @@ function openPicker() {
 .locale-picker {
   display: flex;
   align-items: center;
+  width: 100%;
   gap: 12rpx;
-  font-size: 26rpx;
-  color: #64748b;
+  font-size: 30rpx;
+  color: #0f172a;
 }
 
 .label {
-  color: #94a3b8;
+  flex: 1;
+  color: #0f172a;
 }
 
 .value {
-  color: #2563eb;
-  font-weight: 600;
+  font-size: 24rpx;
+  color: #64748b;
 }
 
 .arrow {
   color: #cbd5e1;
+  font-size: 36rpx;
+  line-height: 1;
+}
+
+.locale-picker--compact {
+  width: auto;
+  font-size: 26rpx;
+  color: #64748b;
+
+  .value {
+    color: #2563eb;
+    font-weight: 600;
+    font-size: 26rpx;
+  }
+
+  .arrow {
+    font-size: 28rpx;
+  }
 }
 </style>

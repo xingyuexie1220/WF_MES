@@ -3,7 +3,7 @@ using System.Windows;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
-using WF.MES.WPF.Infrastructure;
+using WF.MES.WPF.Ui;
 
 namespace WF.MES.WPF.Modules.Barcode.ViewModels;
 
@@ -190,29 +190,6 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
 
     public void OnNavigatedFrom(NavigationContext navigationContext) { }
 
-    protected override void RefreshLocalizedProperties()
-    {
-        RaisePropertyChanged(nameof(PageTitle));
-        RaisePropertyChanged(nameof(SegmentTitle));
-        RaisePropertyChanged(nameof(TotalLengthText));
-        RaisePropertyChanged(nameof(FormTitle));
-        RebuildSelectOptions();
-        RefreshSegmentOrderLabels();
-        RefreshSegmentLocalizedTexts();
-        RefreshRuleSummaries();
-    }
-
-    private void RefreshRuleSummaries()
-    {
-        foreach (var rule in Rules)
-        {
-            if (_segmentSummaryRaw.TryGetValue(rule.RuleId, out var raw))
-            {
-                rule.SegmentSummary = LocalizedOptions.TranslateSegmentSummary(raw, key => L(key));
-            }
-        }
-    }
-
     private void RebuildSelectOptions()
     {
         SegmentTypeOptions = LocalizedOptions.SegmentTypes(key => L(key));
@@ -222,14 +199,6 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
         RaisePropertyChanged(nameof(SegmentTypeOptions));
         RaisePropertyChanged(nameof(DateFormatOptions));
         RaisePropertyChanged(nameof(SerialRadixOptions));
-    }
-
-    private void RefreshSegmentLocalizedTexts()
-    {
-        foreach (var segment in Segments)
-        {
-            segment.RefreshLocalizedText(key => L(key));
-        }
     }
 
     private bool CanSave() =>
@@ -399,7 +368,7 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
         }
         catch (Exception ex)
         {
-            PreviewText = TF("ui.barcode.previewFailed", EX(ex));
+            PreviewText = Lf("ui.barcode.previewFailed", Ex(ex));
             PreviewLength = 0;
         }
     }
@@ -420,15 +389,15 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
 
         UpdatePreview();
 
-        if (!await ConfirmResetKeyChangeIfNeededAsync())
-        {
-            return;
-        }
-
         IsBusy = true;
         var isCreate = EditModel.RuleId == 0;
         try
         {
+            if (!await ConfirmResetKeyChangeIfNeededAsync())
+            {
+                return;
+            }
+
             var ruleId = await _ruleService.SaveRuleAsync(EditModel);
             await LoadRulesAsync();
 
@@ -452,7 +421,7 @@ public class MaterialRuleViewModel : LocalizedViewModelBase, INavigationAware
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(EX(ex));
+            HandyControl.Controls.Growl.Error(Ex(ex));
         }
         finally
         {

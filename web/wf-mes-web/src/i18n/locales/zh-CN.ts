@@ -115,8 +115,10 @@ export default {
     masterData: '生产配置',
     masterMaterial: '物料管理',
     masterRoute: '工艺路线',
-    masterStation: '工站配置',
-    masterWorkCenter: '工作中心',
+    masterStation: '工序维护',
+    masterWorkCenter: '机台档案',
+    production: '生产执行',
+    productionWorkOrder: '生产工单',
     report: '生产报表',
     reportOutput: '产量报表',
     reportWip: 'WIP 报表',
@@ -530,6 +532,62 @@ export default {
       selectTypeFirst: '请先选择字典类型',
       confirmDeleteType: '确认删除字典类型「{name}」？',
       confirmDeleteData: '确认删除字典数据「{name}」？'
+    }
+  },
+  mes: {
+    process: {
+      title: '工序维护',
+      pageDesc: '维护报工工序编码与顺序，供工艺路线引用。',
+      search: '工序编码/名称',
+      code: '工序编码',
+      name: '工序名称',
+      validateRequired: '请填写工序编码和名称',
+      confirmDelete: '确认删除工序「{name}」？'
+    },
+    routing: {
+      title: '工艺路线',
+      pageDesc: '配置有序工序步骤，工单报工按此路线校验前后道。',
+      code: '工艺编码',
+      name: '工艺名称',
+      steps: '工序步骤',
+      addStep: '添加工序',
+      needSteps: '请至少配置一道工序',
+      materialOptional: '可选，按料号默认匹配',
+      validateRequired: '请填写工艺编码和名称',
+      confirmDelete: '确认删除工艺「{name}」？'
+    },
+    material: {
+      title: '物料管理',
+      pageDesc: '首期本地维护；后期可从金蝶同步。',
+      search: '物料编码/名称',
+      code: '物料编码',
+      name: '物料名称',
+      spec: '规格',
+      unit: '单位',
+      source: '来源',
+      validateRequired: '请填写物料编码和名称',
+      confirmDelete: '确认删除物料「{name}」？'
+    },
+    machine: {
+      title: '机台档案',
+      pageDesc: 'CNC 等机台主数据，报工时可选用。',
+      search: '机台编号/名称',
+      code: '机台编号',
+      name: '机台名称',
+      validateRequired: '请填写机台编号和名称',
+      confirmDelete: '确认删除机台「{name}」？'
+    },
+    workOrder: {
+      title: '生产工单',
+      pageDesc: '首期本地开单；后期从金蝶同步。PDA 扫工单号报工。',
+      add: '新建工单',
+      no: '工单号',
+      planQty: '计划数量',
+      dueDate: '交期',
+      progress: '工序进度',
+      close: '关单',
+      validateRequired: '请填写工单号、物料和计划数量',
+      confirmClose: '确认关闭工单「{no}」？'
     }
   }
 }

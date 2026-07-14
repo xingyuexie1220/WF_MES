@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { authRoutes } from '@/router/routes/auth'
 import { bigscreenRoute } from '@/router/routes/bigscreen'
 import { masterDataRoutes } from '@/router/routes/master-data'
+import { productionRoutes } from '@/router/routes/production'
 import { reportRoutes } from '@/router/routes/report'
 import { systemRoutes } from '@/router/routes/system'
 import { barcodeRoutes } from '@/router/routes/barcode'
@@ -37,6 +38,7 @@ const router = createRouter({
         },
         ...systemRoutes,
         ...masterDataRoutes,
+        ...productionRoutes,
         ...reportRoutes,
         ...barcodeRoutes
       ]

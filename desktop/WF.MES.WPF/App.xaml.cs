@@ -5,18 +5,22 @@ using Serilog;
 using WF.MES.Core;
 using WF.MES.Core.Interfaces;
 using WF.MES.Infrastructure;
-using WF.MES.WPF.Infrastructure;
+using WF.MES.Infrastructure.Localization;
+using WF.MES.Infrastructure.Localization;
+using WF.MES.WPF.Ui;
 using WF.MES.WPF.Modules.Mes.ViewModels;
 using WF.MES.WPF.Modules.Mes.Views;
+using WF.MES.WPF.Modules.Material.ViewModels;
+using WF.MES.WPF.Modules.Material.Views;
 using WF.MES.WPF.Modules.Equipment.ViewModels;
 using WF.MES.WPF.Modules.Equipment.Views;
-using WF.MES.WPF.DeviceAdapters;
+using WF.MES.WPF.Modules.Equipment.DeviceAdapters;
 using WF.MES.WPF.Modules.Barcode.ViewModels;
 using WF.MES.WPF.Modules.Barcode.Views;
-using WF.MES.WPF.ViewModels.Login;
-using WF.MES.WPF.ViewModels.Shell;
-using WF.MES.WPF.Views.Login;
-using WF.MES.WPF.Views.Shell;
+using WF.MES.WPF.Auth.ViewModels;
+using WF.MES.WPF.Shell.ViewModels;
+using WF.MES.WPF.Auth.Views;
+using WF.MES.WPF.Shell.Views;
 
 namespace WF.MES.WPF;
 
@@ -27,7 +31,19 @@ public partial class App : PrismApplication
 {
     private static readonly IConfiguration AppConfiguration = BuildConfiguration();
     private static readonly IAppVersion ApplicationVersion = new EntryAssemblyAppVersion();
+
+    /// <summary>全应用唯一本地化服务与 XAML 绑定源（无 Fallback 替换）。</summary>
+    private static readonly ILocalizationService AppLocalization;
+    private static readonly LocalizationBindingSource AppLocSource;
+
     private SingleInstanceGuard? _singleInstanceGuard;
+
+    static App()
+    {
+        AppLocalization = new JsonLocalizationService();
+        AppLocSource = new LocalizationBindingSource(AppLocalization);
+        WpfLocalization.Use(AppLocalization);
+    }
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -58,15 +74,18 @@ public partial class App : PrismApplication
 
     protected override Window CreateShell()
     {
-        // Prism 先 CreateShell 再 OnInitialized；必须在解析 LoginView 前挂好 Loc，
-        // 否则 Loc.Key 会绑到 DesignTime Fallback，语言切换只更新 VM、不更新 XAML。
         EnsureUiLocalization();
         return Container.Resolve<LoginView>();
     }
 
     protected override void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        InfrastructureServiceRegistration.RegisterServices(containerRegistry, AppConfiguration, ApplicationVersion);
+        InfrastructureServiceRegistration.RegisterServices(
+            containerRegistry,
+            AppConfiguration,
+            ApplicationVersion,
+            AppLocalization);
+        containerRegistry.RegisterInstance(AppLocSource);
         containerRegistry.RegisterSingleton<DeviceAdapterRegistry>();
 
         containerRegistry.Register<LoginView>();
@@ -86,11 +105,8 @@ public partial class App : PrismApplication
 
     private void EnsureUiLocalization()
     {
-        WpfLocalization.Use(Container.Resolve<ILocalizationService>());
-        if (Resources["Loc"] is not LocalizationBindingSource)
-        {
-            Resources["Loc"] = new LocalizationBindingSource(WpfLocalization.Instance);
-        }
+        // 始终挂同一绑定源；登录页切语言会刷新索引器绑定，主界面不提供语言切换。
+        Resources["Loc"] = AppLocSource;
     }
 
     /// <summary>
@@ -206,7 +222,8 @@ public partial class App : PrismApplication
 
     private static void NotifyUser(Exception exception, string title)
     {
-        var message = string.Format(WpfLocalization.T("ui.app.errorDetail"), title, exception.Message);
+        var detail = BusinessMessageResolver.Resolve(WpfLocalization.Instance, exception);
+        var message = string.Format(WpfLocalization.T("ui.app.errorDetail"), title, detail);
         try
         {
             HandyControl.Controls.Growl.Error(new HandyControl.Data.GrowlInfo

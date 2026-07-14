@@ -1,19 +1,81 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useI18n } from 'vue-i18n'
+import WfListRow from '@/components/WfListRow.vue'
+import WfTabBar from '@/components/WfTabBar.vue'
 import { useUserStore } from '@/stores/user'
+import { t as translate } from '@/i18n'
+import { isScanBizPath, isTabMenuPath } from '@/utils/menuIcon'
+
+interface ScanEntry {
+  title: string
+  desc: string
+  path: string
+  icon?: string
+}
 
 const { t } = useI18n()
 const userStore = useUserStore()
+const entries = ref<ScanEntry[]>([])
 
-const entries = [
-  { titleKey: 'menu.mobile.warehouseScan', descKey: 'mobile.scan.warehouseDesc', path: '/pages/warehouse/scan/index', icon: '📦' },
-  { titleKey: 'menu.mobile.simplePass', descKey: 'mobile.scan.simplePassDesc', path: '/pages/mes/simple-pass/index', icon: '✅' }
-]
+const descKeyMap: Record<string, string> = {
+  'warehouse/scan': 'mobile.scan.warehouseDesc',
+  'simple-pass': 'mobile.scan.simplePassDesc',
+  'mes/report': 'mobile.scan.reportDesc'
+}
 
-onShow(() => {
+function toPageUrl(path: string) {
+  const normalized = path.startsWith('/') ? path : `/${path}`
+  return normalized.endsWith('/index') ? normalized : `${normalized}/index`
+}
+
+function resolveDesc(path: string) {
+  const key = Object.keys(descKeyMap).find((k) => path.includes(k))
+  return key ? t(descKeyMap[key]) : ''
+}
+
+function flattenScanMenus(
+  menus: Array<{ title?: string; i18nKey?: string; path?: string; icon?: string; children?: unknown[] }>
+): ScanEntry[] {
+  const result: ScanEntry[] = []
+  for (const menu of menus) {
+    if (menu.path?.includes('/pages/') && !isTabMenuPath(menu.path) && isScanBizPath(menu.path)) {
+      const path = toPageUrl(menu.path)
+      result.push({
+        title: menu.i18nKey ? translate(menu.i18nKey) : menu.title || '',
+        desc: resolveDesc(path),
+        path,
+        icon: menu.icon
+      })
+    }
+    if (Array.isArray(menu.children)) {
+      result.push(...flattenScanMenus(menu.children as typeof menus))
+    }
+  }
+  return result
+}
+
+onShow(async () => {
   uni.setNavigationBarTitle({ title: t('mobile.tab.scan') })
-  userStore.checkAuthGuard()
+  if (!userStore.checkAuthGuard()) return
+
+  try {
+    const menus = await userStore.fetchMobileMenus()
+    entries.value = flattenScanMenus(menus)
+  } catch {
+    entries.value = []
+  }
+
+  // 初版：无后端菜单时也展示工序报工入口，便于演示
+  if (!entries.value.some((e) => e.path.includes('mes/report'))) {
+    entries.value.unshift({
+      title: t('mobile.report.title'),
+      desc: t('mobile.scan.reportDesc'),
+      path: '/pages/mes/report/index',
+      icon: 'pass'
+    })
+  }
 })
 
 function openPage(path: string) {
@@ -35,110 +97,108 @@ function quickScan() {
 
 <template>
   <view class="page">
-    <view class="hero-card">
-      <text class="title">{{ t('mobile.scan.hubTitle') }}</text>
-      <text class="hint">{{ t('mobile.scan.hint') }}</text>
-      <button class="scan-btn" @click="quickScan">{{ t('mobile.scan.startScan') }}</button>
+    <view class="hero">
+      <view class="hero__icon-wrap">
+        <u-icon name="scan" color="#ffffff" :size="28" />
+      </view>
+      <text class="hero__title">{{ t('mobile.scan.hubTitle') }}</text>
+      <text class="hero__hint">{{ t('mobile.scan.hint') }}</text>
+      <button class="hero__btn" @click="quickScan">{{ t('mobile.scan.startScan') }}</button>
     </view>
 
-    <view class="section-title">{{ t('mobile.home.quickActions') }}</view>
-    <view class="entries">
-      <view v-for="item in entries" :key="item.path" class="entry" @click="openPage(item.path)">
-        <text class="icon">{{ item.icon }}</text>
-        <view class="content">
-          <text class="entry-title">{{ t(item.titleKey) }}</text>
-          <text class="entry-desc">{{ t(item.descKey) }}</text>
-        </view>
-        <text class="arrow">›</text>
+    <template v-if="entries.length">
+      <text class="section-title">{{ t('mobile.scan.bizTitle') }}</text>
+      <view class="list-card">
+        <WfListRow
+          v-for="(item, index) in entries"
+          :key="item.path"
+          :title="item.title"
+          :desc="item.desc"
+          :icon="item.icon"
+          :path="item.path"
+          :border="index < entries.length - 1"
+          @click="openPage(item.path)"
+        />
       </view>
-    </view>
+    </template>
+
+    <WfTabBar active="scan" />
   </view>
 </template>
 
 <style scoped lang="scss">
+@import '@/styles/tokens.scss';
+
 .page {
   min-height: 100vh;
-  background: #f1f5f9;
-  padding: 32rpx 28rpx;
+  background: $wf-bg;
+  padding: $wf-page-pad-y $wf-page-pad-x 48rpx;
   box-sizing: border-box;
 }
 
-.hero-card {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  border-radius: 24rpx;
-  padding: 40rpx 32rpx;
+.hero {
+  background: linear-gradient(145deg, #3b82f6, $wf-primary-dark);
+  border-radius: $wf-radius-lg;
+  padding: 36rpx 32rpx 32rpx;
   color: #fff;
-  margin-bottom: 32rpx;
+  margin-bottom: $wf-section-gap;
+  box-shadow: $wf-shadow-hero;
 }
 
-.title {
+.hero__icon-wrap {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20rpx;
+}
+
+.hero__title {
   display: block;
   font-size: 36rpx;
   font-weight: 700;
 }
 
-.hint {
+.hero__hint {
   display: block;
-  margin-top: 12rpx;
+  margin-top: 10rpx;
   font-size: 24rpx;
-  opacity: 0.85;
+  opacity: 0.88;
+  line-height: 1.4;
 }
 
-.scan-btn {
+.hero__btn {
   margin-top: 28rpx;
+  height: 88rpx;
+  line-height: 88rpx;
   background: #fff;
-  color: #2563eb;
-  border-radius: 16rpx;
+  color: $wf-primary;
+  border-radius: $wf-radius-sm;
   font-size: 30rpx;
+  font-weight: 600;
+  border: none;
+}
+
+.hero__btn::after {
   border: none;
 }
 
 .section-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #0f172a;
-  margin-bottom: 20rpx;
-}
-
-.entries {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-}
-
-.entry {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  background: #fff;
-  border-radius: 20rpx;
-  padding: 28rpx 24rpx;
-}
-
-.icon {
-  font-size: 44rpx;
-}
-
-.content {
-  flex: 1;
-}
-
-.entry-title {
   display: block;
+  margin-bottom: 16rpx;
+  padding-left: 4rpx;
   font-size: 28rpx;
   font-weight: 600;
-  color: #0f172a;
+  color: #334155;
 }
 
-.entry-desc {
-  display: block;
-  margin-top: 6rpx;
-  font-size: 22rpx;
-  color: #94a3b8;
-}
-
-.arrow {
-  color: #cbd5e1;
-  font-size: 36rpx;
+.list-card {
+  background: $wf-card;
+  border-radius: $wf-radius-md;
+  overflow: hidden;
+  box-shadow: $wf-shadow;
 }
 </style>

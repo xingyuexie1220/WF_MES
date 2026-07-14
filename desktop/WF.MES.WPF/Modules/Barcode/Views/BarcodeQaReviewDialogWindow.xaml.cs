@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 using WF.MES.Core.Interfaces;
-using WF.MES.WPF.Infrastructure;
+using WF.MES.WPF.Ui;
 using WF.MES.WPF.Modules.Barcode.ViewModels;
 
 namespace WF.MES.WPF.Modules.Barcode.Views;

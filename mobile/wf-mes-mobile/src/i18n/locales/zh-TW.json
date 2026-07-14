@@ -105,16 +105,42 @@
       "defaultTag": "預設"
     },
     "home": {
+      "hello": "你好",
+      "primaryTitle": "常用功能",
+      "menuTitle": "全部功能",
       "quickActions": "快捷操作",
-      "menuTitle": "功能選單",
       "badge": "行動端"
     },
     "scan": {
       "hubTitle": "掃碼中心",
-      "hint": "點擊下方按鈕開始掃描",
+      "hint": "點擊下方按鈕打開相機掃碼",
       "startScan": "開始掃碼",
+      "bizTitle": "掃碼業務",
       "warehouseDesc": "掃描物料條碼辦理入庫",
-      "simplePassDesc": "掃描產品條碼過站報工"
+      "simplePassDesc": "掃描產品條碼過站報工",
+      "reportDesc": "掃工單號填寫良品/不良報工"
+    },
+    "report": {
+      "title": "工序報工",
+      "scan": "掃碼",
+      "load": "載入工單",
+      "woPlaceholder": "輸入或掃描工單號",
+      "needWo": "請先輸入工單號",
+      "woNotFound": "工單不存在",
+      "planQty": "計畫數",
+      "process": "報工工序",
+      "pickProcess": "選擇工序",
+      "remain": "可報",
+      "machine": "機台",
+      "pickMachine": "選擇機台",
+      "good": "良品",
+      "defect": "不良",
+      "defectReason": "不良原因",
+      "pickDefect": "選擇原因",
+      "needProcess": "請選擇工序",
+      "needQty": "請填寫數量",
+      "needDefect": "請選擇不良原因",
+      "submit": "提交報工"
     },
     "mine": {
       "profile": "個人資訊",

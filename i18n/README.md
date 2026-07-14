@@ -73,8 +73,8 @@ mobile/wf-mes-mobile/src/i18n/locales/  # 手机 UI 包（*.json）
 - UI 包：`desktop/WF.MES.WPF/i18n/{locale}.json`
 - **键树**：`ui.*`（界面）/ `err.*`（业务异常）/ `val.*`（校验）；API 码仍为 `auth.*` / `common.*` 等。桌面包**不含** `mobile.*`（手机端独立维护）。
 - 运行时：`JsonLocalizationService` 加载输出目录 `i18n/{locale}.json`
-- API 解析：`ApiMessageResolver` / `ApiErrorHelper`
-- **WPF 接入规范**（公开 API：`infra:Loc.Key` / `LocDataGrid*` / `L|TF|EX`；实现收拢为 `Loc.cs`、`LocColumns.cs`、`LocConverters.cs`、`LocalizedViewModelBase.cs`，高级：`LocInfoField`）：见 [WF_MES_新模组开发流程.md §4.1](../desktop/WF.MES.WPF/Docs/WF_MES_新模组开发流程.md)
+- API 解析：`ApiErrorHelper` / `ApiResponseHelper`
+- **WPF 接入规范**（公开 API：`infra:Loc.Key` / `Loc.FieldLabelKey` / `LocDataGrid*` / `L|Lf|Ex`；实现收拢为 `Loc.cs`、`LocColumns.cs`、`LocConverters.cs`、`LocalizedViewModelBase.cs`，高级：`LocInfoField`）：见 [WF_MES_新模组开发流程.md](../desktop/WF.MES.WPF/Docs/WF_MES_新模组开发流程.md)
 
 ### Web（Vue）
 

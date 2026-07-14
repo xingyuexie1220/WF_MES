@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using WF.MES.Core.Interfaces;
 
@@ -26,11 +24,8 @@ public sealed class JsonLocalizationService : ILocalizationService
             LoadCatalog(option.Value);
         }
 
-        _currentLocale = LoadSavedLocale();
-        if (!_catalogs.ContainsKey(_currentLocale))
-        {
-            _currentLocale = "zh-CN";
-        }
+        var saved = LoadSavedLocale();
+        _currentLocale = _catalogs.ContainsKey(saved) ? saved : "zh-CN";
     }
 
     public string CurrentLocale => _currentLocale;
@@ -38,8 +33,6 @@ public sealed class JsonLocalizationService : ILocalizationService
     public IReadOnlyList<LocaleOption> LocaleOptions { get; }
 
     public event EventHandler? LocaleChanged;
-
-    public event PropertyChangedEventHandler? PropertyChanged;
 
     public string T(string key, string? fallback = null)
     {
@@ -72,7 +65,6 @@ public sealed class JsonLocalizationService : ILocalizationService
         _currentLocale = locale;
         SaveLocale(locale);
         LocaleChanged?.Invoke(this, EventArgs.Empty);
-        OnPropertyChanged(nameof(CurrentLocale));
     }
 
     private void LoadCatalog(string locale)
@@ -186,7 +178,4 @@ public sealed class JsonLocalizationService : ILocalizationService
 
     private static string GetLocaleStoragePath()
         => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WF.MES", LocaleStorageFile);
-
-    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }

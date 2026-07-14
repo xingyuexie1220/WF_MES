@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using WF.MES.Application.Common;
-using WF.MES.Infrastructure.Persistence;
 using WF.MES.Infrastructure.Security;
 using WF.MES.Shared.Constants;
 using WF.MES.Shared.Exceptions;
@@ -36,7 +35,6 @@ public class FactoryContextMiddleware(RequestDelegate next)
             || path.StartsWith("/api/v1/system/regions", StringComparison.Ordinal))
         {
             factoryContext.DisableFilter();
-            SqlSugarFactoryFilter.Set(null, false);
             await next(context);
             return;
         }
@@ -56,15 +54,7 @@ public class FactoryContextMiddleware(RequestDelegate next)
 
         var factoryCode = context.User.FindFirst("wf:factory_code")?.Value;
         factoryContext.SetFactory(claimFactoryId.Value, factoryCode);
-        SqlSugarFactoryFilter.Set(claimFactoryId.Value, factoryContext.IsFilterEnabled);
 
-        try
-        {
-            await next(context);
-        }
-        finally
-        {
-            SqlSugarFactoryFilter.Clear();
-        }
+        await next(context);
     }
 }

@@ -1,6 +1,6 @@
 namespace WF.MES.Core.Constants;
 
-/// <summary>日期段可选格式（与 DatePartFormatter / DatePartCharMaps 对应）。</summary>
+/// <summary>日期段可选格式（与 DatePartFormatter / DatePartCharMaps 对应；单段单码）。</summary>
 public static class DatePartFormats
 {
     public static readonly string[] AllOptions = ["YYYY", "YY", "Y", "MM", "M", "DD", "D", "WW"];

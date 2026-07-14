@@ -1,9 +1,9 @@
-using System.Windows.Media;
+﻿using System.Windows.Media;
 using WF.MES.Core.Exceptions;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
-using WF.MES.WPF.Infrastructure;
+using WF.MES.WPF.Ui;
 
 namespace WF.MES.WPF.Modules.Barcode.ViewModels;
 
@@ -128,19 +128,13 @@ public class BarcodeQaReviewDialogViewModel : LocalizedViewModelBase
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(EX(ex));
+            HandyControl.Controls.Growl.Error(Ex(ex));
             RequestClose?.Invoke(false);
         }
         finally
         {
             IsBusy = false;
         }
-    }
-
-    protected override void RefreshLocalizedProperties()
-    {
-        RaisePropertyChanged(nameof(WindowTitle));
-        RaisePropertyChanged(nameof(TitleText));
     }
 
     private bool CanApproveAction =>
@@ -174,7 +168,7 @@ public class BarcodeQaReviewDialogViewModel : LocalizedViewModelBase
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(EX(ex));
+            HandyControl.Controls.Growl.Error(Ex(ex));
         }
         finally
         {
@@ -203,7 +197,7 @@ public class BarcodeQaReviewDialogViewModel : LocalizedViewModelBase
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(EX(ex));
+            HandyControl.Controls.Growl.Error(Ex(ex));
         }
         finally
         {

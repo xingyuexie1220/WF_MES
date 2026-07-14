@@ -1,6 +1,6 @@
-using WF.MES.Core.Interfaces;
-using WF.MES.WPF.DeviceAdapters;
-using WF.MES.WPF.Infrastructure;
+﻿using WF.MES.Core.Interfaces;
+using WF.MES.WPF.Modules.Equipment.DeviceAdapters;
+using WF.MES.WPF.Ui;
 
 namespace WF.MES.WPF.Modules.Equipment.ViewModels;
 
@@ -42,14 +42,6 @@ public class EquipmentTestViewModel : LocalizedViewModelBase
     }
 
     public DelegateCommand SubmitCommand { get; }
-
-    protected override void RefreshLocalizedProperties()
-    {
-        RaisePropertyChanged(nameof(PageTitle));
-        RaisePropertyChanged(nameof(HintText));
-        RaisePropertyChanged(nameof(SubmitText));
-        ApplyResultMessage();
-    }
 
     private async Task SubmitAsync()
     {

@@ -23,6 +23,8 @@ const MENU_TITLE_KEY_BY_PATH: Record<string, string> = {
   '/master-data/route': 'menu.masterRoute',
   '/master-data/station': 'menu.masterStation',
   '/master-data/workcenter': 'menu.masterWorkCenter',
+  '/production': 'menu.production',
+  '/production/work-order': 'menu.productionWorkOrder',
   '/report': 'menu.report',
   '/report/output': 'menu.reportOutput',
   '/report/wip': 'menu.reportWip',

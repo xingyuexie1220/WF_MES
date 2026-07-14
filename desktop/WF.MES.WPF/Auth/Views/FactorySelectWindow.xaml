@@ -1,0 +1,32 @@
+﻿<hc:Window x:Class="WF.MES.WPF.Auth.Views.FactorySelectWindow"
+           xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+           xmlns:hc="https://handyorg.github.io/handycontrol"
+           xmlns:infra="clr-namespace:WF.MES.WPF.Ui"
+           Title="WF MES"
+           Width="460"
+           Height="380"
+           WindowStartupLocation="CenterScreen">
+    <StackPanel Margin="24">
+        <TextBlock FontSize="18"
+                   FontWeight="SemiBold"
+                   infra:Loc.Key="ui.factory.selectTitle" />
+        <TextBlock Margin="0,8,0,16"
+                   Foreground="#666"
+                   TextWrapping="Wrap"
+                   infra:Loc.Key="ui.factory.selectHint" />
+        <ListBox x:Name="FactoryList"
+                 DisplayMemberPath="FactoryName"
+                 Height="180" />
+        <StackPanel Margin="0,16,0,0"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+            <Button Margin="0,0,8,0"
+                    Click="Cancel_Click"
+                    infra:Loc.Key="common.cancel" />
+            <Button Click="Confirm_Click"
+                    infra:Loc.Key="common.confirm"
+                    Style="{StaticResource ButtonPrimary}" />
+        </StackPanel>
+    </StackPanel>
+</hc:Window>

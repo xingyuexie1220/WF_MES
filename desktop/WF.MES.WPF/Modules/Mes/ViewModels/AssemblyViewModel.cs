@@ -1,5 +1,5 @@
-using WF.MES.Core.Interfaces;
-using WF.MES.WPF.Infrastructure;
+﻿using WF.MES.Core.Interfaces;
+using WF.MES.WPF.Ui;
 
 namespace WF.MES.WPF.Modules.Mes.ViewModels;
 
@@ -13,10 +13,4 @@ public class AssemblyViewModel : LocalizedViewModelBase
     public string PageTitle => L("ui.mes.assemblyTitle");
 
     public string HintText => L("ui.mes.assemblyHint");
-
-    protected override void RefreshLocalizedProperties()
-    {
-        RaisePropertyChanged(nameof(PageTitle));
-        RaisePropertyChanged(nameof(HintText));
-    }
 }

@@ -5,7 +5,7 @@
 
 .USAGE
     1. 复制 purge_barcode.env.example.cmd 为 purge_barcode.env.cmd 并填写连接信息
-    2. 在 NMES 库已执行 Scripts\Barcode_PurgeRetention.sql
+    2. 在目标业务库已执行 Scripts\Barcode_PurgeRetention.sql
     3. 以管理员 PowerShell 运行：
        .\register_purge_scheduled_task.ps1
        .\register_purge_scheduled_task.ps1 -DailyAt "03:30"
@@ -64,4 +64,4 @@ Write-Host "查看运行日志："
 Write-Host "  $scriptDir\logs\"
 Write-Host ""
 Write-Host "查看数据库清理日志："
-Write-Host "  SELECT TOP 20 * FROM NMES.dbo.Barcode_PurgeLog ORDER BY RunAt DESC;"
+Write-Host "  SELECT TOP 20 * FROM dbo.Barcode_PurgeLog ORDER BY RunAt DESC;"

@@ -6,7 +6,7 @@
 
 实体类上的 `[SugarTable]` 仅用于 SqlSugar ORM 映射已有表，不会同步表结构。
 
-**`02_create_tables.sql` 与 `docs/MES.dbo.initdefinition.md`（你的建表定义）一致**，共约 30 张表：`System_*` + `Barcode_*` + `Master_*` / `Production_*` / `Warehouse_*`。
+**`02_create_tables.sql` 与 `docs/MES.dbo.initdefinition.md`（你的建表定义）一致**，含 `System_*` + `Barcode_*` + `Master_*` / `Production_*` / `Warehouse_*` + **`Mes_*`（简易报工）**。
 
 **新环境推荐**：使用 `00_rebuild_all.sql` 一键清空重建（不保留历史数据）。
 
@@ -16,12 +16,12 @@
 
 | 文件 | 说明 |
 |------|------|
-| `sql/00_init_all.sql` | 全新库初始化（01 → 02 → 03，不删表） |
-| `sql/00_rebuild_all.sql` | **推荐** 清空重建（01 → 20 → 02 → 03） |
+| `sql/00_init_all.sql` | 全新库初始化（01 → 02 → 03 → 04，不删表） |
+| `sql/00_rebuild_all.sql` | **推荐** 清空重建（01 → 20 → 02 → 03 → 04） |
 | `sql/01_create_database.sql` | 创建数据库 `MES` |
 | `sql/02_create_tables.sql` | 创建全部业务表 |
 | `sql/03_seed_data.sql` | 三端菜单 + 角色授权 + 部门/用户/字典/公告种子 |
-| `sql/04_seed_business_data.sql` | 条码/主数据/生产/仓储业务测试数据 |
+| `sql/04_seed_business_data.sql` | 条码/主数据/生产/仓储/**Mes_* 报工** 业务测试数据 |
 | `sql/05_upgrade_multifactory.sql` | **已有库增量升级**（补 `DefaultFactoryId`、多工厂表） |
 | `sql/06_rename_table_prefixes.sql` | **已有库**表前缀重命名（缩写 → 全词） |
 | `sql/20_drop_all_tables.sql` | 删除全部业务表（重建前执行） |
@@ -36,7 +36,8 @@
 | `System_` | 系统平台 | `System_User`、`System_Role_Menu`、`System_Factory` |
 | `Barcode_` | 条码业务 | `Barcode_Customer`、`Barcode_MaterialRule`、`Barcode_Record` |
 | `Master_` | 主数据 | `Master_Material`、`Master_Route`、`Master_Station` |
-| `Production_` | 生产执行 | `Production_WorkOrder`、`Production_PassRecord` |
+| `Production_` | 生产执行（旧脚手架） | `Production_WorkOrder`、`Production_PassRecord` |
+| `Mes_` | **简易报工（新）** | `Mes_Process`、`Mes_Routing`、`Mes_Work_Order`、`Mes_Report_Record` |
 | `Warehouse_` | 仓储 | `Warehouse_InboundOrder` |
 
 字典 **编码**（如 `System_notice_type`）为业务字段值，不是表名，保持小写不变。
@@ -85,10 +86,16 @@ cd database/sql
 sqlcmd -S localhost,1433 -U sa -P "WfMes@123456" -i 00_init_all.sql
 ```
 
+### 已有库仅补报工模块
+
+若库已存在但缺少 `Mes_*` 表，请从 `02_create_tables.sql` 中提取 `Mes_*` 段手动执行，或直接使用 `00_rebuild_all.sql` 重建测试库。
+
+执行 `04_seed_business_data.sql` 后可用演示工单 **`WO202607130001`**（计划 100，已投料 P10）在 PDA 继续报 P20→P50。
+
 ### SSMS 手动执行
 
-重建：`01` → `20` → `02` → `03`  
-全新：`01` → `02` → `03`
+重建：`01` → `20` → `02` → `03` → `04`  
+全新：`01` → `02` → `03` → `04`
 
 ## 默认账号
 

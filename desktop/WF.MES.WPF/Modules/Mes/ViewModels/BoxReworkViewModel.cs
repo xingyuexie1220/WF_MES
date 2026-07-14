@@ -1,5 +1,5 @@
-using WF.MES.Core.Interfaces;
-using WF.MES.WPF.Infrastructure;
+﻿using WF.MES.Core.Interfaces;
+using WF.MES.WPF.Ui;
 
 namespace WF.MES.WPF.Modules.Mes.ViewModels;
 
@@ -12,9 +12,4 @@ public class BoxReworkViewModel : LocalizedViewModelBase
     }
 
     public string PageTitle => L("ui.mes.boxRework");
-
-    protected override void RefreshLocalizedProperties()
-    {
-        RaisePropertyChanged(nameof(PageTitle));
-    }
 }

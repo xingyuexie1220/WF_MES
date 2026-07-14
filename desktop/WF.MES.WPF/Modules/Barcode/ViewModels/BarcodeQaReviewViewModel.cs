@@ -1,8 +1,8 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
-using WF.MES.WPF.Infrastructure;
+using WF.MES.WPF.Ui;
 using WF.MES.WPF.Modules.Barcode.Views;
 
 namespace WF.MES.WPF.Modules.Barcode.ViewModels;
@@ -149,25 +149,6 @@ public class BarcodeQaReviewViewModel : LocalizedViewModelBase, INavigationAware
 
     public void OnNavigatedFrom(NavigationContext navigationContext) { }
 
-    protected override void RefreshLocalizedProperties()
-    {
-        RaisePropertyChanged(nameof(PageTitle));
-        var selectedStatus = SelectedStatusFilter?.StatusValue;
-        RebuildStatusFilters();
-        SelectedStatusFilter = StatusFilters.FirstOrDefault(f => f.StatusValue == selectedStatus) ?? StatusFilters[0];
-        var index = Customers.ToList().FindIndex(c => c.CustomerId == 0);
-        if (index >= 0)
-        {
-            var selectedId = SelectedCustomer?.CustomerId;
-            Customers[index] = new CustomerListDto { CustomerId = 0, CustomerName = L("ui.actions.all") };
-            if (selectedId == 0)
-            {
-                SelectedCustomer = Customers[index];
-            }
-        }
-
-    }
-
     private void RebuildStatusFilters()
     {
         StatusFilters.Clear();
@@ -226,7 +207,7 @@ public class BarcodeQaReviewViewModel : LocalizedViewModelBase, INavigationAware
         {
             if (loadVersion == _loadListVersion)
             {
-                HandyControl.Controls.Growl.Error(EX(ex));
+                HandyControl.Controls.Growl.Error(Ex(ex));
             }
         }
         finally

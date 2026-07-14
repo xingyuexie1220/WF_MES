@@ -1,8 +1,8 @@
-<UserControl x:Class="WF.MES.WPF.Modules.Barcode.Views.BarcodePrintView"
+﻿<UserControl x:Class="WF.MES.WPF.Modules.Barcode.Views.BarcodePrintView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:infra="clr-namespace:WF.MES.WPF.Infrastructure"
+             xmlns:infra="clr-namespace:WF.MES.WPF.Ui"
              xmlns:prism="http://prismlibrary.com/"
              prism:ViewModelLocator.AutoWireViewModel="True">
     <Grid Margin="{StaticResource PageRootMargin}">
@@ -111,7 +111,6 @@
                             <MultiBinding Converter="{x:Static infra:LocFormatConverter.Instance}"
                                           ConverterParameter="ui.barcode.recentGenerateNo">
                                 <Binding Path="GenerateNo" />
-                                <Binding Source="{x:Static infra:Loc.LocSource}" Path="Revision" />
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
@@ -120,7 +119,6 @@
                             <MultiBinding Converter="{x:Static infra:LocFormatConverter.Instance}"
                                           ConverterParameter="ui.barcode.serialConfig">
                                 <Binding Path="SerialConfigPreview" />
-                                <Binding Source="{x:Static infra:Loc.LocSource}" Path="Revision" />
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
@@ -133,7 +131,6 @@
                             <MultiBinding Converter="{x:Static infra:LocFormatConverter.Instance}"
                                           ConverterParameter="ui.barcode.serialRangePreview">
                                 <Binding Path="SerialRangePreview" />
-                                <Binding Source="{x:Static infra:Loc.LocSource}" Path="Revision" />
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
@@ -146,7 +143,6 @@
                             <MultiBinding Converter="{x:Static infra:LocFormatConverter.Instance}"
                                           ConverterParameter="ui.barcode.totalLength">
                                 <Binding Path="SampleLengthPreview" />
-                                <Binding Source="{x:Static infra:Loc.LocSource}" Path="Revision" />
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>

@@ -59,31 +59,32 @@
       "style": {
         "navigationBarTitleText": "简单过站"
       }
+    },
+    {
+      "path": "pages/mes/report/index",
+      "style": {
+        "navigationBarTitleText": "工序报工"
+      }
     }
   ],
   "tabBar": {
+    "custom": true,
     "color": "#8a94a6",
     "selectedColor": "#2563eb",
     "backgroundColor": "#ffffff",
-    "borderStyle": "black",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/home/index",
-        "text": "工作台",
-        "iconPath": "static/tab/home.png",
-        "selectedIconPath": "static/tab/home-active.png"
+        "text": "工作台"
       },
       {
         "pagePath": "pages/scan/index",
-        "text": "扫码",
-        "iconPath": "static/tab/scan.png",
-        "selectedIconPath": "static/tab/scan-active.png"
+        "text": "扫码"
       },
       {
         "pagePath": "pages/mine/index",
-        "text": "我的",
-        "iconPath": "static/tab/mine.png",
-        "selectedIconPath": "static/tab/mine-active.png"
+        "text": "我的"
       }
     ]
   },

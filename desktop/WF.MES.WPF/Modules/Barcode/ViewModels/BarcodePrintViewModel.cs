@@ -3,7 +3,7 @@ using System.Windows;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
-using WF.MES.WPF.Infrastructure;
+using WF.MES.WPF.Ui;
 using WF.MES.WPF.Modules.Barcode.Views;
 
 namespace WF.MES.WPF.Modules.Barcode.ViewModels;
@@ -62,7 +62,7 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
 
     public string PreviewUpdatingText => L("ui.barcode.previewUpdating");
 
-    public string MaxQuantityHint => TF("ui.barcode.maxQuantityHint", BarcodeGenerateLimits.MaxQuantityPerBatch);
+    public string MaxQuantityHint => Lf("ui.barcode.maxQuantityHint", BarcodeGenerateLimits.MaxQuantityPerBatch);
 
     public ObservableCollection<CustomerListDto> Customers { get; } = [];
     public ObservableCollection<MaterialRuleListDto> Rules { get; } = [];
@@ -204,20 +204,6 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
 
     public void OnNavigatedFrom(NavigationContext navigationContext) { }
 
-    protected override void RefreshLocalizedProperties()
-    {
-        RaisePropertyChanged(nameof(PageTitle));
-        RaisePropertyChanged(nameof(PreviewUpdatingText));
-        RaisePropertyChanged(nameof(MaxQuantityHint));
-        RaisePropertyChanged(nameof(GenerateButtonText));
-        ApplyStatusMessage();
-
-        if (!IsGenerating && SelectedRule != null && Quantity > 0)
-        {
-            _ = UpdateTextPreviewCoreAsync();
-        }
-    }
-
     private bool CanGenerate() =>
         SelectedCustomer != null && SelectedRule != null && Quantity > 0;
 
@@ -246,7 +232,7 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(EX(ex));
+            HandyControl.Controls.Growl.Error(Ex(ex));
         }
     }
 
@@ -338,7 +324,7 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
         catch (Exception ex)
         {
             ResetPreview();
-            SamplePreview = EX(ex);
+            SamplePreview = Ex(ex);
             SampleLengthPreview = 0;
         }
     }
@@ -367,7 +353,7 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
             ClearStatusMessage();
             HandyControl.Controls.Growl.Success(new HandyControl.Data.GrowlInfo
             {
-                Message = TF("ui.barcode.generatedCount", result.Records.Count),
+                Message = Lf("ui.barcode.generatedCount", result.Records.Count),
                 WaitTime = 3
             });
 
@@ -388,7 +374,7 @@ public class BarcodePrintViewModel : LocalizedViewModelBase, INavigationAware
         catch (Exception ex)
         {
             ClearStatusMessage();
-            HandyControl.Controls.Growl.Error(EX(ex));
+            HandyControl.Controls.Growl.Error(Ex(ex));
         }
         finally
         {

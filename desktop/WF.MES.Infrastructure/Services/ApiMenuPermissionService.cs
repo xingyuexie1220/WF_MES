@@ -5,10 +5,8 @@ using WF.MES.Models.Dtos;
 
 namespace WF.MES.Infrastructure.Services;
 
-/// <summary>从 /auth/desktop-menus 构建侧栏模组/菜单树。</summary>
-public sealed class ApiMenuPermissionService(
-    IAuthApi authApi,
-    ILocalizationService localization) : IMenuPermissionService
+/// <summary>从 /auth/desktop-menus 构建侧栏模组/菜单树（保留 I18nKey，标题在 UI 渲染时翻译）。</summary>
+public sealed class ApiMenuPermissionService(IAuthApi authApi) : IMenuPermissionService
 {
     private const int DesktopRootMenuId = 300;
     private const int MenuTypeDirectory = 1;
@@ -28,7 +26,7 @@ public sealed class ApiMenuPermissionService(
         return modules;
     }
 
-    private List<ModuleMenuPermissionDto> MapToModules(IReadOnlyList<ClientMenuDto> tree)
+    private static List<ModuleMenuPermissionDto> MapToModules(IReadOnlyList<ClientMenuDto> tree)
     {
         if (tree.Count == 0)
         {
@@ -44,7 +42,8 @@ public sealed class ApiMenuPermissionService(
             .Select(dir => new ModuleMenuPermissionDto
             {
                 ModuleId = (int)dir.Id,
-                ModuleName = ResolveTitle(dir),
+                I18nKey = dir.I18nKey,
+                TitleFallback = dir.Title,
                 Icon = dir.Icon,
                 Menus = dir.Children
                     .Where(menu => menu.MenuType == MenuTypeMenu
@@ -55,7 +54,8 @@ public sealed class ApiMenuPermissionService(
                     {
                         MenuId = (int)menu.Id,
                         ModuleId = (int)dir.Id,
-                        MenuName = ResolveTitle(menu),
+                        I18nKey = menu.I18nKey,
+                        TitleFallback = menu.Title,
                         ViewName = menu.Component!
                     })
                     .ToList()
@@ -63,9 +63,4 @@ public sealed class ApiMenuPermissionService(
             .Where(module => module.Menus.Count > 0)
             .ToList();
     }
-
-    private string ResolveTitle(ClientMenuDto menu)
-        => string.IsNullOrWhiteSpace(menu.I18nKey)
-            ? menu.Title
-            : localization.T(menu.I18nKey, menu.Title);
 }

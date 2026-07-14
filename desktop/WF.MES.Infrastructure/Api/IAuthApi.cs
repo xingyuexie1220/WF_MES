@@ -3,6 +3,7 @@ using WF.MES.Models.Dtos;
 
 namespace WF.MES.Infrastructure.Api;
 
+/// <summary>后端认证 / 会话 / 桌面菜单 Refit 契约。</summary>
 public interface IAuthApi
 {
     [Post("/api/v1/auth/login")]
@@ -10,9 +11,6 @@ public interface IAuthApi
 
     [Post("/api/v1/auth/select-factory")]
     Task<ApiResultDto<LoginResponseDto>> SelectFactoryAsync([Body] SelectFactoryRequestDto request, CancellationToken cancellationToken = default);
-
-    [Post("/api/v1/auth/switch-factory")]
-    Task<ApiResultDto<LoginResponseDto>> SwitchFactoryAsync([Body] SwitchFactoryRequestDto request, CancellationToken cancellationToken = default);
 
     [Get("/api/v1/auth/info")]
     Task<ApiResultDto<UserInfoDto>> GetInfoAsync(CancellationToken cancellationToken = default);
