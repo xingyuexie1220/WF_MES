@@ -367,8 +367,9 @@ public class AuthService(
 
     private async Task<Dictionary<long, long>> BuildMenuParentMapAsync(ClientType clientType, CancellationToken cancellationToken)
     {
+        // 含按钮，便于 role_menu 仅有按钮 id 时也能展开到页面/目录
         var menus = await db.Queryable<SystemMenu>()
-            .Where(m => !m.IsDeleted && m.ClientType == clientType && m.MenuType != MenuType.Button)
+            .Where(m => !m.IsDeleted && m.ClientType == clientType)
             .Select(m => new { m.Id, m.ParentId })
             .ToListAsync(cancellationToken);
 

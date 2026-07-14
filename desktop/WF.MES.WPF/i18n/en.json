@@ -78,6 +78,9 @@
     }
   },
   "ui": {
+    "locale": {
+      "label": "Language"
+    },
     "loginHint": "Enter your credentials to continue",
     "headerTitle": "WF MES",
     "logout": "Sign out",
@@ -97,6 +100,9 @@
     "machineName": "Machine: {0}",
     "version": "Version {0}",
     "menuCount": "{0} items",
+    "punct": {
+      "colon": ": "
+    },
     "checkingUpdate": "Checking for updates...",
     "updateFound": "New version {0}. Updating...",
     "readyToLogin": "Version {0}. Sign in to continue",
@@ -112,9 +118,6 @@
     "updateCompleteRestart": "Update complete. Restarting...",
     "updateFailedContinue": "Update failed. Continue with sign-in.",
     "noDesktopMenu": "No desktop menu permissions assigned",
-    "locale": {
-      "label": "Language"
-    },
     "fields": {
       "customer": "Customer",
       "customerName": "Customer name",
@@ -202,9 +205,6 @@
       "selectTitle": "Select factory",
       "selectHint": "Your account can access multiple factories. Choose one for this session.",
       "selectRequired": "Please select a factory",
-      "switch": "Switch factory",
-      "switchSuccess": "Factory switched",
-      "switchFailed": "Failed to switch factory",
       "selectFailed": "Factory selection failed",
       "current": "Current factory"
     },
@@ -295,6 +295,7 @@
       "generateDetail": "Batch details",
       "noBarcodesToExport": "No barcodes to export for this batch",
       "exportedCount": "Exported {0} barcodes",
+      "exportedCountPath": "Exported {0} barcodes\n{1}",
       "exportTitle": "Export barcodes",
       "printedLabelsSuccess": "Printed {0} labels",
       "exportCsv": {

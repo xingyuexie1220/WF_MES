@@ -115,6 +115,8 @@ VALUES
     (411, 410, N'产量报表', 2, N'/report/output',         N'report/output/index',        N'dashboard:report:view',     N'Histogram', 1, 1, 1, 1, N'menu.reportOutput',    GETDATE(), 0),
     (412, 410, N'WIP报表',  2, N'/report/wip',            N'report/wip/index',           N'dashboard:report:view',     N'PieChart',  2, 1, 1, 1, N'menu.reportWip',       GETDATE(), 0),
     (420, 0,   N'数据大屏', 2, N'/bigscreen',             N'bigscreen/index',            N'dashboard:bigscreen:view',  N'Monitor',   4, 1, 1, 1, N'menu.bigscreen',       GETDATE(), 0),
+    (430, 0,   N'生产执行', 1, N'/production',              NULL,                            NULL,                    N'Document', 25, 1, 1, 1, N'menu.production',          GETDATE(), 0),
+    (431, 430, N'生产工单', 2, N'/production/work-order',  N'production/work-order/index', N'mes:workorder:scan',   N'Document',  1, 1, 1, 1, N'menu.productionWorkOrder', GETDATE(), 0),
 
     /* Mobile (ClientType=2) */
     (200, 0,   N'手机端 MES', 1, N'/mobile',               NULL,                       NULL,                              N'phone',  1, 2, 1, 1, N'menu.mobile.root',       GETDATE(), 0),
@@ -124,6 +126,7 @@ VALUES
     (204, 202, N'提交扫码',   3, NULL, NULL, N'mobile:warehouse:scan:submit', NULL, 1, 2, 0, 1, NULL, GETDATE(), 0),
     (205, 202, N'取消扫码',   3, NULL, NULL, N'mobile:warehouse:scan:cancel', NULL, 2, 2, 0, 1, NULL, GETDATE(), 0),
     (206, 200, N'简单过站',   2, N'/pages/mes/simple-pass', N'pages/mes/simple-pass', N'mobile:mes:pass:list', N'Finished', 4, 2, 1, 1, N'menu.mobile.simplePass', GETDATE(), 0),
+    (207, 200, N'工序报工',   2, N'/pages/mes/report',       N'pages/mes/report/index',      N'mes:workorder:scan',   N'pass',      5, 2, 1, 1, N'menu.mobile.report',       GETDATE(), 0),
 
     /* Desktop / WPF (ClientType=3) — Component = Prism RegisterForNavigation 名称 */
     (300, 0,   N'桌面端',     1, N'/desktop',                   NULL,                    NULL,                      N'Monitor',      1, 3, 1, 1, N'menu.desktop.root',             GETDATE(), 0),
@@ -145,7 +148,7 @@ VALUES
     (320, 300, N'设备测试',   1, N'/desktop/equipment',        NULL,                NULL,                      N'Cpu',          3, 3, 1, 1, N'menu.desktop.equipment',    GETDATE(), 0),
     (321, 320, N'测试对接',   2, N'/desktop/equipment/test',     N'Equipment.Test',   N'equipment:test:submit',  N'Connection',   1, 3, 1, 1, N'menu.desktop.equipmentTest',GETDATE(), 0);
 SET IDENTITY_INSERT dbo.System_Menu OFF;
-DBCC CHECKIDENT ('dbo.System_Menu', RESEED, 421);
+DBCC CHECKIDENT ('dbo.System_Menu', RESEED, 431);
 GO
 
 /* ========== 角色菜单 ========== */
@@ -155,7 +158,7 @@ SELECT 1, Id FROM dbo.System_Menu WHERE IsDeleted = 0;
 INSERT INTO dbo.System_Role_Menu (RoleId, MenuId)
 SELECT 2, Id FROM dbo.System_Menu
 WHERE IsDeleted = 0
-  AND Id IN (200, 201, 202, 203, 204, 205, 206, 300, 301, 302, 303, 304, 305, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321);
+  AND Id IN (200, 201, 202, 203, 204, 205, 206, 207, 300, 301, 302, 303, 304, 305, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 431);
 GO
 
 /* ========== 岗位 ========== */

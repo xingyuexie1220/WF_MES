@@ -1,7 +1,7 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
-using WF.MES.WPF.Infrastructure;
+using WF.MES.WPF.Ui;
 
 namespace WF.MES.WPF.Modules.Barcode.ViewModels;
 
@@ -108,12 +108,6 @@ public class CustomerManageViewModel : LocalizedViewModelBase, INavigationAware
 
     public void OnNavigatedFrom(NavigationContext navigationContext) { }
 
-    protected override void RefreshLocalizedProperties()
-    {
-        RaisePropertyChanged(nameof(PageTitle));
-        RaisePropertyChanged(nameof(FormTitle));
-    }
-
     private bool CanSave() =>
         !IsBusy && !string.IsNullOrWhiteSpace(EditCustomerName);
 
@@ -130,7 +124,7 @@ public class CustomerManageViewModel : LocalizedViewModelBase, INavigationAware
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(EX(ex));
+            HandyControl.Controls.Growl.Error(Ex(ex));
         }
         finally
         {
@@ -187,7 +181,7 @@ public class CustomerManageViewModel : LocalizedViewModelBase, INavigationAware
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(EX(ex));
+            HandyControl.Controls.Growl.Error(Ex(ex));
         }
         finally
         {

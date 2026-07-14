@@ -9,8 +9,6 @@ public interface IAuthService
 
     Task<LoginResultDto> SelectFactoryAsync(string userName, string password, long factoryId, CancellationToken cancellationToken = default);
 
-    Task<LoginResultDto> SwitchFactoryAsync(long factoryId, CancellationToken cancellationToken = default);
-
     /// <summary>心跳：检测 Access Token 是否有效、是否被其他设备踢下线（不自动 Refresh）。</summary>
     Task<bool> ValidateSessionAsync(CancellationToken cancellationToken = default);
 

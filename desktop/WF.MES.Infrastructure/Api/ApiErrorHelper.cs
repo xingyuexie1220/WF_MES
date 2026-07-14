@@ -7,20 +7,28 @@ using WF.MES.Models.Dtos;
 
 namespace WF.MES.Infrastructure.Api;
 
+/// <summary>API 异常 / messageCode → 用户可见文案。</summary>
 public static class ApiErrorHelper
 {
-    private const string DefaultApiBaseUrlHint = "http://localhost:5088";
-
-    public static string ToUserMessage(Exception ex, ILocalizationService? localization = null, string? apiBaseUrl = null)
+    private static readonly JsonSerializerOptions ParseOptions = new()
     {
-        if (localization is not null && (ex is BusinessException || ex.InnerException is BusinessException))
-        {
-            return BusinessMessageResolver.Resolve(localization, ex);
-        }
+        PropertyNameCaseInsensitive = true
+    };
 
-        if (TryParseApiResult(ex, out var messageCode, out var message) && localization is not null)
+    /// <summary>将 API messageCode 解析为当前语言文案；message 仅作 fallback。</summary>
+    public static string ResolveMessage(
+        ILocalizationService localization,
+        string? messageCode,
+        string? message = null,
+        string fallbackKey = "common.requestFailed")
+    {
+        if (!string.IsNullOrWhiteSpace(messageCode))
         {
-            return ApiMessageResolver.Resolve(localization, messageCode, message);
+            var translated = localization.T(messageCode, "");
+            if (!string.IsNullOrWhiteSpace(translated))
+            {
+                return translated;
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(message))
@@ -28,45 +36,54 @@ public static class ApiErrorHelper
             return message;
         }
 
-        var inner = ex;
-        while (inner.InnerException is not null)
+        return localization.T(fallbackKey);
+    }
+
+    public static string ToUserMessage(Exception ex, ILocalizationService localization, string? apiBaseUrl = null)
+    {
+        if (ex is BusinessException || ex.InnerException is BusinessException)
         {
-            inner = inner.InnerException;
+            return BusinessMessageResolver.Resolve(localization, ex);
         }
 
-        var innerMessage = inner.Message;
-        if (inner is HttpRequestException or System.Net.Sockets.SocketException
-            || innerMessage.Contains("积极拒绝", StringComparison.Ordinal)
-            || innerMessage.Contains("actively refused", StringComparison.OrdinalIgnoreCase)
-            || innerMessage.Contains("No connection could be made", StringComparison.OrdinalIgnoreCase))
+        if (TryParseApiResult(ex, out var messageCode, out var message))
         {
-            var serviceTarget = Format(localization, "common.api.serviceTarget");
+            return ResolveMessage(localization, messageCode, message);
+        }
+
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            return message!;
+        }
+
+        var inner = Unwrap(ex);
+        var innerMessage = inner.Message;
+
+        if (IsConnectionRefused(inner, innerMessage))
+        {
+            var serviceTarget = localization.T("common.api.serviceTarget");
             var target = string.IsNullOrWhiteSpace(apiBaseUrl)
                 ? serviceTarget
                 : $"{serviceTarget} ({apiBaseUrl})";
-            return Format(localization, "common.api.connectionRefused", target);
+            return string.Format(localization.T("common.api.connectionRefused"), target);
         }
 
-        if (innerMessage.Contains("timed out", StringComparison.OrdinalIgnoreCase)
-            || innerMessage.Contains("超时", StringComparison.Ordinal))
+        if (IsTimeout(innerMessage))
         {
-            return Format(localization, "common.api.timeout");
+            return localization.T("common.api.timeout");
         }
 
-        if (innerMessage.Contains("ResponseEnded", StringComparison.OrdinalIgnoreCase)
-            || innerMessage.Contains("response ended prematurely", StringComparison.OrdinalIgnoreCase)
-            || innerMessage.Contains("连接被关闭", StringComparison.Ordinal))
+        if (IsProtocolMismatch(innerMessage))
         {
-            var hint = string.IsNullOrWhiteSpace(apiBaseUrl) ? DefaultApiBaseUrlHint : apiBaseUrl;
-            return Format(localization, "common.api.protocolMismatch", hint);
+            var hint = string.IsNullOrWhiteSpace(apiBaseUrl)
+                ? localization.T("common.api.serviceTarget")
+                : apiBaseUrl;
+            return string.Format(localization.T("common.api.protocolMismatch"), hint);
         }
 
-        if (string.IsNullOrWhiteSpace(innerMessage))
-        {
-            return Format(localization, "common.api.loginRetry");
-        }
-
-        return innerMessage;
+        return string.IsNullOrWhiteSpace(innerMessage)
+            ? localization.T("common.api.loginRetry")
+            : innerMessage;
     }
 
     public static bool TryParseApiResult(Exception ex, out string? messageCode, out string? message)
@@ -81,10 +98,7 @@ public static class ApiErrorHelper
 
         try
         {
-            var dto = JsonSerializer.Deserialize<ApiResultDto<object>>(apiEx.Content, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            var dto = JsonSerializer.Deserialize<ApiResultDto<object>>(apiEx.Content, ParseOptions);
             if (dto is null)
             {
                 return false;
@@ -100,9 +114,28 @@ public static class ApiErrorHelper
         }
     }
 
-    private static string Format(ILocalizationService? localization, string key, params object?[] args)
+    private static Exception Unwrap(Exception ex)
     {
-        var template = localization?.T(key) ?? key;
-        return args.Length > 0 ? string.Format(template, args) : template;
+        while (ex.InnerException is not null)
+        {
+            ex = ex.InnerException;
+        }
+
+        return ex;
     }
+
+    private static bool IsConnectionRefused(Exception inner, string innerMessage) =>
+        inner is HttpRequestException or System.Net.Sockets.SocketException
+        || innerMessage.Contains("积极拒绝", StringComparison.Ordinal)
+        || innerMessage.Contains("actively refused", StringComparison.OrdinalIgnoreCase)
+        || innerMessage.Contains("No connection could be made", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsTimeout(string innerMessage) =>
+        innerMessage.Contains("timed out", StringComparison.OrdinalIgnoreCase)
+        || innerMessage.Contains("超时", StringComparison.Ordinal);
+
+    private static bool IsProtocolMismatch(string innerMessage) =>
+        innerMessage.Contains("ResponseEnded", StringComparison.OrdinalIgnoreCase)
+        || innerMessage.Contains("response ended prematurely", StringComparison.OrdinalIgnoreCase)
+        || innerMessage.Contains("连接被关闭", StringComparison.Ordinal);
 }

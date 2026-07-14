@@ -16,10 +16,12 @@ WF 制造执行系统（桌面客户端），面向工位 Windows 环境。
 
 | 项目 | 说明 |
 |------|------|
-| `WF.MES.WPF` | WPF 客户端（Prism、HandyControl） |
+| `WF.MES.WPF` | WPF 客户端（Prism、HandyControl）。内部：`Auth/` / `Shell/` / `Ui/` / `Modules/{Mes,Material,Barcode,Equipment}` |
 | `WF.MES.Infrastructure` | 业务 Service、SqlSugar、FluentValidation |
 | `WF.MES.Core` | 接口、DTO、实体、常量 |
 | `WF.MES.Updater` | 在线更新辅助程序 |
+
+功能页目录须与 `System_Menu.Component` 前缀一致（如 `Barcode.Print` → `Modules/Barcode/`）。
 
 ## 文档索引
 
@@ -53,9 +55,9 @@ WF 制造执行系统（桌面客户端），面向工位 Windows 环境。
 
 | 能力 | 说明 |
 |------|------|
-| 语言 | 登录页与主界面顶栏均可切换 **简体中文 / 繁體中文 / English**；选择会保存到 `%LocalAppData%/WF.MES/wf_locale.txt` |
-| API 语言 | HTTP 请求自动携带 `Accept-Language`，菜单标题随语言刷新 |
-| 多工厂 | 登录时若账号可访问多个工厂，会弹出选厂窗口；主界面顶栏 **切换工厂** 可在同地区工厂间切换（需重新加载菜单权限） |
+| 语言 | **登录页**可切换 简体中文 / 繁體中文 / English，并写入 `%LocalAppData%/WF.MES/wf_locale.txt`；**主界面不再切换语言** |
+| API 语言 | HTTP 请求自动携带 `Accept-Language`（取自当前 locale） |
+| 多工厂 | 登录时若账号可访问多个工厂，会弹出选厂窗口 |
 
 同步 API messageCode 到桌面 UI 包（可选，构建时会自动复制 UI 包）：
 
@@ -63,7 +65,7 @@ WF 制造执行系统（桌面客户端），面向工位 Windows 环境。
 ./i18n/scripts/sync-desktop.ps1
 ```
 
-业务模块（条码、MES、设备）页面标题、按钮、列头与提示信息均已接入同一套 i18n；切换语言后主界面菜单与已打开模块文案会同步刷新。
+业务模块（条码、MES、设备）页面标题、按钮、列头与提示信息均已接入同一套 i18n。
 
 ## 当前版本
 

@@ -1,5 +1,5 @@
-using WF.MES.Core.Interfaces;
-using WF.MES.WPF.Infrastructure;
+﻿using WF.MES.Core.Interfaces;
+using WF.MES.WPF.Ui;
 
 namespace WF.MES.WPF.Modules.Mes.ViewModels;
 
@@ -12,9 +12,4 @@ public class WorkOrderScanViewModel : LocalizedViewModelBase
     }
 
     public string PageTitle => L("ui.mes.workOrderScan");
-
-    protected override void RefreshLocalizedProperties()
-    {
-        RaisePropertyChanged(nameof(PageTitle));
-    }
 }

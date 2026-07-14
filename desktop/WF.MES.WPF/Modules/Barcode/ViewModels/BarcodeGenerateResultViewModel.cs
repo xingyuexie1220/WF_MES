@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
-using WF.MES.WPF.Infrastructure;
+using WF.MES.WPF.Ui;
 
 namespace WF.MES.WPF.Modules.Barcode.ViewModels;
 
@@ -121,14 +121,6 @@ public class BarcodeGenerateResultViewModel : LocalizedViewModelBase
         }
     }
 
-    protected override void RefreshLocalizedProperties()
-    {
-        RaisePropertyChanged(nameof(PageTitle));
-        RaisePropertyChanged(nameof(WindowTitle));
-        RaisePropertyChanged(nameof(PrintButtonText));
-        ApplyPrintStatus();
-    }
-
     private bool CanPrint() =>
         !HasPrinted && !string.IsNullOrWhiteSpace(SelectedPrinter) && Records.Count > 0;
 
@@ -140,7 +132,7 @@ public class BarcodeGenerateResultViewModel : LocalizedViewModelBase
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Warning(EX(ex));
+            HandyControl.Controls.Growl.Warning(Ex(ex));
         }
     }
 
@@ -173,19 +165,19 @@ public class BarcodeGenerateResultViewModel : LocalizedViewModelBase
                 await _recordService.MarkPrintedAsync(_model.GenerateRecordId);
                 HandyControl.Controls.Growl.Success(new HandyControl.Data.GrowlInfo
                 {
-                    Message = TF("ui.barcode.printedLabelsSuccess", result.PrintedCount),
+                    Message = Lf("ui.barcode.printedLabelsSuccess", result.PrintedCount),
                     WaitTime = 3
                 });
             }
             catch (Exception ex)
             {
-                HandyControl.Controls.Growl.Warning(TF("ui.barcode.printStatusUpdateFailed", EX(ex)));
+                HandyControl.Controls.Growl.Warning(Lf("ui.barcode.printStatusUpdateFailed", Ex(ex)));
             }
         }
         catch (Exception ex)
         {
             ClearPrintStatus();
-            HandyControl.Controls.Growl.Error(EX(ex));
+            HandyControl.Controls.Growl.Error(Ex(ex));
         }
         finally
         {

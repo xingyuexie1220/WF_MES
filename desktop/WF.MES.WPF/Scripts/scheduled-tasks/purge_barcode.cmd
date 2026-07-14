@@ -15,7 +15,7 @@ if not exist "%ENV_FILE%" (
 call "%ENV_FILE%"
 
 if not defined SQL_SERVER set SQL_SERVER=127.0.0.1
-if not defined SQL_DATABASE set SQL_DATABASE=NMES
+if not defined SQL_DATABASE set SQL_DATABASE=WF_MES_DEV
 if not defined RETENTION_DAYS set RETENTION_DAYS=30
 if not defined BATCH_SIZE set BATCH_SIZE=5000
 

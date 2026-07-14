@@ -105,16 +105,42 @@
       "defaultTag": "默认"
     },
     "home": {
+      "hello": "你好",
+      "primaryTitle": "常用功能",
+      "menuTitle": "全部功能",
       "quickActions": "快捷操作",
-      "menuTitle": "功能菜单",
       "badge": "移动端"
     },
     "scan": {
       "hubTitle": "扫码中心",
-      "hint": "点击下方按钮开始扫描",
+      "hint": "点击下方按钮打开相机扫码",
       "startScan": "开始扫码",
+      "bizTitle": "扫码业务",
       "warehouseDesc": "扫描物料条码办理入库",
-      "simplePassDesc": "扫描产品条码过站报工"
+      "simplePassDesc": "扫描产品条码过站报工",
+      "reportDesc": "扫工单号填写良品/不良报工"
+    },
+    "report": {
+      "title": "工序报工",
+      "scan": "扫码",
+      "load": "加载工单",
+      "woPlaceholder": "输入或扫描工单号",
+      "needWo": "请先输入工单号",
+      "woNotFound": "工单不存在",
+      "planQty": "计划数",
+      "process": "报工工序",
+      "pickProcess": "选择工序",
+      "remain": "可报",
+      "machine": "机台",
+      "pickMachine": "选择机台",
+      "good": "良品",
+      "defect": "不良",
+      "defectReason": "不良原因",
+      "pickDefect": "选择原因",
+      "needProcess": "请选择工序",
+      "needQty": "请填写数量",
+      "needDefect": "请选择不良原因",
+      "submit": "提交报工"
     },
     "mine": {
       "profile": "个人信息",

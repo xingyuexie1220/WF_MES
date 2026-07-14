@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useI18n } from 'vue-i18n'
 import { appConfig } from '@/config/app'
-import WfLocalePicker from '@/components/WfLocalePicker.vue'
-import WfFactoryPicker from '@/components/WfFactoryPicker.vue'
+import WfListRow from '@/components/WfListRow.vue'
+import WfTabBar from '@/components/WfTabBar.vue'
 import { useUserStore } from '@/stores/user'
-import type { FactorySummary } from '@/types/auth'
+import { useLocaleStore } from '@/stores/locale'
+import type { AppLocale } from '@/i18n'
 
 const { t } = useI18n()
 const userStore = useUserStore()
-const showFactoryPicker = ref(false)
+const localeStore = useLocaleStore()
 
 const avatarText = computed(() => (userStore.displayName || '?').slice(0, 1).toUpperCase())
-const factories = computed(() => userStore.accessibleFactories)
+const localeLabel = computed(() => t(localeStore.getLocaleLabel(localeStore.locale)))
 
 onShow(() => {
   uni.setNavigationBarTitle({ title: t('mobile.tab.mine') })
@@ -25,22 +26,16 @@ async function refreshProfile() {
   uni.showToast({ title: t('mobile.mine.updated'), icon: 'success' })
 }
 
-function openFactoryPicker() {
-  if (factories.value.length <= 1) {
-    uni.showToast({ title: t('common.noData'), icon: 'none' })
-    return
-  }
-  showFactoryPicker.value = true
-}
-
-async function handleSwitchFactory(factory: FactorySummary) {
-  if (factory.id === userStore.currentFactory.id) {
-    showFactoryPicker.value = false
-    return
-  }
-  await userStore.switchFactory(factory.id)
-  showFactoryPicker.value = false
-  uni.showToast({ title: t('mobile.factory.switchSuccess'), icon: 'success' })
+function openLocalePicker() {
+  uni.showActionSheet({
+    itemList: localeStore.localeOptions.map((item) => t(item.labelKey)),
+    success(res) {
+      const next = localeStore.localeOptions[res.tapIndex]?.value as AppLocale | undefined
+      if (next) {
+        localeStore.applyLocale(next)
+      }
+    }
+  })
 }
 
 function goChangePassword() {
@@ -64,135 +59,140 @@ function handleLogout() {
 
 <template>
   <view class="page">
-    <view class="profile-card">
-      <view class="avatar">{{ avatarText }}</view>
-      <view class="info">
-        <text class="name">{{ userStore.displayName }}</text>
-        <text class="account">@{{ userStore.userInfo?.userName }}</text>
-        <text v-if="userStore.currentFactory.name" class="factory">{{ userStore.currentFactory.name }}</text>
+    <view class="profile">
+      <view class="profile__avatar">{{ avatarText }}</view>
+      <view class="profile__info">
+        <text class="profile__name">{{ userStore.displayName }}</text>
+        <text class="profile__account">@{{ userStore.userInfo?.userName }}</text>
+        <text v-if="userStore.currentFactory.name" class="profile__factory">
+          {{ userStore.currentFactory.name }}
+        </text>
       </view>
     </view>
 
-    <view class="menu">
-      <view class="menu-item" @click="refreshProfile">
-        <text>{{ t('mobile.mine.refreshProfile') }}</text>
-        <text class="arrow">›</text>
-      </view>
-      <view class="menu-item" @click="openFactoryPicker">
-        <text>{{ t('mobile.factory.switch') }}</text>
-        <text class="value">{{ userStore.currentFactory.name || '-' }}</text>
-      </view>
-      <view class="menu-item">
-        <WfLocalePicker />
-      </view>
-      <view class="menu-item" @click="goChangePassword">
-        <text>{{ t('mobile.mine.changePassword') }}</text>
-        <text class="arrow">›</text>
-      </view>
-      <view class="menu-item">
-        <text>{{ t('mobile.mine.about') }}</text>
-        <text class="value">{{ appConfig.appName }}</text>
-      </view>
-      <view class="menu-item">
-        <text>{{ t('mobile.mine.version') }}</text>
-        <text class="value">0.1.0</text>
-      </view>
+    <view class="list-card">
+      <WfListRow
+        :title="t('mobile.mine.refreshProfile')"
+        icon-name="reload"
+        icon-bg="#dbeafe"
+        icon-fg="#2563eb"
+        border
+        @click="refreshProfile"
+      />
+      <WfListRow
+        :title="t('locale.title')"
+        :value="localeLabel"
+        icon-name="zh"
+        icon-bg="#ede9fe"
+        icon-fg="#7c3aed"
+        border
+        @click="openLocalePicker"
+      />
+      <WfListRow
+        :title="t('mobile.mine.changePassword')"
+        icon-name="lock"
+        icon-bg="#ffedd5"
+        icon-fg="#ea580c"
+        border
+        @click="goChangePassword"
+      />
+      <WfListRow
+        :title="t('mobile.mine.about')"
+        :value="appConfig.appName"
+        icon-name="info-circle"
+        icon-bg="#e0e7ff"
+        icon-fg="#4f46e5"
+        :show-arrow="false"
+        border
+      />
+      <WfListRow
+        :title="t('mobile.mine.version')"
+        value="0.1.0"
+        icon-name="integral"
+        icon-bg="#f1f5f9"
+        icon-fg="#64748b"
+        :show-arrow="false"
+      />
     </view>
 
     <button class="btn-logout" @click="handleLogout">{{ t('mobile.mine.logout') }}</button>
 
-    <WfFactoryPicker
-      :show="showFactoryPicker"
-      :factories="factories"
-      :current-factory-id="userStore.currentFactory.id"
-      @close="showFactoryPicker = false"
-      @select="handleSwitchFactory"
-    />
+    <WfTabBar active="mine" />
   </view>
 </template>
 
 <style scoped lang="scss">
+@import '@/styles/tokens.scss';
+
 .page {
   min-height: 100vh;
-  background: #f1f5f9;
-  padding: 32rpx 28rpx;
+  background: $wf-bg;
+  padding: $wf-page-pad-y $wf-page-pad-x 48rpx;
   box-sizing: border-box;
 }
 
-.profile-card {
+.profile {
   display: flex;
   align-items: center;
   gap: 24rpx;
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 36rpx;
-  margin-bottom: 24rpx;
+  padding: 28rpx;
+  margin-bottom: $wf-section-gap;
+  background: linear-gradient(160deg, #eff6ff 0%, #ffffff 70%);
+  border-radius: $wf-radius-lg;
+  border: 1rpx solid $wf-border;
+  box-shadow: $wf-shadow;
 }
 
-.avatar {
-  width: 120rpx;
-  height: 120rpx;
+.profile__avatar {
+  width: 96rpx;
+  height: 96rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, $wf-primary, $wf-primary-dark);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48rpx;
+  font-size: 40rpx;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
-.name {
+.profile__name {
   display: block;
-  font-size: 36rpx;
+  font-size: 34rpx;
   font-weight: 700;
-  color: #0f172a;
+  color: $wf-text;
 }
 
-.account,
-.factory {
+.profile__account,
+.profile__factory {
   display: block;
-  margin-top: 8rpx;
+  margin-top: 6rpx;
   font-size: 24rpx;
-  color: #64748b;
+  color: $wf-text-secondary;
 }
 
-.menu {
-  background: #fff;
-  border-radius: 20rpx;
+.list-card {
+  background: $wf-card;
+  border-radius: $wf-radius-md;
   overflow: hidden;
   margin-bottom: 32rpx;
-}
-
-.menu-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 32rpx 28rpx;
-  font-size: 30rpx;
-  color: #0f172a;
-  border-bottom: 1rpx solid #f1f5f9;
-}
-
-.menu-item:last-child {
-  border-bottom: none;
-}
-
-.arrow {
-  color: #cbd5e1;
-  font-size: 36rpx;
-}
-
-.value {
-  font-size: 24rpx;
-  color: #64748b;
+  box-shadow: $wf-shadow;
 }
 
 .btn-logout {
-  background: #fff;
-  color: #ef4444;
-  border-radius: 16rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: $wf-card;
+  color: $wf-danger;
+  border-radius: $wf-radius-sm;
   font-size: 30rpx;
+  font-weight: 500;
+  border: none;
+  box-shadow: $wf-shadow;
+}
+
+.btn-logout::after {
   border: none;
 }
 </style>

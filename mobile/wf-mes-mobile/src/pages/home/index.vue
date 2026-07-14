@@ -1,45 +1,23 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useI18n } from 'vue-i18n'
+import WfMenuIcon from '@/components/WfMenuIcon.vue'
+import WfTabBar from '@/components/WfTabBar.vue'
 import { useUserStore } from '@/stores/user'
 import { t as translate } from '@/i18n'
+import { isDevelopingPath, isTabMenuPath } from '@/utils/menuIcon'
 
 interface MenuCard {
   title: string
-  path?: string
+  path: string
   icon?: string
-  desc?: string
+  developing?: boolean
 }
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const userStore = useUserStore()
 const cards = ref<MenuCard[]>([])
-
-const today = computed(() =>
-  new Date().toLocaleDateString(locale.value, { month: 'long', day: 'numeric', weekday: 'long' })
-)
-
-const quickActions = computed<MenuCard[]>(() => [
-  {
-    title: t('menu.mobile.warehouseScan'),
-    desc: t('mobile.scan.warehouseDesc'),
-    path: '/pages/warehouse/scan/index',
-    icon: '📦'
-  },
-  {
-    title: t('menu.mobile.simplePass'),
-    desc: t('mobile.scan.simplePassDesc'),
-    path: '/pages/mes/simple-pass/index',
-    icon: '✅'
-  },
-  {
-    title: t('menu.mobile.inventory'),
-    desc: t('layout.developing'),
-    path: '/pages/inventory/list/index',
-    icon: '📋'
-  }
-])
 
 onShow(async () => {
   uni.setNavigationBarTitle({ title: t('mobile.tab.home') })
@@ -58,14 +36,18 @@ function toPageUrl(path: string) {
   return normalized.endsWith('/index') ? normalized : `${normalized}/index`
 }
 
-function flattenMenus(menus: Array<{ title?: string; i18nKey?: string; path?: string; icon?: string; children?: unknown[] }>): MenuCard[] {
+function flattenMenus(
+  menus: Array<{ title?: string; i18nKey?: string; path?: string; icon?: string; children?: unknown[] }>
+): MenuCard[] {
   const result: MenuCard[] = []
   for (const menu of menus) {
-    if (menu.path?.includes('/pages/')) {
+    if (menu.path?.includes('/pages/') && !isTabMenuPath(menu.path)) {
+      const path = toPageUrl(menu.path)
       result.push({
-        title: menu.i18nKey ? translate(menu.i18nKey) : (menu.title || ''),
-        path: toPageUrl(menu.path),
-        icon: menu.icon || '📱'
+        title: menu.i18nKey ? translate(menu.i18nKey) : menu.title || '',
+        path,
+        icon: menu.icon,
+        developing: isDevelopingPath(path)
       })
     }
     if (Array.isArray(menu.children)) {
@@ -77,7 +59,7 @@ function flattenMenus(menus: Array<{ title?: string; i18nKey?: string; path?: st
 
 function openPage(path?: string) {
   if (!path) return
-  if (path.includes('/pages/home/') || path.includes('/pages/scan/') || path.includes('/pages/mine/')) {
+  if (isTabMenuPath(path)) {
     uni.switchTab({ url: path })
     return
   }
@@ -88,130 +70,141 @@ function openPage(path?: string) {
 <template>
   <view class="page">
     <view class="header">
-      <view>
-        <text class="greeting">{{ t('login.welcome') }}，{{ userStore.displayName }}</text>
-        <text class="date">{{ today }}</text>
-        <text v-if="userStore.currentFactory.name" class="factory">{{ userStore.currentFactory.name }}</text>
+      <view class="header__text">
+        <text class="header__hello">{{ t('mobile.home.hello') }}，{{ userStore.displayName }}</text>
+        <text v-if="userStore.currentFactory.name" class="header__factory">
+          {{ userStore.currentFactory.name }}
+        </text>
       </view>
-      <view class="badge">{{ t('mobile.home.badge') }}</view>
+      <view class="header__avatar">{{ (userStore.displayName || '?').slice(0, 1) }}</view>
     </view>
 
-    <view class="section-title">{{ t('mobile.home.quickActions') }}</view>
-    <view class="actions">
-      <view v-for="action in quickActions" :key="action.path" class="action-item" @click="openPage(action.path)">
-        <text class="action-icon">{{ action.icon }}</text>
-        <text class="action-title">{{ action.title }}</text>
-        <text class="action-desc">{{ action.desc }}</text>
+    <view class="section">
+      <text class="section__title">{{ t('mobile.home.menuTitle') }}</text>
+      <view v-if="cards.length" class="grid-card">
+        <view
+          v-for="card in cards"
+          :key="card.path"
+          class="grid-item"
+          :class="{ 'grid-item--muted': card.developing }"
+          @click="openPage(card.path)"
+        >
+          <WfMenuIcon :icon="card.icon" :path="card.path" />
+          <text class="grid-item__title">{{ card.title }}</text>
+          <text v-if="card.developing" class="grid-item__tag">{{ t('layout.developing') }}</text>
+        </view>
       </view>
+      <view v-else class="empty">{{ t('common.noData') }}</view>
     </view>
 
-    <view class="section-title">{{ t('mobile.home.menuTitle') }}</view>
-    <view v-if="cards.length === 0" class="empty">{{ t('common.noData') }}</view>
-    <view class="cards">
-      <view v-for="card in cards" :key="card.path" class="card" @click="openPage(card.path)">
-        <text class="card-icon">{{ card.icon || '📱' }}</text>
-        <text class="card-title">{{ card.title }}</text>
-      </view>
-    </view>
+    <WfTabBar active="home" />
   </view>
 </template>
 
 <style scoped lang="scss">
+@import '@/styles/tokens.scss';
+
 .page {
   min-height: 100vh;
-  background: #f1f5f9;
-  padding: 32rpx 28rpx;
+  background: $wf-bg;
+  padding: $wf-page-pad-y $wf-page-pad-x 48rpx;
   box-sizing: border-box;
 }
 
 .header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 28rpx;
+  gap: 20rpx;
+  margin-bottom: $wf-section-gap;
+  padding: 8rpx 4rpx 4rpx;
 }
 
-.greeting {
+.header__hello {
   display: block;
-  font-size: 40rpx;
+  font-size: 36rpx;
   font-weight: 700;
-  color: #0f172a;
+  color: $wf-text;
+  line-height: 1.3;
 }
 
-.date,
-.factory {
+.header__factory {
   display: block;
   margin-top: 8rpx;
   font-size: 24rpx;
-  color: #64748b;
+  color: $wf-text-secondary;
 }
 
-.badge {
-  padding: 8rpx 20rpx;
-  background: #dbeafe;
-  color: #2563eb;
-  border-radius: 999rpx;
-  font-size: 22rpx;
+.header__avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $wf-primary, $wf-primary-dark);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
-.section-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #0f172a;
-  margin-bottom: 20rpx;
-}
-
-.actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16rpx;
-  margin-bottom: 32rpx;
-}
-
-.action-item,
-.card {
-  background: #fff;
-  border-radius: 20rpx;
-  box-shadow: 0 4rpx 16rpx rgba(15, 35, 80, 0.05);
-}
-
-.action-item {
-  padding: 28rpx 24rpx;
-}
-
-.action-icon,
-.card-icon {
-  font-size: 44rpx;
-}
-
-.action-title,
-.card-title {
+.section__title {
   display: block;
-  margin-top: 12rpx;
+  margin-bottom: 16rpx;
+  padding-left: 4rpx;
   font-size: 28rpx;
   font-weight: 600;
-  color: #0f172a;
+  color: #334155;
 }
 
-.action-desc {
-  display: block;
-  margin-top: 6rpx;
-  font-size: 22rpx;
-  color: #94a3b8;
-}
-
-.cards {
+.grid-card {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16rpx;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24rpx 8rpx;
+  padding: 32rpx 16rpx 28rpx;
+  background: $wf-card;
+  border-radius: $wf-radius-md;
+  box-shadow: $wf-shadow;
 }
 
-.card {
-  padding: 28rpx 24rpx;
+.grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  min-height: 132rpx;
+  padding: 4rpx;
+}
+
+.grid-item--muted {
+  opacity: 0.7;
+}
+
+.grid-item:active {
+  opacity: 0.75;
+}
+
+.grid-item__title {
+  font-size: 22rpx;
+  color: #334155;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.grid-item__tag {
+  font-size: 18rpx;
+  color: $wf-text-muted;
+  line-height: 1.2;
 }
 
 .empty {
-  color: #94a3b8;
-  margin-bottom: 24rpx;
+  padding: 56rpx 24rpx;
+  text-align: center;
+  color: $wf-text-muted;
+  font-size: 26rpx;
+  background: $wf-card;
+  border-radius: $wf-radius-md;
+  box-shadow: $wf-shadow;
 }
 </style>

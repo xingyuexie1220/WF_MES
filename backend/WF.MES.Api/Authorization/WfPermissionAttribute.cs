@@ -37,4 +37,10 @@ public abstract class WfApiControllerBase : ControllerBase
         var currentUser = HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
         return currentUser.UserId ?? throw new BusinessException("未登录", 401);
     }
+
+    protected string GetOperatorName()
+    {
+        var currentUser = HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
+        return currentUser.UserName ?? "unknown";
+    }
 }

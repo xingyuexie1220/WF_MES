@@ -60,11 +60,6 @@ public class UserInfoDto
     public List<FactorySummaryDto> AccessibleFactories { get; set; } = [];
 }
 
-public class SwitchFactoryRequestDto
-{
-    public long FactoryId { get; set; }
-}
-
 public class ChangePasswordRequestDto
 {
     public string OldPassword { get; set; } = string.Empty;

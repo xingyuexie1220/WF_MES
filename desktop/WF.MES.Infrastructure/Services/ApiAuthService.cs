@@ -1,9 +1,6 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Refit;
 using Serilog;
-using WF.MES.Core.Exceptions;
 using WF.MES.Core.Interfaces;
 using WF.MES.Infrastructure.Api;
 using WF.MES.Models.Dtos;
@@ -35,12 +32,8 @@ public sealed class ApiAuthService(
 
             if (response.Code != 200 || response.Data is null)
             {
-                return new LoginResultDto
-                {
-                    Success = false,
-                    ErrorMessage = ApiMessageResolver.Resolve(
-                        localization, response.MessageCode, response.Message, "auth.invalid_credentials")
-                };
+                return Fail(ApiErrorHelper.ResolveMessage(
+                    localization, response.MessageCode, response.Message, "auth.invalid_credentials"));
             }
 
             if (response.Data.NeedSelectFactory)
@@ -54,19 +47,11 @@ public sealed class ApiAuthService(
             }
 
             ApplyLoginResponse(response.Data);
-            return new LoginResultDto
-            {
-                Success = true,
-                User = response.Data.UserInfo
-            };
+            return Ok(response.Data.UserInfo);
         }
         catch (Exception ex)
         {
-            return new LoginResultDto
-            {
-                Success = false,
-                ErrorMessage = ApiErrorHelper.ToUserMessage(ex, localization, _apiBaseUrl)
-            };
+            return Fail(ApiErrorHelper.ToUserMessage(ex, localization, _apiBaseUrl));
         }
     }
 
@@ -87,64 +72,16 @@ public sealed class ApiAuthService(
 
             if (response.Code != 200 || response.Data is null)
             {
-                return new LoginResultDto
-                {
-                    Success = false,
-                    ErrorMessage = ApiMessageResolver.Resolve(
-                        localization, response.MessageCode, response.Message, "ui.factory.selectFailed")
-                };
+                return Fail(ApiErrorHelper.ResolveMessage(
+                    localization, response.MessageCode, response.Message, "ui.factory.selectFailed"));
             }
 
             ApplyLoginResponse(response.Data);
-            return new LoginResultDto
-            {
-                Success = true,
-                User = response.Data.UserInfo
-            };
+            return Ok(response.Data.UserInfo);
         }
         catch (Exception ex)
         {
-            return new LoginResultDto
-            {
-                Success = false,
-                ErrorMessage = ApiErrorHelper.ToUserMessage(ex, localization, _apiBaseUrl)
-            };
-        }
-    }
-
-    public async Task<LoginResultDto> SwitchFactoryAsync(long factoryId, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var response = await authApi.SwitchFactoryAsync(new SwitchFactoryRequestDto
-            {
-                FactoryId = factoryId
-            }, cancellationToken);
-
-            if (response.Code != 200 || response.Data is null)
-            {
-                return new LoginResultDto
-                {
-                    Success = false,
-                    ErrorMessage = ApiMessageResolver.Resolve(
-                        localization, response.MessageCode, response.Message, "ui.factory.switchFailed")
-                };
-            }
-
-            ApplyLoginResponse(response.Data);
-            return new LoginResultDto
-            {
-                Success = true,
-                User = response.Data.UserInfo
-            };
-        }
-        catch (Exception ex)
-        {
-            return new LoginResultDto
-            {
-                Success = false,
-                ErrorMessage = ApiErrorHelper.ToUserMessage(ex, localization, _apiBaseUrl)
-            };
+            return Fail(ApiErrorHelper.ToUserMessage(ex, localization, _apiBaseUrl));
         }
     }
 
@@ -219,7 +156,7 @@ public sealed class ApiAuthService(
         catch (ApiException apiEx)
         {
             if (ApiErrorHelper.TryParseApiResult(apiEx, out var messageCode, out _)
-                && string.Equals(messageCode, ApiResponseHelper.SessionReplacedCode, StringComparison.OrdinalIgnoreCase))
+                && ApiResponseHelper.IsSessionReplacedCode(messageCode))
             {
                 Log.Information("会话已在其他设备登录");
             }
@@ -238,36 +175,16 @@ public sealed class ApiAuthService(
         sessionService.SetUser(data.UserInfo);
         sessionService.SetActionPermissions(data.UserInfo.Permissions.ToHashSet(StringComparer.OrdinalIgnoreCase));
     }
-}
 
-public static class ApiClientRegistration
-{
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    private static LoginResultDto Ok(UserInfoDto? user) => new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        Success = true,
+        User = user
     };
 
-    public static IAuthApi CreateAuthApi(IConfiguration configuration, IApiTokenStore tokenStore, ILocalizationService localization)
+    private static LoginResultDto Fail(string errorMessage) => new()
     {
-        var baseUrl = configuration["Api:BaseUrl"]
-            ?? throw new BusinessException("err.apiBaseUrlNotConfigured");
-
-        var handler = new AuthTokenHandler(tokenStore, localization)
-        {
-            InnerHandler = ApiHttpClientFactory.CreateHandler()
-        };
-
-        var httpClient = new HttpClient(handler)
-        {
-            BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/"),
-            Timeout = TimeSpan.FromSeconds(configuration.GetValue("Api:TimeoutSeconds", 30))
-        };
-
-        return RestService.For<IAuthApi>(httpClient, new RefitSettings
-        {
-            ContentSerializer = new SystemTextJsonContentSerializer(JsonOptions)
-        });
-    }
+        Success = false,
+        ErrorMessage = errorMessage
+    };
 }

@@ -9,7 +9,7 @@ using WF.MES.Shared.Exceptions;
 
 namespace WF.MES.Infrastructure.Services;
 
-public class UserService(ISqlSugarClient db) : IUserService
+public class UserService(ISqlSugarClient db, Application.Common.ICacheService cache) : IUserService
 {
     public async Task<PagedResult<UserDto>> GetPagedListAsync(UserQueryRequest request, CancellationToken cancellationToken = default)
     {
@@ -111,6 +111,7 @@ public class UserService(ISqlSugarClient db) : IUserService
 
         var userId = await db.Insertable(user).ExecuteReturnBigIdentityAsync();
         await SaveUserRelationsAsync(userId, request.RoleIds, request.PositionIds);
+        await cache.RemoveCategoryAsync("menu");
         return userId;
     }
 
@@ -131,6 +132,7 @@ public class UserService(ISqlSugarClient db) : IUserService
         await db.Deleteable<SystemUserRole>().Where(x => x.UserId == id).ExecuteCommandAsync();
         await db.Deleteable<SystemUserPosition>().Where(x => x.UserId == id).ExecuteCommandAsync();
         await SaveUserRelationsAsync(id, request.RoleIds, request.PositionIds);
+        await cache.RemoveCategoryAsync("menu");
     }
 
     public async Task DeleteAsync(long id, long operatorId, CancellationToken cancellationToken = default)
@@ -147,6 +149,7 @@ public class UserService(ISqlSugarClient db) : IUserService
         user.UpdateBy = operatorId;
         user.UpdateTime = DateTime.Now;
         await db.Updateable(user).ExecuteCommandAsync();
+        await cache.RemoveCategoryAsync("menu");
     }
 
     public async Task ResetPasswordAsync(long id, ResetPasswordRequest request, long operatorId, CancellationToken cancellationToken = default)

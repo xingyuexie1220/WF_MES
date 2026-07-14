@@ -29,11 +29,6 @@ public class RuleSegmentItemViewModel : BindableBase
         {
             if (SetProperty(ref _segmentType, value))
             {
-                if (IsDate && !DatePartFormats.IsValid(DateFormat))
-                {
-                    DateFormat = DatePartFormats.Default;
-                }
-
                 RaisePropertyChanged(nameof(IsLiteral));
                 RaisePropertyChanged(nameof(IsDate));
                 RaisePropertyChanged(nameof(IsSerial));

@@ -145,7 +145,7 @@ GO
  4. Windows 计划任务 + sqlcmd（Express 或无 Agent 时推荐）
 
  步骤：
-   1) 在 NMES 库执行本脚本（创建 PurgeLog 表与 sp_Barcode_PurgeExpired）
+   1) 在目标业务库执行本脚本（创建 PurgeLog 表与 sp_Barcode_PurgeExpired）
    2) 复制 Scripts\scheduled-tasks\purge_barcode.env.example.cmd
       为 purge_barcode.env.cmd，填写 SQL 连接与密码
    3) 双击或命令行试跑：Scripts\scheduled-tasks\purge_barcode.cmd

@@ -15,37 +15,140 @@ namespace WF.MES.Api.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/v1/master-data")]
-public class MasterDataController(IMasterDataScaffoldService service) : WfApiControllerBase
+public class MasterDataController(IMesMasterDataService service) : WfApiControllerBase
 {
     [HttpGet("materials")]
     [WfPermission("master:material:list")]
-    public async Task<ApiResult<object>> GetMaterials() => ApiResult<object>.Ok(await service.GetMaterialsAsync());
+    public async Task<ApiResult<object>> GetMaterials()
+        => ApiResult<object>.Ok(await service.GetMaterialsAsync());
+
+    [HttpPost("materials")]
+    [WfPermission("master:material:list")]
+    public async Task<ApiResult<long>> SaveMaterial([FromBody] Application.MasterData.Dtos.SaveMesMaterialRequest request)
+        => ApiResult<long>.Ok(await service.SaveMaterialAsync(request, GetOperatorId()));
+
+    [HttpPost("materials/delete/{id:long}")]
+    [WfPermission("master:material:list")]
+    public async Task<ApiResult<object>> DeleteMaterial(long id)
+    {
+        await service.DeleteMaterialAsync(id);
+        return ApiResult<object>.Ok(new { id });
+    }
 
     [HttpGet("routes")]
     [WfPermission("master:route:list")]
-    public async Task<ApiResult<object>> GetRoutes() => ApiResult<object>.Ok(await service.GetRoutesAsync());
+    public async Task<ApiResult<object>> GetRoutes()
+        => ApiResult<object>.Ok(await service.GetRoutingsAsync());
 
+    [HttpGet("routes/{id:long}")]
+    [WfPermission("master:route:list")]
+    public async Task<ApiResult<object>> GetRoute(long id)
+        => ApiResult<object>.Ok(await service.GetRoutingAsync(id));
+
+    [HttpPost("routes")]
+    [WfPermission("master:route:list")]
+    public async Task<ApiResult<long>> SaveRoute([FromBody] Application.MasterData.Dtos.SaveMesRoutingRequest request)
+        => ApiResult<long>.Ok(await service.SaveRoutingAsync(request, GetOperatorId()));
+
+    [HttpPost("routes/delete/{id:long}")]
+    [WfPermission("master:route:list")]
+    public async Task<ApiResult<object>> DeleteRoute(long id)
+    {
+        await service.DeleteRoutingAsync(id);
+        return ApiResult<object>.Ok(new { id });
+    }
+
+    /// <summary>工序（沿用 stations 路径）</summary>
     [HttpGet("stations")]
     [WfPermission("master:station:list")]
-    public async Task<ApiResult<object>> GetStations() => ApiResult<object>.Ok(await service.GetStationsAsync());
+    public async Task<ApiResult<object>> GetStations()
+        => ApiResult<object>.Ok(await service.GetProcessesAsync());
 
+    [HttpPost("stations")]
+    [WfPermission("master:station:list")]
+    public async Task<ApiResult<long>> SaveStation([FromBody] Application.MasterData.Dtos.SaveMesProcessRequest request)
+        => ApiResult<long>.Ok(await service.SaveProcessAsync(request, GetOperatorId()));
+
+    [HttpPost("stations/delete/{id:long}")]
+    [WfPermission("master:station:list")]
+    public async Task<ApiResult<object>> DeleteStation(long id)
+    {
+        await service.DeleteProcessAsync(id);
+        return ApiResult<object>.Ok(new { id });
+    }
+
+    /// <summary>机台（沿用 work-centers 路径）</summary>
     [HttpGet("work-centers")]
     [WfPermission("master:workcenter:list")]
-    public async Task<ApiResult<object>> GetWorkCenters() => ApiResult<object>.Ok(await service.GetWorkCentersAsync());
+    public async Task<ApiResult<object>> GetWorkCenters()
+        => ApiResult<object>.Ok(await service.GetMachinesAsync());
+
+    [HttpPost("work-centers")]
+    [WfPermission("master:workcenter:list")]
+    public async Task<ApiResult<long>> SaveWorkCenter([FromBody] Application.MasterData.Dtos.SaveMesMachineRequest request)
+        => ApiResult<long>.Ok(await service.SaveMachineAsync(request, GetOperatorId()));
+
+    [HttpPost("work-centers/delete/{id:long}")]
+    [WfPermission("master:workcenter:list")]
+    public async Task<ApiResult<object>> DeleteWorkCenter(long id)
+    {
+        await service.DeleteMachineAsync(id);
+        return ApiResult<object>.Ok(new { id });
+    }
+
+    [HttpGet("defect-codes")]
+    [WfPermission("master:station:list")]
+    public async Task<ApiResult<object>> GetDefectCodes()
+        => ApiResult<object>.Ok(await service.GetDefectCodesAsync());
 }
 
 [Authorize]
 [ApiController]
 [Route("api/v1/production")]
-public class ProductionController(IProductionScaffoldService service) : WfApiControllerBase
+public class ProductionController(IMesProductionService service) : WfApiControllerBase
 {
     [HttpGet("work-orders")]
     [WfPermission("mes:workorder:scan")]
-    public async Task<ApiResult<object>> GetWorkOrders() => ApiResult<object>.Ok(await service.GetWorkOrdersAsync());
+    public async Task<ApiResult<object>> GetWorkOrders([FromQuery] string? status = null)
+        => ApiResult<object>.Ok(await service.GetWorkOrdersAsync(status));
+
+    [HttpGet("work-orders/{workOrderNo}")]
+    [WfPermission("mes:workorder:scan")]
+    public async Task<ApiResult<object>> GetWorkOrder(string workOrderNo)
+        => ApiResult<object>.Ok(await service.GetWorkOrderByNoAsync(workOrderNo));
+
+    [HttpPost("work-orders")]
+    [WfPermission("mes:workorder:scan")]
+    public async Task<ApiResult<long>> SaveWorkOrder([FromBody] Application.Production.Dtos.SaveMesWorkOrderRequest request)
+        => ApiResult<long>.Ok(await service.SaveWorkOrderAsync(request, GetOperatorId()));
+
+    [HttpPost("work-orders/{id:long}/close")]
+    [WfPermission("mes:workorder:scan")]
+    public async Task<ApiResult<object>> CloseWorkOrder(long id, [FromBody] Application.Production.Dtos.SaveMesWorkOrderRequest? request)
+    {
+        await service.CloseWorkOrderAsync(id, request?.Remark, GetOperatorId());
+        return ApiResult<object>.Ok(new { id });
+    }
 
     [HttpPost("pass-records")]
     [WfPermission("mes:workorder:scan")]
-    public async Task<ApiResult<object>> PassStation([FromBody] object request) => ApiResult<object>.Ok(await service.PassStationAsync(request));
+    public async Task<ApiResult<object>> PassStation([FromBody] Application.Production.Dtos.MesReportRequest request)
+        => ApiResult<object>.Ok(await service.SubmitReportAsync(request, GetOperatorName(), GetOperatorId()));
+
+    [HttpGet("pass-records")]
+    [WfPermission("mes:workorder:scan")]
+    public async Task<ApiResult<object>> GetPassRecords([FromQuery] string? workOrderNo = null, [FromQuery] int take = 50)
+        => ApiResult<object>.Ok(await service.GetRecentReportsAsync(workOrderNo, take));
+
+    [HttpGet("machines")]
+    [WfPermission("mes:workorder:scan")]
+    public async Task<ApiResult<object>> GetMachines([FromServices] IMesMasterDataService master)
+        => ApiResult<object>.Ok(await master.GetMachinesAsync());
+
+    [HttpGet("defect-codes")]
+    [WfPermission("mes:workorder:scan")]
+    public async Task<ApiResult<object>> GetDefectCodes([FromServices] IMesMasterDataService master)
+        => ApiResult<object>.Ok(await master.GetDefectCodesAsync());
 }
 
 [Authorize]

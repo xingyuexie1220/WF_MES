@@ -3,7 +3,9 @@ using WF.MES.Core.Interfaces;
 
 namespace WF.MES.Infrastructure.Api;
 
-/// <summary>为 API 请求附加 Bearer Token、X-Factory-Id 与 Accept-Language（登录接口除外）。</summary>
+/// <summary>
+/// 附加 <c>Accept-Language</c>；除登录/选厂外附加 Bearer 与 <c>X-Factory-Id</c>。
+/// </summary>
 public sealed class AuthTokenHandler(IApiTokenStore tokenStore, ILocalizationService localization) : DelegatingHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -11,23 +13,35 @@ public sealed class AuthTokenHandler(IApiTokenStore tokenStore, ILocalizationSer
         request.Headers.Remove("Accept-Language");
         request.Headers.TryAddWithoutValidation("Accept-Language", localization.CurrentLocale);
 
-        if (request.RequestUri is not null
-            && !request.RequestUri.AbsolutePath.Contains("/auth/login", StringComparison.OrdinalIgnoreCase)
-            && !request.RequestUri.AbsolutePath.Contains("/auth/select-factory", StringComparison.OrdinalIgnoreCase))
+        if (IsAnonymousAuthPath(request.RequestUri))
         {
-            var token = tokenStore.AccessToken;
-            if (!string.IsNullOrWhiteSpace(token))
-            {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            }
+            return base.SendAsync(request, cancellationToken);
+        }
 
-            if (tokenStore.FactoryId.HasValue && tokenStore.FactoryId.Value > 0)
-            {
-                request.Headers.Remove("X-Factory-Id");
-                request.Headers.TryAddWithoutValidation("X-Factory-Id", tokenStore.FactoryId.Value.ToString());
-            }
+        var token = tokenStore.AccessToken;
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        if (tokenStore.FactoryId is > 0)
+        {
+            request.Headers.Remove("X-Factory-Id");
+            request.Headers.TryAddWithoutValidation("X-Factory-Id", tokenStore.FactoryId.Value.ToString());
         }
 
         return base.SendAsync(request, cancellationToken);
+    }
+
+    private static bool IsAnonymousAuthPath(Uri? requestUri)
+    {
+        var path = requestUri?.AbsolutePath;
+        if (string.IsNullOrEmpty(path))
+        {
+            return false;
+        }
+
+        return path.Contains("/auth/login", StringComparison.OrdinalIgnoreCase)
+               || path.Contains("/auth/select-factory", StringComparison.OrdinalIgnoreCase);
     }
 }

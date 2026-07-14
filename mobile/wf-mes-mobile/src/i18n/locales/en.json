@@ -105,16 +105,42 @@
       "defaultTag": "Default"
     },
     "home": {
+      "hello": "Hello",
+      "primaryTitle": "Frequently used",
+      "menuTitle": "All features",
       "quickActions": "Quick actions",
-      "menuTitle": "Menus",
       "badge": "Mobile"
     },
     "scan": {
       "hubTitle": "Scan center",
-      "hint": "Tap the button below to scan",
+      "hint": "Tap the button below to open the camera",
       "startScan": "Start scan",
+      "bizTitle": "Scan workflows",
       "warehouseDesc": "Scan material barcode for inbound",
-      "simplePassDesc": "Scan product barcode to pass station"
+      "simplePassDesc": "Scan product barcode to pass station",
+      "reportDesc": "Scan WO and report good/defect qty"
+    },
+    "report": {
+      "title": "Process Report",
+      "scan": "Scan",
+      "load": "Load WO",
+      "woPlaceholder": "Enter or scan work order No.",
+      "needWo": "Work order No. required",
+      "woNotFound": "Work order not found",
+      "planQty": "Plan qty",
+      "process": "Process",
+      "pickProcess": "Select process",
+      "remain": "Remain",
+      "machine": "Machine",
+      "pickMachine": "Select machine",
+      "good": "Good",
+      "defect": "Defect",
+      "defectReason": "Defect reason",
+      "pickDefect": "Select reason",
+      "needProcess": "Select a process",
+      "needQty": "Enter quantity",
+      "needDefect": "Select defect reason",
+      "submit": "Submit"
     },
     "mine": {
       "profile": "Profile",

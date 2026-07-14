@@ -57,6 +57,15 @@ const MASTER_DATA_ITEMS: FallbackMenuLeaf[] = [
   }
 ]
 
+const PRODUCTION_ITEMS: FallbackMenuLeaf[] = [
+  {
+    path: '/production/work-order',
+    titleKey: 'menu.productionWorkOrder',
+    permission: 'mes:workorder:scan',
+    icon: 'Document'
+  }
+]
+
 const REPORT_ITEMS: FallbackMenuLeaf[] = [
   { path: '/report/output', titleKey: 'menu.reportOutput', permission: 'dashboard:report:view', icon: 'DataLine' },
   { path: '/report/wip', titleKey: 'menu.reportWip', permission: 'dashboard:report:view', icon: 'PieChart' }
@@ -139,6 +148,11 @@ export function buildMasterDataFallback(): SidebarMenuItem[] {
   return group ? [group] : []
 }
 
+export function buildProductionFallback(): SidebarMenuItem[] {
+  const group = buildGroupedMenu('production', 'menu.production', 'Document', PRODUCTION_ITEMS)
+  return group ? [group] : []
+}
+
 export function buildReportFallback(): SidebarMenuItem[] {
   const group = buildGroupedMenu('report', 'menu.report', 'DataAnalysis', REPORT_ITEMS)
   return group ? [group] : []
@@ -152,6 +166,7 @@ export function buildBarcodeFallback(): SidebarMenuItem[] {
 export function buildFallbackMenusWhenApiEmpty(): SidebarMenuItem[] {
   return [
     ...buildMasterDataFallback(),
+    ...buildProductionFallback(),
     ...buildReportFallback(),
     ...buildBarcodeFallback(),
     ...buildFallbackSystemMenus()

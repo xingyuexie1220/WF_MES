@@ -1,30 +1,28 @@
 import type { RouteRecordRaw } from 'vue-router'
 
-const developing = () => import('@/views/common/developing/index.vue')
-
 export const masterDataRoutes: RouteRecordRaw[] = [
   {
     path: 'master-data/material',
     name: 'MasterMaterial',
-    component: developing,
-    meta: { titleKey: 'menu.masterMaterial', permission: 'master:material:list' }
+    component: () => import('@/views/master-data/material/index.vue'),
+    meta: { titleKey: 'menu.masterMaterial', permission: 'master:material:list', keepAlive: true }
   },
   {
     path: 'master-data/route',
     name: 'MasterRoute',
-    component: developing,
-    meta: { titleKey: 'menu.masterRoute', permission: 'master:route:list' }
+    component: () => import('@/views/master-data/route/index.vue'),
+    meta: { titleKey: 'menu.masterRoute', permission: 'master:route:list', keepAlive: true }
   },
   {
     path: 'master-data/station',
     name: 'MasterStation',
-    component: developing,
-    meta: { titleKey: 'menu.masterStation', permission: 'master:station:list' }
+    component: () => import('@/views/master-data/station/index.vue'),
+    meta: { titleKey: 'menu.masterStation', permission: 'master:station:list', keepAlive: true }
   },
   {
     path: 'master-data/workcenter',
     name: 'MasterWorkCenter',
-    component: developing,
-    meta: { titleKey: 'menu.masterWorkCenter', permission: 'master:workcenter:list' }
+    component: () => import('@/views/master-data/workcenter/index.vue'),
+    meta: { titleKey: 'menu.masterWorkCenter', permission: 'master:workcenter:list', keepAlive: true }
   }
 ]

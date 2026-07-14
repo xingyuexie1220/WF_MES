@@ -3,7 +3,7 @@ using Microsoft.Win32;
 using WF.MES.Core.Constants;
 using WF.MES.Core.Interfaces;
 using WF.MES.Models.Dtos;
-using WF.MES.WPF.Infrastructure;
+using WF.MES.WPF.Ui;
 
 namespace WF.MES.WPF.Modules.Barcode.ViewModels;
 
@@ -76,7 +76,7 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
         set => SetProperty(ref _filterCreatedFrom, value.Date);
     }
 
-    public string RetentionHint => TF("ui.barcode.retentionHint", BarcodeRetentionPolicy.RetentionDays);
+    public string RetentionHint => Lf("ui.barcode.retentionHint", BarcodeRetentionPolicy.RetentionDays);
 
     public string ExportOnlyHint => L("ui.barcode.detailHint");
 
@@ -109,25 +109,6 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
     public bool IsNavigationTarget(NavigationContext navigationContext) => true;
 
     public void OnNavigatedFrom(NavigationContext navigationContext) { }
-
-    protected override void RefreshLocalizedProperties()
-    {
-        RaisePropertyChanged(nameof(PageTitle));
-        RaisePropertyChanged(nameof(DetailSectionTitle));
-        RaisePropertyChanged(nameof(RetentionHint));
-        RaisePropertyChanged(nameof(ExportOnlyHint));
-        var index = Customers.ToList().FindIndex(c => c.CustomerId == 0);
-        if (index >= 0)
-        {
-            var selectedId = SelectedCustomer?.CustomerId;
-            Customers[index] = new CustomerListDto { CustomerId = 0, CustomerName = L("ui.actions.all") };
-            if (selectedId == 0)
-            {
-                SelectedCustomer = Customers[index];
-            }
-        }
-
-    }
 
     private bool CanRefresh() => !IsLoadingGenerateRecords && !IsExporting;
 
@@ -179,7 +160,7 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(EX(ex));
+            HandyControl.Controls.Growl.Error(Ex(ex));
         }
         finally
         {
@@ -216,15 +197,27 @@ public class BarcodeDetailViewModel : LocalizedViewModelBase, INavigationAware
 
             if (count == 0)
             {
-                HandyControl.Controls.Growl.Warning(L("ui.barcode.noBarcodesToExport"));
+                HandyControl.Controls.Growl.Warning(new HandyControl.Data.GrowlInfo
+                {
+                    Message = L("ui.barcode.noBarcodesToExport"),
+                    WaitTime = 4
+                });
                 return;
             }
 
-            HandyControl.Controls.Growl.Success(TF("ui.barcode.exportedCount", count));
+            HandyControl.Controls.Growl.Success(new HandyControl.Data.GrowlInfo
+            {
+                Message = Lf("ui.barcode.exportedCountPath", count, dialog.FileName),
+                WaitTime = 5
+            });
         }
         catch (Exception ex)
         {
-            HandyControl.Controls.Growl.Error(EX(ex));
+            HandyControl.Controls.Growl.Error(new HandyControl.Data.GrowlInfo
+            {
+                Message = Ex(ex),
+                WaitTime = 5
+            });
         }
         finally
         {

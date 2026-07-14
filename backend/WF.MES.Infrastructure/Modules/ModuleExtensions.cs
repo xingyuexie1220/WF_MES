@@ -15,8 +15,8 @@ public static class MasterDataModuleExtensions
 {
     public static IServiceCollection AddWfMasterDataModule(this IServiceCollection services)
     {
-        services.AddScoped<WF.MES.Application.MasterData.IMasterDataScaffoldService,
-            WF.MES.Infrastructure.Services.MasterDataScaffoldService>();
+        services.AddScoped<WF.MES.Application.MasterData.IMesMasterDataService,
+            WF.MES.Infrastructure.Services.Mes.MesMasterDataService>();
         return services;
     }
 }
@@ -25,8 +25,8 @@ public static class ProductionModuleExtensions
 {
     public static IServiceCollection AddWfProductionModule(this IServiceCollection services)
     {
-        services.AddScoped<WF.MES.Application.Production.IProductionScaffoldService,
-            WF.MES.Infrastructure.Services.ProductionScaffoldService>();
+        services.AddScoped<WF.MES.Application.Production.IMesProductionService,
+            WF.MES.Infrastructure.Services.Mes.MesProductionService>();
         return services;
     }
 }
